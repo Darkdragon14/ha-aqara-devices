@@ -1,0 +1,21 @@
+set_video:
+  name: Toggle Camera Video
+  description: Enable/disable camera video stream via Aqara API.
+  fields:
+    did:
+      name: Device ID (DID)
+      description: Aqara DID of your G3 (defaults to the DID configured in the integration).
+      required: false
+      example: "lumi1.xxxxxx"
+      selector:
+        text:
+    state:
+      name: State
+      description: "Use 'off' or 'on' (you can also use '0'/'1')."
+      required: true
+      example: "on"
+      selector:
+        select:
+          options:
+            - "off"
+            - "on"

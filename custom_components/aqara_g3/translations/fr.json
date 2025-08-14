@@ -1,0 +1,29 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Aqara FP2",
+                "description": "Configurez votre intégration Aqara FP2.",
+                "data": {
+                    "email": "Email",
+                    "password": "Mot de passe",
+                    "region": "Région"
+                }
+            },
+            "select_device": {
+                "title": "Sélectionner un appareil",
+                "description": "Choisissez l'appareil FP2 à ajouter.",
+                "data": {
+                    "did": "Appareil"
+                }
+            }
+        },
+        "error": {
+            "auth": "Impossible de s'authentifier, veuillez vérifier vos identifiants.",
+            "no_devices_found": "Aucun appareil FP2 n'a été trouvé."
+        },
+        "abort": {
+            "already_configured": "Cet appareil est déjà configuré."
+        }
+    }
+}

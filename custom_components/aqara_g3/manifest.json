@@ -1,0 +1,12 @@
+{
+  "domain": "aqara_g3",
+  "name": "Aqara Camera Hub G3 (Minimal)",
+  "version": "1.0.0",
+  "documentation": "https://github.com/ton-repo/aqara_g3_integration",
+  "requirements": [
+    "pycryptodome>=3.20.0"
+  ],
+  "codeowners": ["@your_github_username"],
+  "config_flow": true,
+  "iot_class": "cloud_push"
+}
