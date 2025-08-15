@@ -10,7 +10,7 @@ from aiohttp import ClientSession
 from Crypto.Cipher import PKCS1_v1_5
 from Crypto.PublicKey import RSA
 
-from .const import AQARA_RSA_PUBKEY, AREAS, REQUEST_PATH, QUERY_PATH
+from .const import AQARA_RSA_PUBKEY, AREAS, REQUEST_PATH, QUERY_PATH, HISTORY_PATH, CAMERA_ACTIVE
 
 class AqaraApi:
     """Tiny Aqara mobile API client for this MVP."""
@@ -111,7 +111,39 @@ class AqaraApi:
             return await resp.json(content_type=None)
 
     async def res_query(self, payload: dict) -> Any:
-        url = f"{self._server}{QUERY_PATH}"
+        url = f"{self._server}{HISTORY_PATH}"
         body = json.dumps(payload)
         async with self._session.post(url, data=body, headers=self._rest_headers()) as resp:
             return await resp.json(content_type=None)
+
+    async def get_camera_active(self, did: str) -> int:
+        """Return 0/1 for set_video using res/query."""
+        payloads = {
+            "resourceIds": [
+                CAMERA_ACTIVE["read"]
+            ],
+            "subjectId": did
+        }
+        data = await self.res_query(payloads)
+
+        if str(data.get("code")) == "0":
+            result = data.get("result")
+            if isinstance(result, dict):
+                records = result.get("data")
+                if isinstance(records, list) and len(records) > 0:
+                    # Take the most recent entry
+                    v = records[0].get("value")
+                    try:
+                        return 1 if int(v) == 1 else 0
+                    except Exception:
+                        return 1 if str(v).lower() in ("1", "on", "true") else 0
+            elif isinstance(result, list):
+                # Fallback if API returns a list directly
+                for rec in result:
+                    if rec.get("resourceId") == CAMERA_ACTIVE["read"]:
+                        v = rec.get("value")
+                        try:
+                            return 1 if int(v) == 1 else 0
+                        except Exception:
+                            return 1 if str(v).lower() in ("1", "on", "true") else 0
+        raise RuntimeError(f"Failed to query set_video: {data}")

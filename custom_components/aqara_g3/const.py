@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 DOMAIN = "aqara_g3"
-PLATFORMS: list[str] = []  # only services for this MVP
+PLATFORMS: list[str] = ["switch"]  # only services for this MVP
 
 # Endpoint used for attribute write/query
 REQUEST_PATH = "/app/v1.0/lumi/res/write"  # per AqaraPOST examples
 QUERY_PATH = "/app/v1.0/lumi/res/query"
+HISTORY_PATH = "/app/v1.0/lumi/res/history/log"
+
+# Command
+CAMERA_ACTIVE = {"write": "set_video", "read": "14.74.85"}
 
 # Minimal area map (extend later as needed)
 AREAS = {
