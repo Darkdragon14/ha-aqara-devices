@@ -1,5 +1,5 @@
 {
-  "domain": "aqara_g3",
+  "domain": "ha-aqara-devices",
   "name": "Aqara Camera Hub G3 (Minimal)",
   "version": "1.0.0",
   "documentation": "https://github.com/ton-repo/aqara_g3_integration",
