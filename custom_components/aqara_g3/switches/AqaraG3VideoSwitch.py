@@ -18,7 +18,7 @@ class AqaraG3VideoSwitch(CoordinatorEntity, SwitchEntity):
         super().__init__(coordinator)
         self._did = did
         self._api = api
-        self._attr_unique_id = f"{did}_camera_active"
+        self._attr_unique_id = f"{did}_{CAMERA_ACTIVE['inApp']}"
 
     @property
     def device_info(self):
@@ -31,21 +31,22 @@ class AqaraG3VideoSwitch(CoordinatorEntity, SwitchEntity):
 
     @property
     def is_on(self) -> bool:
-        val = self.coordinator.data
+        data = self.coordinator.data or {}
+        val = data.get(CAMERA_ACTIVE["inApp"])
         try:
             return bool(int(val))
         except Exception:
             return str(val).lower() in ("1", "on", "true")
 
     async def async_turn_on(self, **kwargs):
-        payload = {"data": {CAMERA_ACTIVE["write"]: 1}, "subjectId": self._did}
+        payload = {"data": {CAMERA_ACTIVE["api"]: 1}, "subjectId": self._did}
         data = await self._api.res_write(payload)
         if str(data.get("code")) != "0":
             raise Exception(f"Aqara API error: {data}")
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
-        payload = {"data": {CAMERA_ACTIVE["write"]: 0}, "subjectId": self._did}
+        payload = {"data": {CAMERA_ACTIVE["api"]: 0}, "subjectId": self._did}
         data = await self._api.res_write(payload)
         if str(data.get("code")) != "0":
             raise Exception(f"Aqara API error: {data}")

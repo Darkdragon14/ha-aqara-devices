@@ -21,44 +21,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     api: AqaraApi = data["api"]
     did = data["did"]
 
-    async def _async_update_video_data():
+    async def _async_update_all_data():
         try:
-            # Fetch latest set_video value (0/1)
-            return await api.get_camera_active(did)
+            # Returns {"camera_active": 0/1, "detect_human_active": 0/1}
+            return await api.get_device_states(did)
         except Exception as e:
-            # Never raise ConfigEntryNotReady from a platform; let the coordinator handle retries
-            raise UpdateFailed(str(e)) from e
-        
-    async def _async_update_detect_human_data():
-        try:
-            # Fetch latest set_video value (0/1)
-            return await api.get_detect_human_active(did)
-        except Exception as e:
-            # Never raise ConfigEntryNotReady from a platform; let the coordinator handle retries
             raise UpdateFailed(str(e)) from e
 
-    coordinator_video = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name="aqara_g3__camera_active",
-        update_method=_async_update_video_data,
+        name="aqara_g3__states",
+        update_method=_async_update_all_data,
         update_interval=timedelta(seconds=1),
     )
 
-    coordinator_detect_human = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="aqara_g3__detect_human_active",
-        update_method=_async_update_detect_human_data,
-        update_interval=timedelta(seconds=1),
-    )
-
-    videoSwitch = AqaraG3VideoSwitch(coordinator_video, did, api)
-    humanSwitch = AqaraG3DetectHumanSwitch(coordinator_detect_human, did, api)
+    videoSwitch = AqaraG3VideoSwitch(coordinator, did, api)
+    humanSwitch = AqaraG3DetectHumanSwitch(coordinator, did, api)
 
     # Do NOT call async_config_entry_first_refresh() here to avoid bubbling setup errors
     async_add_entities([videoSwitch, humanSwitch], True)
 
     # Kick off the first refresh in the background; errors will be logged by the coordinator
-    hass.async_create_task(coordinator_video.async_request_refresh())
-    hass.async_create_task(coordinator_detect_human.async_request_refresh())
+    hass.async_create_task(coordinator.async_request_refresh())

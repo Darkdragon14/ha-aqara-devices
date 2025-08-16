@@ -122,55 +122,37 @@ class AqaraApi:
         async with self._session.post(url, data=body, headers=self._rest_headers()) as resp:
             return await resp.json(content_type=None)
 
-    async def get_camera_active(self, did: str) -> int:
-        """Return 0/1 for set_video using res/query."""
-        payloads = {
-            "resourceIds": [
-                CAMERA_ACTIVE["read"]
-            ],
-            "subjectId": did
+    async def get_device_states(self, did: str) -> dict[str, int]:
+        """
+        Return both camera_active and detect_human_active in one call.
+        Normalizes truthy values to 0/1.
+        """
+        payload = {
+            "data": [{
+                "options": [DETECT_HUMAN_ACTIVE["api"], CAMERA_ACTIVE["api"]],
+                "subjectId": did,
+            }]
         }
-        data = await self.res_history(payloads)
-
-        if str(data.get("code")) == "0":
-            result = data.get("result")
-            if isinstance(result, dict):
-                records = result.get("data")
-                if isinstance(records, list) and len(records) > 0:
-                    # Take the most recent entry
-                    v = records[0].get("value")
-                    try:
-                        return 1 if int(v) == 1 else 0
-                    except Exception:
-                        return 1 if str(v).lower() in ("1", "on", "true") else 0
-            elif isinstance(result, list):
-                # Fallback if API returns a list directly
-                for rec in result:
-                    if rec.get("resourceId") == CAMERA_ACTIVE["read"]:
-                        v = rec.get("value")
-                        try:
-                            return 1 if int(v) == 1 else 0
-                        except Exception:
-                            return 1 if str(v).lower() in ("1", "on", "true") else 0
-        raise RuntimeError(f"Failed to query set_video: {data}")
-    
-    async def get_detect_human_active(self, did: str) -> int:
-        """
-        Return 0/1 for detect human mode using res/query.
-        """
-
-        # payload = {"subjectId": did, "resourceIds": [DETECT_HUMAN_ACTIVE["read"]]}
-        payload = {"data": [{"options":["humans_track_enable"], "subjectId": did}]}
         data = await self.res_query(payload)
 
-        if str(data.get("code")) == "0":
-            result = data.get("result")
-            if isinstance(result, list) and len(result) > 0:
-                v = result[0].get("value")
-                try:
-                    return 1 if int(v) == 1 else 0
-                except Exception:
-                    return 1 if str(v).lower() in ("1", "on", "true") else 0
-            else:
-                return 0
-        raise RuntimeError(f"Failed to query detect_human: {data}")
+        if str(data.get("code")) != "0":
+            raise RuntimeError(f"Failed to query device states: {data}")
+
+        def _to01(v) -> int:
+            try:
+                return 1 if int(v) == 1 else 0
+            except Exception:
+                return 1 if str(v).lower() in ("1", "on", "true") else 0
+
+        res = {CAMERA_ACTIVE["inApp"]: 0, DETECT_HUMAN_ACTIVE["inApp"]: 0}
+        result = data.get("result", [])
+
+        if isinstance(result, list):
+            for item in result:
+                key = item.get("attr")
+                val = item.get("value")
+                if key in (CAMERA_ACTIVE["api"],):                 # camera on/off
+                    res[CAMERA_ACTIVE["inApp"]] = _to01(val)
+                elif key in (DETECT_HUMAN_ACTIVE["api"],):     # human detection on/off
+                    res[DETECT_HUMAN_ACTIVE["inApp"]] = _to01(val)
+        return res
