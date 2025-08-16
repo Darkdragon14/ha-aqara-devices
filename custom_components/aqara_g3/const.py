@@ -7,6 +7,7 @@ PLATFORMS: list[str] = ["switch"]  # only services for this MVP
 REQUEST_PATH = "/app/v1.0/lumi/res/write"  # per AqaraPOST examples
 QUERY_PATH = "/app/v1.0/lumi/res/query"
 HISTORY_PATH = "/app/v1.0/lumi/res/history/log"
+DEVICES_PATH = "/app/v1.0/lumi/app/position/device/query"
 
 # Command
 CAMERA_ACTIVE =  {"api": "set_video", "inApp": "camera_active"}

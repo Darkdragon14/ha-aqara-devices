@@ -24,23 +24,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await api.login(entry.data["username"], entry.data["password"])
-        # Probe state once so we can fail fast with ConfigEntryNotReady
-        did = entry.data["did"]
-        await api.get_device_states(did)
+        cameras = await api.get_cameras()
+        if not cameras:
+            raise ConfigEntryNotReady("No Aqara G3 cameras found")
+        dids = [c["did"] for c in cameras]
+        for did in dids:
+            try:
+                await api.get_device_states(did)
+            except Exception as e:
+                raise ConfigEntryNotReady(f"Probe failed for {did}: {e}") from e
+
     except ConfigEntryNotReady:
         raise
     except Exception as e:
-        # If we cannot reach/query state now, tell HA to retry later
         raise ConfigEntryNotReady(f"Aqara setup not ready: {e}") from e
 
     hass.data[DOMAIN][entry.entry_id] = {
         "api": api,
-        "did": entry.data["did"],
+        "dids": dids,
+        "cameras": cameras, 
     }
 
-    # Forward platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     return True
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

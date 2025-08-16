@@ -10,7 +10,7 @@ from aiohttp import ClientSession
 from Crypto.Cipher import PKCS1_v1_5
 from Crypto.PublicKey import RSA
 
-from .const import AQARA_RSA_PUBKEY, AREAS, REQUEST_PATH, QUERY_PATH, HISTORY_PATH, CAMERA_ACTIVE, DETECT_HUMAN_ACTIVE
+from .const import AQARA_RSA_PUBKEY, AREAS, REQUEST_PATH, QUERY_PATH, HISTORY_PATH, DEVICES_PATH, CAMERA_ACTIVE, DETECT_HUMAN_ACTIVE
 
 class AqaraApi:
     """Tiny Aqara mobile API client for this MVP."""
@@ -156,3 +156,26 @@ class AqaraApi:
                 elif key in (DETECT_HUMAN_ACTIVE["api"],):     # human detection on/off
                     res[DETECT_HUMAN_ACTIVE["inApp"]] = _to01(val)
         return res
+    
+    async def get_devices(self) -> list[dict[str, Any]]:
+        """Fetch all devices from Aqara cloud."""
+        url = f"{self._server}{DEVICES_PATH}"
+        headers = {
+            "Sys-type": "1",
+            "AppId": "444c476ef7135e53330f46e7",
+            "UserId": self._userid,
+            "Token": self._token,
+            "Content-Type": "application/json; charset=utf-8",
+        }
+
+        async with self._session.get(url, headers=self._rest_headers(), json={}) as resp:
+            if resp.status != 200:
+                raise Exception(f"Failed to fetch devices: {resp.status}")
+            body = await resp.json()
+
+        return body.get("result", {}).get("devices", [])
+
+    async def get_cameras(self) -> list[dict[str, Any]]:
+        """Filter only Aqara G3 cameras."""
+        devices = await self.get_devices()
+        return [d for d in devices if d.get("model") == "lumi.camera.gwpgl1"]

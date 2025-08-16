@@ -14,9 +14,10 @@ class AqaraG3VideoSwitch(CoordinatorEntity, SwitchEntity):
     _attr_name = "Video"
     _attr_icon = "mdi:video"
 
-    def __init__(self, coordinator: DataUpdateCoordinator, did: str, api):
+    def __init__(self, coordinator: DataUpdateCoordinator, did: str, device_name: str, api):
         super().__init__(coordinator)
         self._did = did
+        self._device_name = device_name
         self._api = api
         self._attr_unique_id = f"{did}_{CAMERA_ACTIVE['inApp']}"
 
@@ -26,7 +27,7 @@ class AqaraG3VideoSwitch(CoordinatorEntity, SwitchEntity):
             "identifiers": {(DOMAIN, self._did)},
             "manufacturer": "Aqara",
             "model": "Camera Hub G3",
-            "name": f"Aqara G3 ({self._did})",
+            "name": f"Aqara G3 ({self._device_name})",
         }
 
     @property

@@ -19,28 +19,33 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     data = hass.data[DOMAIN][entry.entry_id]
     api: AqaraApi = data["api"]
-    did = data["did"]
+    dids: list[str] = data["dids"]
+    cameras: list[dict] = data["cameras"]
 
-    async def _async_update_all_data():
-        try:
-            # Returns {"camera_active": 0/1, "detect_human_active": 0/1}
-            return await api.get_device_states(did)
-        except Exception as e:
-            raise UpdateFailed(str(e)) from e
+    entities = []
 
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="aqara_g3__states",
-        update_method=_async_update_all_data,
-        update_interval=timedelta(seconds=1),
-    )
+    for cam in cameras:
+        did = cam["did"]
+        name = cam["deviceName"]
 
-    videoSwitch = AqaraG3VideoSwitch(coordinator, did, api)
-    humanSwitch = AqaraG3DetectHumanSwitch(coordinator, did, api)
+        async def _async_update_video_data(did_local=did):
+            try:
+                return await api.get_device_states(did_local)
+            except Exception as e:
+                raise UpdateFailed(str(e)) from e
 
-    # Do NOT call async_config_entry_first_refresh() here to avoid bubbling setup errors
-    async_add_entities([videoSwitch, humanSwitch], True)
+        coordinator = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}-camera-active-{did}",
+            update_method=_async_update_video_data,
+            update_interval=timedelta(seconds=1),
+        )
 
-    # Kick off the first refresh in the background; errors will be logged by the coordinator
-    hass.async_create_task(coordinator.async_request_refresh())
+        videoSwitch = AqaraG3VideoSwitch(coordinator, did, name, api)
+        humanSwitch = AqaraG3DetectHumanSwitch(coordinator, did, name, api)
+
+        entities.append(videoSwitch)
+        entities.append(humanSwitch)
+
+    async_add_entities(entities)

@@ -11,7 +11,6 @@ DATA_SCHEMA = vol.Schema({
     vol.Required("username"): str,
     vol.Required("password"): str,
     vol.Required("area", default="EU"): vol.In(["EU","US","CN","OTHER"]),
-    vol.Required("did"): str,
 })
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -21,7 +20,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             return self.async_create_entry(
-                title=f"Aqara G3 ({user_input['did']})",
+                title=f"Aqara G3",
                 data=user_input,
             )
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA, errors=errors)

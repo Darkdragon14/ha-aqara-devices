@@ -9,13 +9,6 @@
                     "password": "Mot de passe",
                     "region": "Région"
                 }
-            },
-            "select_device": {
-                "title": "Sélectionner un appareil",
-                "description": "Choisissez l'appareil FP2 à ajouter.",
-                "data": {
-                    "did": "Appareil"
-                }
             }
         },
         "error": {
