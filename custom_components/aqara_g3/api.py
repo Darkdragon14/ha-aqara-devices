@@ -10,7 +10,7 @@ from aiohttp import ClientSession
 from Crypto.Cipher import PKCS1_v1_5
 from Crypto.PublicKey import RSA
 
-from .const import AQARA_RSA_PUBKEY, AREAS, REQUEST_PATH, QUERY_PATH, HISTORY_PATH, CAMERA_ACTIVE
+from .const import AQARA_RSA_PUBKEY, AREAS, REQUEST_PATH, QUERY_PATH, HISTORY_PATH, CAMERA_ACTIVE, DETECT_HUMAN_ACTIVE
 
 class AqaraApi:
     """Tiny Aqara mobile API client for this MVP."""
@@ -111,6 +111,12 @@ class AqaraApi:
             return await resp.json(content_type=None)
 
     async def res_query(self, payload: dict) -> Any:
+        url = f"{self._server}{QUERY_PATH}"
+        body = json.dumps(payload)
+        async with self._session.post(url, data=body, headers=self._rest_headers()) as resp:
+            return await resp.json(content_type=None)
+
+    async def res_history(self, payload: dict) -> Any:
         url = f"{self._server}{HISTORY_PATH}"
         body = json.dumps(payload)
         async with self._session.post(url, data=body, headers=self._rest_headers()) as resp:
@@ -124,7 +130,7 @@ class AqaraApi:
             ],
             "subjectId": did
         }
-        data = await self.res_query(payloads)
+        data = await self.res_history(payloads)
 
         if str(data.get("code")) == "0":
             result = data.get("result")
@@ -147,3 +153,24 @@ class AqaraApi:
                         except Exception:
                             return 1 if str(v).lower() in ("1", "on", "true") else 0
         raise RuntimeError(f"Failed to query set_video: {data}")
+    
+    async def get_detect_human_active(self, did: str) -> int:
+        """
+        Return 0/1 for detect human mode using res/query.
+        """
+
+        # payload = {"subjectId": did, "resourceIds": [DETECT_HUMAN_ACTIVE["read"]]}
+        payload = {"data": [{"options":["humans_track_enable"], "subjectId": did}]}
+        data = await self.res_query(payload)
+
+        if str(data.get("code")) == "0":
+            result = data.get("result")
+            if isinstance(result, list) and len(result) > 0:
+                v = result[0].get("value")
+                try:
+                    return 1 if int(v) == 1 else 0
+                except Exception:
+                    return 1 if str(v).lower() in ("1", "on", "true") else 0
+            else:
+                return 0
+        raise RuntimeError(f"Failed to query detect_human: {data}")

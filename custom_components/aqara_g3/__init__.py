@@ -27,6 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Probe state once so we can fail fast with ConfigEntryNotReady
         did = entry.data["did"]
         await api.get_camera_active(did)
+        await api.get_detect_human_active(did)
     except ConfigEntryNotReady:
         raise
     except Exception as e:

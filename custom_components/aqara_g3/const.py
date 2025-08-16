@@ -10,6 +10,7 @@ HISTORY_PATH = "/app/v1.0/lumi/res/history/log"
 
 # Command
 CAMERA_ACTIVE = {"write": "set_video", "read": "14.74.85"}
+DETECT_HUMAN_ACTIVE = {"write": "humans_track_enable", "read": "14.77.85"}
 
 # Minimal area map (extend later as needed)
 AREAS = {
