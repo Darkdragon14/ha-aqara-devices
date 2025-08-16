@@ -1,7 +1,7 @@
 {
   "domain": "ha-aqara-devices",
-  "name": "Aqara Camera Hub G3 (Minimal)",
-  "version": "1.0.0",
+  "name": "Aqara Devices (Hub G3 and FP2)",
+  "version": "0.1.0",
   "documentation": "https://github.com/ton-repo/aqara_g3_integration",
   "requirements": [
     "pycryptodome>=3.20.0"
