@@ -4,13 +4,14 @@ import hashlib
 import json
 import time
 import uuid
-from typing import Any
+from typing import Dict, Any, Iterable
 
 from aiohttp import ClientSession
 from Crypto.Cipher import PKCS1_v1_5
 from Crypto.PublicKey import RSA
 
-from .const import AQARA_RSA_PUBKEY, AREAS, REQUEST_PATH, QUERY_PATH, HISTORY_PATH, DEVICES_PATH, CAMERA_ACTIVE, DETECT_HUMAN_ACTIVE
+from .const import AQARA_RSA_PUBKEY, AREAS, REQUEST_PATH, QUERY_PATH, HISTORY_PATH, DEVICES_PATH
+from .switches import ALL_SWITCHES_DEF
 
 class AqaraApi:
     """Tiny Aqara mobile API client for this MVP."""
@@ -122,19 +123,33 @@ class AqaraApi:
         async with self._session.post(url, data=body, headers=self._rest_headers()) as resp:
             return await resp.json(content_type=None)
 
-    async def get_device_states(self, did: str) -> dict[str, int]:
+    async def get_device_states(
+        self,
+        did: str,
+        switch_defs: Iterable[Dict[str, Any]] = ALL_SWITCHES_DEF,
+    ) -> Dict[str, int]:
         """
-        Return both camera_active and detect_human_active in one call.
-        Normalizes truthy values to 0/1.
+        Query multiple boolean-like attributes in one call, based on switch defs.
+        Returns a dict { <inApp>: 0|1, ... } for all provided switch_defs.
         """
+
+        # Map api -> inApp for fast reverse lookup
+        api_to_inapp = {spec["api"]: spec["inApp"] for spec in switch_defs}
+
+        # Initialize result with 0 for every inApp (so missing attrs default to 0)
+        result_map: Dict[str, int] = {spec["inApp"]: 0 for spec in switch_defs}
+
+        # Build options list from all APIs
+        options = list(api_to_inapp.keys())
+
         payload = {
             "data": [{
-                "options": [DETECT_HUMAN_ACTIVE["api"], CAMERA_ACTIVE["api"]],
+                "options": options,
                 "subjectId": did,
             }]
         }
-        data = await self.res_query(payload)
 
+        data = await self.res_query(payload)
         if str(data.get("code")) != "0":
             raise RuntimeError(f"Failed to query device states: {data}")
 
@@ -142,20 +157,30 @@ class AqaraApi:
             try:
                 return 1 if int(v) == 1 else 0
             except Exception:
-                return 1 if str(v).lower() in ("1", "on", "true") else 0
+                return 1 if str(v).strip().lower() in ("1", "on", "true", "yes") else 0
 
-        res = {CAMERA_ACTIVE["inApp"]: 0, DETECT_HUMAN_ACTIVE["inApp"]: 0}
-        result = data.get("result", [])
+        raw_result = data.get("result", [])
 
-        if isinstance(result, list):
-            for item in result:
-                key = item.get("attr")
-                val = item.get("value")
-                if key in (CAMERA_ACTIVE["api"],):                 # camera on/off
-                    res[CAMERA_ACTIVE["inApp"]] = _to01(val)
-                elif key in (DETECT_HUMAN_ACTIVE["api"],):     # human detection on/off
-                    res[DETECT_HUMAN_ACTIVE["inApp"]] = _to01(val)
-        return res
+        # Some gateways return a flat list; others may wrap deeper—be tolerant.
+        items = []
+        if isinstance(raw_result, list):
+            items = raw_result
+        elif isinstance(raw_result, dict):
+            # Try common containers
+            for k in ("attributes", "data", "list", "items"):
+                v = raw_result.get(k)
+                if isinstance(v, list):
+                    items = v
+                    break
+
+        for item in items:
+            key = item.get("attr")
+            val = item.get("value")
+            if key in api_to_inapp:
+                in_app = api_to_inapp[key]
+                result_map[in_app] = _to01(val)
+
+        return result_map
     
     async def get_devices(self) -> list[dict[str, Any]]:
         """Fetch all devices from Aqara cloud."""

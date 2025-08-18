@@ -9,10 +9,6 @@ QUERY_PATH = "/app/v1.0/lumi/res/query"
 HISTORY_PATH = "/app/v1.0/lumi/res/history/log"
 DEVICES_PATH = "/app/v1.0/lumi/app/position/device/query"
 
-# Command
-CAMERA_ACTIVE =  {"api": "set_video", "inApp": "camera_active"}
-DETECT_HUMAN_ACTIVE = {"api": "humans_track_enable", "inApp": "detect_human_active"}
-
 # Minimal area map (extend later as needed)
 AREAS = {
     "EU": {"server": "https://rpc-ger.aqara.com", "appid": "444c476ef7135e53330f46e7", "appkey": "NULL"},
