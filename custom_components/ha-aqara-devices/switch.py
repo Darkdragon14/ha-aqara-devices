@@ -86,6 +86,8 @@ class AqaraG3Switch(CoordinatorEntity, SwitchEntity):
             "manufacturer": "Aqara",
             "model": "Camera Hub G3",
             "name": f"Aqara G3 ({self._device_name})",
+            "model_id": self._did,
+            "model": "lumi.camera.gwpgl1",
         }
 
     @staticmethod
