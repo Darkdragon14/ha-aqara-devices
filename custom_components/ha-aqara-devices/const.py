@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 DOMAIN = "ha-aqara-devices"
-PLATFORMS: list[str] = ["switch"]  # only services for this MVP
+PLATFORMS: list[str] = ["switch", "button"]  # only services for this MVP
 
 # Endpoint used for attribute write/query
 REQUEST_PATH = "/app/v1.0/lumi/res/write"  # per AqaraPOST examples
 QUERY_PATH = "/app/v1.0/lumi/res/query"
 HISTORY_PATH = "/app/v1.0/lumi/res/history/log"
 DEVICES_PATH = "/app/v1.0/lumi/app/position/device/query"
+OPERATE_PATH = "/app/v1.0/lumi/devex/camera/operate"
 
 # Minimal area map (extend later as needed)
 AREAS = {

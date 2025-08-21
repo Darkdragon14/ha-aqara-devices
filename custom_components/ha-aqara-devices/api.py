@@ -10,7 +10,7 @@ from aiohttp import ClientSession
 from Crypto.Cipher import PKCS1_v1_5
 from Crypto.PublicKey import RSA
 
-from .const import AQARA_RSA_PUBKEY, AREAS, REQUEST_PATH, QUERY_PATH, HISTORY_PATH, DEVICES_PATH
+from .const import AQARA_RSA_PUBKEY, AREAS, REQUEST_PATH, QUERY_PATH, HISTORY_PATH, DEVICES_PATH, OPERATE_PATH
 from .switches import ALL_SWITCHES_DEF
 
 class AqaraApi:
@@ -204,3 +204,17 @@ class AqaraApi:
         """Filter only Aqara G3 cameras."""
         devices = await self.get_devices()
         return [d for d in devices if d.get("model") == "lumi.camera.gwpgl1"]
+    
+
+    async def camera_operate(self, did: str, action: str) -> Dict[str, Any]:
+        payload = {
+            "method": "ctrl_ptz",
+            "params": {"action": action},
+            "did": did,
+        }
+        url = f"{self._server}{OPERATE_PATH}"
+        body = json.dumps(payload)
+        async with self._session.post(url, data=body, headers=self._rest_headers()) as resp:
+            if resp.status != 200:
+                raise Exception(f"Failed to fetch devices: {resp.status}")
+            return True
