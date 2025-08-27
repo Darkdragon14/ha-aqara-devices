@@ -1,6 +1,6 @@
 {
   "name": "Aqara Devices",
-  "domains": ["switch", "button"],
+  "domains": ["switch", "button", "binary_sensor"],
   "homeassistant": "2024.6.0",
   "render_readme": true
 }

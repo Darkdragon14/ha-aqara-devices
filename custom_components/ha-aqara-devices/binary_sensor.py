@@ -5,7 +5,10 @@ from typing import Dict, Any
 import logging
 
 from homeassistant.core import HomeAssistant
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    BinarySensorDeviceClass,
+)
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -14,7 +17,7 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.config_entries import ConfigEntry
 
 from .const import DOMAIN
-from .switches import ALL_SWITCHES_DEF
+from .binary_sensors import ALL_BINARY_SENSORS_DEF
 from .api import AqaraApi
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,26 +42,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         coordinator = DataUpdateCoordinator(
             hass,
             _LOGGER,
-            name=f"{DOMAIN}-camera-active-{did}",
+            name=f"{DOMAIN}-camera-binary_sensor-{did}",
             update_method=_async_update_video_data,
             update_interval=timedelta(seconds=1),
         )
 
 
-        for switch_def in ALL_SWITCHES_DEF:
-            switch = AqaraG3Switch(
+        for binary_sensor_def in ALL_BINARY_SENSORS_DEF:
+            switch = AqaraG3BinarySensor(
                 coordinator,
                 did,
                 name,
                 api,
-                switch_def,
+                binary_sensor_def,
             )
             entities.append(switch)
 
     async_add_entities(entities)
 
-class AqaraG3Switch(CoordinatorEntity, SwitchEntity):
+class AqaraG3BinarySensor(CoordinatorEntity, BinarySensorEntity):
     _attr_has_entity_name = True
+    _attr_device_class = BinarySensorDeviceClass.POWER
 
     def __init__(
         self,
@@ -109,24 +113,3 @@ class AqaraG3Switch(CoordinatorEntity, SwitchEntity):
         raw = data.get(self._spec["inApp"])
         return self._truthy(raw)
 
-    async def async_turn_on(self, **kwargs):
-        payload = {
-            "data": deepcopy(self._spec["on_data"]),
-            "subjectId": self._did,
-        }
-
-        resp = await self._api.res_write(payload)
-        if str(resp.get("code")) != "0":
-            raise Exception(f"Aqara API error: {resp}")
-        await self.coordinator.async_request_refresh()
-
-    async def async_turn_off(self, **kwargs):
-        payload = {
-            "data": deepcopy(self._spec["off_data"]),
-            "subjectId": self._did,
-        }
-        
-        resp = await self._api.res_write(payload)
-        if str(resp.get("code")) != "0":
-            raise Exception(f"Aqara API error: {resp}")
-        await self.coordinator.async_request_refresh()

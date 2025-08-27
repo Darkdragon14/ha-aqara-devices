@@ -12,6 +12,9 @@ from Crypto.PublicKey import RSA
 
 from .const import AQARA_RSA_PUBKEY, AREAS, REQUEST_PATH, QUERY_PATH, HISTORY_PATH, DEVICES_PATH, OPERATE_PATH
 from .switches import ALL_SWITCHES_DEF
+from .binary_sensors import ALL_BINARY_SENSORS_DEF
+
+ALL_DEF = ALL_BINARY_SENSORS_DEF + ALL_SWITCHES_DEF
 
 class AqaraApi:
     """Tiny Aqara mobile API client for this MVP."""
@@ -126,7 +129,7 @@ class AqaraApi:
     async def get_device_states(
         self,
         did: str,
-        switch_defs: Iterable[Dict[str, Any]] = ALL_SWITCHES_DEF,
+        switch_defs: Iterable[Dict[str, Any]] = ALL_DEF,
     ) -> Dict[str, int]:
         """
         Query multiple boolean-like attributes in one call, based on switch defs.

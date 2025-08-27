@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Final
+import asyncio
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
@@ -19,7 +20,10 @@ ICONS: dict[str, str] = {
     "down": "mdi:arrow-down-bold",
     "left": "mdi:arrow-left-bold",
     "right": "mdi:arrow-right-bold",
+    "alarm_status": "mdi:bell-alert",
 }
+
+RING_ALARM_BELL =  "alarm_status"
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     data = hass.data[DOMAIN][entry.entry_id]
@@ -30,6 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     for cam in cameras:
         did = cam["did"]
         name = cam["deviceName"]
+        entities.append(AqaraG3RingAlarmBell(api, did, name))
         for direction in ("up", "down", "left", "right"):
             entities.append(AqaraG3PTZButton(api, did, name, direction))
 
@@ -63,3 +68,42 @@ class AqaraG3PTZButton(ButtonEntity):
         action = PTZ_ACTIONS[self._direction]
         await self._api.camera_operate(self._did, action)
         await self._api.camera_operate(self._did, "stop")
+
+class AqaraG3RingAlarmBell(ButtonEntity):
+    _attr_has_entity_name = True
+
+    def __init__(self, api: AqaraApi, did: str, device_name: str) -> None:
+        self._api = api
+        self._did = did
+        self._attr_name = "Ring Alarm Bell"
+        self._attr_icon = ICONS[RING_ALARM_BELL]
+        self._attr_unique_id = f"{did}_ring_alarm_bell"
+        self._device_name = device_name
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, self._did)},
+            "manufacturer": "Aqara",
+            "model": "Camera Hub G3",
+            "name": f"Aqara G3 ({self._device_name})",
+            "model_id": self._did,
+            "model": "lumi.camera.gwpgl1",
+        }
+
+    async def async_press(self) -> None:
+        payload = {
+            "data": {
+                RING_ALARM_BELL: 1
+            },
+            "subjectId": self._did,
+        }
+        await self._api.res_write(payload)
+        await asyncio.sleep(10)
+        payload = {
+            "data": {
+                RING_ALARM_BELL: 0
+            },
+            "subjectId": self._did,
+        }
+        await self._api.res_write(payload)
