@@ -13,8 +13,9 @@ from Crypto.PublicKey import RSA
 from .const import AQARA_RSA_PUBKEY, AREAS, REQUEST_PATH, QUERY_PATH, HISTORY_PATH, DEVICES_PATH, OPERATE_PATH
 from .switches import ALL_SWITCHES_DEF
 from .binary_sensors import ALL_BINARY_SENSORS_DEF
+from .numbers import ALL_NUMBERS_DEF
 
-ALL_DEF = ALL_BINARY_SENSORS_DEF + ALL_SWITCHES_DEF
+ALL_DEF = ALL_BINARY_SENSORS_DEF + ALL_SWITCHES_DEF + ALL_NUMBERS_DEF
 
 class AqaraApi:
     """Tiny Aqara mobile API client for this MVP."""
@@ -181,7 +182,10 @@ class AqaraApi:
             val = item.get("value")
             if key in api_to_inapp:
                 in_app = api_to_inapp[key]
-                result_map[in_app] = _to01(val)
+                if in_app == "volume":
+                    result_map[in_app] = int(val)
+                else:
+                    result_map[in_app] = _to01(val)
 
         return result_map
     

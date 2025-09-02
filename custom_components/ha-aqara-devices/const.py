@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 DOMAIN = "ha-aqara-devices"
-PLATFORMS: list[str] = ["switch", "button", "binary_sensor"]  # only services for this MVP
+PLATFORMS: list[str] = ["switch", "button", "binary_sensor", "number"]  # only services for this MVP
 
 # Endpoint used for attribute write/query
 REQUEST_PATH = "/app/v1.0/lumi/res/write"  # per AqaraPOST examples
