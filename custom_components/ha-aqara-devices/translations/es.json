@@ -1,0 +1,32 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Aqara FP2",
+                "description": "Configura tu integración de Aqara FP2.",
+                "data": {
+                    "email": "Correo electrónico",
+                    "password": "Contraseña",
+                    "region": "Región"
+                }
+            }
+        },
+        "error": {
+            "auth": "Falló la autenticación, verifica tus credenciales.",
+            "no_devices_found": "No se encontraron dispositivos FP2."
+        },
+        "abort": {
+            "already_configured": "Este dispositivo ya está configurado."
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "night_vision": { "name": "Visión nocturna" },
+            "gesture_v_sign": { "name": "Gesto signo V" },
+            "gesture_four": { "name": "Gesto cuatro" },
+            "gesture_high_five": { "name": "Gesto choca esos cinco" },
+            "gesture_finger_gun": { "name": "Gesto pistola con los dedos" },
+            "gesture_ok": { "name": "Gesto OK" }
+        }
+    }
+}

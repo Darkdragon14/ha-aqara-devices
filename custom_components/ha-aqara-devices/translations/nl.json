@@ -1,0 +1,32 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Aqara FP2",
+                "description": "Stel je Aqara FP2-integratie in.",
+                "data": {
+                    "email": "E-mail",
+                    "password": "Wachtwoord",
+                    "region": "Regio"
+                }
+            }
+        },
+        "error": {
+            "auth": "Authenticatie mislukt, controleer je inloggegevens.",
+            "no_devices_found": "Er zijn geen FP2-apparaten gevonden."
+        },
+        "abort": {
+            "already_configured": "Dit apparaat is al geconfigureerd."
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "night_vision": { "name": "Nachtzicht" },
+            "gesture_v_sign": { "name": "Gebaar V-teken" },
+            "gesture_four": { "name": "Gebaar vier" },
+            "gesture_high_five": { "name": "Gebaar high five" },
+            "gesture_finger_gun": { "name": "Gebaar vingerpistool" },
+            "gesture_ok": { "name": "Gebaar OK" }
+        }
+    }
+}

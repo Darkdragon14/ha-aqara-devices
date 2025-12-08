@@ -1,0 +1,32 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Aqara FP2",
+                "description": "Állítsd be az Aqara FP2 integrációdat.",
+                "data": {
+                    "email": "E-mail",
+                    "password": "Jelszó",
+                    "region": "Régió"
+                }
+            }
+        },
+        "error": {
+            "auth": "A hitelesítés sikertelen, ellenőrizd a hitelesítő adataidat.",
+            "no_devices_found": "Nem található FP2 eszköz."
+        },
+        "abort": {
+            "already_configured": "Ez az eszköz már konfigurálva van."
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "night_vision": { "name": "Éjjellátás" },
+            "gesture_v_sign": { "name": "V jel kézmozdulat" },
+            "gesture_four": { "name": "Négyes kézmozdulat" },
+            "gesture_high_five": { "name": "Pacsi kézmozdulat" },
+            "gesture_finger_gun": { "name": "Pisztoly kézmozdulat" },
+            "gesture_ok": { "name": "OK kézmozdulat" }
+        }
+    }
+}
