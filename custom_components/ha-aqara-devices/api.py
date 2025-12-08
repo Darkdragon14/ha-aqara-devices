@@ -2,6 +2,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import logging
 import time
 import uuid
 from typing import Dict, Any, Iterable
@@ -16,6 +17,7 @@ from .binary_sensors import ALL_BINARY_SENSORS_DEF
 from .numbers import ALL_NUMBERS_DEF
 
 ALL_DEF = ALL_BINARY_SENSORS_DEF + ALL_SWITCHES_DEF + ALL_NUMBERS_DEF
+_LOGGER = logging.getLogger(__name__)
 
 class AqaraApi:
     """Tiny Aqara mobile API client for this MVP."""
@@ -137,57 +139,120 @@ class AqaraApi:
         Returns a dict { <inApp>: 0|1, ... } for all provided switch_defs.
         """
 
-        # Map api -> inApp for fast reverse lookup
-        api_to_inapp = {spec["api"]: spec["inApp"] for spec in switch_defs}
+        # Separate standard attributes from history-derived ones
+        standard_defs = [spec for spec in switch_defs if spec.get("api")]
+        history_defs = [spec for spec in switch_defs if spec.get("history_resource")]
 
         # Initialize result with 0 for every inApp (so missing attrs default to 0)
-        result_map: Dict[str, int] = {spec["inApp"]: 0 for spec in switch_defs}
+        result_map: Dict[str, int | float] = {spec["inApp"]: 0 for spec in switch_defs}
 
-        # Build options list from all APIs
-        options = list(api_to_inapp.keys())
+        if standard_defs:
+            # Map api -> inApp for fast reverse lookup
+            api_to_inapp = {spec["api"]: spec["inApp"] for spec in standard_defs}
 
-        payload = {
-            "data": [{
-                "options": options,
-                "subjectId": did,
-            }]
-        }
+            # Build options list from all APIs
+            options = list(api_to_inapp.keys())
 
-        data = await self.res_query(payload)
-        if str(data.get("code")) != "0":
-            raise RuntimeError(f"Failed to query device states: {data}")
+            payload = {
+                "data": [{
+                    "options": options,
+                    "subjectId": did,
+                }]
+            }
 
-        def _to01(v) -> int:
-            try:
-                return 1 if int(v) == 1 else 0
-            except Exception:
-                return 1 if str(v).strip().lower() in ("1", "on", "true", "yes") else 0
+            data = await self.res_query(payload)
+            if str(data.get("code")) != "0":
+                raise RuntimeError(f"Failed to query device states: {data}")
 
-        raw_result = data.get("result", [])
+            def _to01(v) -> int:
+                try:
+                    return 1 if int(v) == 1 else 0
+                except Exception:
+                    return 1 if str(v).strip().lower() in ("1", "on", "true", "yes") else 0
 
-        # Some gateways return a flat list; others may wrap deeper—be tolerant.
-        items = []
-        if isinstance(raw_result, list):
-            items = raw_result
-        elif isinstance(raw_result, dict):
-            # Try common containers
-            for k in ("attributes", "data", "list", "items"):
-                v = raw_result.get(k)
-                if isinstance(v, list):
-                    items = v
-                    break
+            raw_result = data.get("result", [])
 
-        for item in items:
-            key = item.get("attr")
-            val = item.get("value")
-            if key in api_to_inapp:
-                in_app = api_to_inapp[key]
-                if in_app == "volume":
-                    result_map[in_app] = int(val)
-                else:
-                    result_map[in_app] = _to01(val)
+            # Some gateways return a flat list; others may wrap deeper—be tolerant.
+            items = []
+            if isinstance(raw_result, list):
+                items = raw_result
+            elif isinstance(raw_result, dict):
+                # Try common containers
+                for k in ("attributes", "data", "list", "items"):
+                    v = raw_result.get(k)
+                    if isinstance(v, list):
+                        items = v
+                        break
+
+            for item in items:
+                key = item.get("attr")
+                val = item.get("value")
+                if key in api_to_inapp:
+                    in_app = api_to_inapp[key]
+                    if in_app == "volume":
+                        result_map[in_app] = int(val)
+                    else:
+                        result_map[in_app] = _to01(val)
+
+        if history_defs:
+            result_map.update(await self._history_states(did, history_defs))
 
         return result_map
+
+    async def _history_states(self, did: str, specs: Iterable[Dict[str, Any]]) -> Dict[str, float]:
+        spec_list = list(specs)
+        history_map: Dict[str, float] = {}
+        resource_ids = list({spec["history_resource"] for spec in spec_list})
+        max_size = max((spec.get("history_size", 10) for spec in spec_list), default=10)
+        payload = {
+            "resourceIds": resource_ids,
+            "scanId": "",
+            "size": max_size,
+            "startTime": 1514736000000,
+            "subjectId": did,
+        }
+
+        data = await self.res_history(payload)
+        if str(data.get("code")) != "0":
+            raise RuntimeError(f"Failed to query device history: {data}")
+
+        raw_result = data.get("result") or {}
+        events = []
+        if isinstance(raw_result, list):
+            events = raw_result
+        elif isinstance(raw_result, dict):
+            for key in ("data", "list", "items"):
+                maybe = raw_result.get(key)
+                if isinstance(maybe, list):
+                    events = maybe
+                    break
+
+        grouped: Dict[str, list[dict]] = {}
+        for event in events or []:
+            rid = str(event.get("resourceId") or event.get("attr") or "")
+            if not rid:
+                continue
+            grouped.setdefault(rid, []).append(event)
+
+        for spec in spec_list:
+            rid = spec["history_resource"]
+            desired = str(spec.get("history_value"))
+            for event in grouped.get(rid, []):
+                value = str(event.get("value"))
+                if value != desired:
+                    continue
+                ts = event.get("timeStamp") or event.get("timestamp") or event.get("time")
+                try:
+                    ts_val = float(ts)
+                except (TypeError, ValueError):
+                    _LOGGER.debug("Could not parse timestamp for %s: %s", spec["inApp"], event)
+                    break
+                if ts_val > 1_000_000_000_000:
+                    ts_val = ts_val / 1000.0
+                history_map[spec["inApp"]] = ts_val
+                break
+
+        return history_map
     
     async def get_devices(self) -> list[dict[str, Any]]:
         """Fetch all devices from Aqara cloud."""

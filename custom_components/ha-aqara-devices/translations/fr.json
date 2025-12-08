@@ -18,5 +18,15 @@
         "abort": {
             "already_configured": "Cet appareil est déjà configuré."
         }
+    },
+    "entity": {
+        "binary_sensor": {
+            "night_vision": { "name": "Vision nocturne" },
+            "gesture_v_sign": { "name": "Geste signe V" },
+            "gesture_four": { "name": "Geste quatre" },
+            "gesture_high_five": { "name": "Geste tape m'en cinq" },
+            "gesture_finger_gun": { "name": "Geste pistolet avec les doigts" },
+            "gesture_ok": { "name": "Geste OK" }
+        }
     }
 }

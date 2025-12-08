@@ -1,8 +1,8 @@
 from __future__ import annotations
 from datetime import timedelta
-from copy import deepcopy
 from typing import Dict, Any
 import logging
+import time
 
 from homeassistant.core import HomeAssistant
 from homeassistant.components.binary_sensor import (
@@ -62,7 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
 class AqaraG3BinarySensor(CoordinatorEntity, BinarySensorEntity):
     _attr_has_entity_name = True
-    _attr_device_class = BinarySensorDeviceClass.POWER
 
     def __init__(
         self,
@@ -81,6 +80,20 @@ class AqaraG3BinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._attr_name = spec["name"]
         self._attr_icon = spec["icon"]
         self._attr_unique_id = f"{did}_{spec['inApp']}"
+        self._attr_translation_key = spec.get("translation_key")
+        self._value_type = spec.get("value_type")
+        self._hold_seconds = spec.get("hold_seconds", 5)
+
+        device_class = spec.get("device_class")
+        if isinstance(device_class, BinarySensorDeviceClass):
+            self._attr_device_class = device_class
+        elif isinstance(device_class, str):
+            try:
+                self._attr_device_class = BinarySensorDeviceClass(device_class)
+            except ValueError:
+                self._attr_device_class = BinarySensorDeviceClass.POWER
+        else:
+            self._attr_device_class = BinarySensorDeviceClass.POWER
 
     @property
     def device_info(self):
@@ -111,5 +124,17 @@ class AqaraG3BinarySensor(CoordinatorEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         data = self.coordinator.data or {}
         raw = data.get(self._spec["inApp"])
+        if self._value_type == "timestamp":
+            if not raw:
+                return False
+            try:
+                ts = float(raw)
+            except (TypeError, ValueError):
+                return False
+            if ts > 1_000_000_000_000:  # milliseconds
+                ts /= 1000.0
+            now = time.time()
+            if ts <= 0 or ts > now + 5:
+                return False
+            return (now - ts) <= max(self._hold_seconds, 1)
         return self._truthy(raw)
-
