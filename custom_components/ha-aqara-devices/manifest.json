@@ -1,5 +1,5 @@
 {
-  "domain": "ha-aqara-devices",
+  "domain": "ha_aqara_devices",
   "name": "Aqara Devices (Hub G3 and FP2)",
   "codeowners": ["@Darkdragon14"],
   "config_flow": true,
