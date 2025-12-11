@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-DOMAIN = "ha-aqara-devices"
+DOMAIN = "ha_aqara_devices"
 PLATFORMS: list[str] = ["switch", "button", "binary_sensor", "number"]  # only services for this MVP
 
 # Endpoint used for attribute write/query

@@ -22,7 +22,7 @@ To install this integration via [HACS](https://hacs.xyz/):
 
 ### Manual installation (alternative)
 
-1. Copy the `custom_components/ha-aqara-devices` directory into your Home Assistant `custom_components` folder.
+1. Copy the `custom_components/ha_aqara_devices` directory into your Home Assistant `custom_components` folder.
 2. Restart Home Assistant.
 3. Add the **Aqara Devices** integration from **Settings → Devices & Services**.
 
@@ -58,4 +58,4 @@ Each G3 discovered in your Aqara account gets its own set of entities with devic
 
 ## Missing translation
 
-Want to see your language? Please open an issue or submit a PR with new entries under `custom_components/ha-aqara-devices/translations/`. I’ll happily merge or help provide the translations. :smile:
+Want to see your language? Please open an issue or submit a PR with new entries under `custom_components/ha_aqara_devices/translations/`. I’ll happily merge or help provide the translations. :smile:
