@@ -2,7 +2,7 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 [![Hassfest](https://github.com/Darkdragon14/ha-aqara-devices/actions/workflows/hassfest.yml/badge.svg)](https://github.com/Darkdragon14/ha-aqara-devices/actions/workflows/hassfest.yml)
 [![HACS Action](https://github.com/Darkdragon14/ha-aqara-devices/actions/workflows/hacs_action.yml/badge.svg)](https://github.com/Darkdragon14/ha-aqara-devices/actions/workflows/hacs_action.yml)
-[![release](https://img.shields.io/github/v/release/Darkdragon14/aqara-fp2-integration.svg)](https://github.com/Darkdragon14/ha-aqara-devices/releases)
+[![release](https://img.shields.io/github/v/release/Darkdragon14/ha-aqara-devices.svg)](https://github.com/Darkdragon14/ha-aqara-devices/releases)
 
 `Aqara Devices (Hub G3 and FP2)` exposes the cloud features of the Aqara Camera Hub G3 (and planned FP2 sensors) directly inside Home Assistant. The integration keeps critical toggles, gesture events, PTZ controls, and media functions in sync so that automations can react instantly to what the camera is doing without touching the Aqara mobile app.
 
