@@ -16,9 +16,10 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.config_entries import ConfigEntry
 
-from .const import DOMAIN
-from .binary_sensors import ALL_BINARY_SENSORS_DEF
+from .const import DOMAIN, G3_MODEL, G3_DEVICE_LABEL, M3_DEVICE_LABEL
+from .binary_sensors import ALL_BINARY_SENSORS_DEF, M3_BINARY_SENSORS_DEF
 from .api import AqaraApi
+from .device_info import build_device_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,16 +27,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     data = hass.data[DOMAIN][entry.entry_id]
     api: AqaraApi = data["api"]
     cameras: list[dict] = data["cameras"]
+    hubs_m3: list[dict] = data.get("hubs_m3", [])
 
     entities = []
 
     for cam in cameras:
         did = cam["did"]
         name = cam["deviceName"]
+        model = cam.get("model") or G3_MODEL
 
         async def _async_update_video_data(did_local=did):
             try:
-                return await api.get_device_states(did_local)
+                return await api.get_device_states(did_local, ALL_BINARY_SENSORS_DEF)
             except Exception as e:
                 raise UpdateFailed(str(e)) from e
 
@@ -49,18 +52,51 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
 
         for binary_sensor_def in ALL_BINARY_SENSORS_DEF:
-            switch = AqaraG3BinarySensor(
+            switch = AqaraBinarySensor(
                 coordinator,
                 did,
                 name,
                 api,
                 binary_sensor_def,
+                model,
+                G3_DEVICE_LABEL,
+            )
+            entities.append(switch)
+
+    for hub in hubs_m3:
+        did = hub["did"]
+        name = hub["deviceName"]
+        model = hub["model"]
+
+        async def _async_update_m3_data(did_local=did):
+            try:
+                return await api.get_device_states(did_local, M3_BINARY_SENSORS_DEF)
+            except Exception as e:
+                raise UpdateFailed(str(e)) from e
+
+        coordinator = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}-hub-m3-binary_sensor-{did}",
+            update_method=_async_update_m3_data,
+            update_interval=timedelta(seconds=1),
+        )
+
+        for binary_sensor_def in M3_BINARY_SENSORS_DEF:
+            switch = AqaraBinarySensor(
+                coordinator,
+                did,
+                name,
+                api,
+                binary_sensor_def,
+                model,
+                M3_DEVICE_LABEL,
             )
             entities.append(switch)
 
     async_add_entities(entities)
 
-class AqaraG3BinarySensor(CoordinatorEntity, BinarySensorEntity):
+class AqaraBinarySensor(CoordinatorEntity, BinarySensorEntity):
     _attr_has_entity_name = True
 
     def __init__(
@@ -70,12 +106,16 @@ class AqaraG3BinarySensor(CoordinatorEntity, BinarySensorEntity):
         device_name: str,
         api: AqaraApi,
         spec: Dict[str, Any],
+        model: str,
+        device_label: str,
     ):
         super().__init__(coordinator)
         self._did = did
         self._device_name = device_name
         self._api = api
         self._spec = spec
+        self._model = model
+        self._device_label = device_label
 
         self._attr_name = spec["name"]
         self._attr_icon = spec["icon"]
@@ -97,14 +137,7 @@ class AqaraG3BinarySensor(CoordinatorEntity, BinarySensorEntity):
 
     @property
     def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._did)},
-            "manufacturer": "Aqara",
-            "model": "Camera Hub G3",
-            "name": f"Aqara G3 ({self._device_name})",
-            "model_id": self._did,
-            "model": "lumi.camera.gwpgl1",
-        }
+        return build_device_info(self._did, self._device_name, self._model, self._device_label)
 
     @staticmethod
     def _truthy(val: Any) -> bool:

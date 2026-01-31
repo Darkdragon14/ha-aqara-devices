@@ -13,9 +13,10 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.config_entries import ConfigEntry
 
-from .const import DOMAIN
+from .const import DOMAIN, G3_MODEL, G3_DEVICE_LABEL
 from .switches import ALL_SWITCHES_DEF
 from .api import AqaraApi
+from .device_info import build_device_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
         async def _async_update_video_data(did_local=did):
             try:
-                return await api.get_device_states(did_local)
+                return await api.get_device_states(did_local, ALL_SWITCHES_DEF)
             except Exception as e:
                 raise UpdateFailed(str(e)) from e
 
@@ -73,6 +74,8 @@ class AqaraG3Switch(CoordinatorEntity, SwitchEntity):
         self._device_name = device_name
         self._api = api
         self._spec = spec
+        self._model = G3_MODEL
+        self._device_label = G3_DEVICE_LABEL
 
         self._attr_name = spec["name"]
         self._attr_icon = spec["icon"]
@@ -80,14 +83,7 @@ class AqaraG3Switch(CoordinatorEntity, SwitchEntity):
 
     @property
     def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._did)},
-            "manufacturer": "Aqara",
-            "model": "Camera Hub G3",
-            "name": f"Aqara G3 ({self._device_name})",
-            "model_id": self._did,
-            "model": "lumi.camera.gwpgl1",
-        }
+        return build_device_info(self._did, self._device_name, self._model, self._device_label)
 
     @staticmethod
     def _truthy(val: Any) -> bool:

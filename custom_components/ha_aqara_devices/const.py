@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 DOMAIN = "ha_aqara_devices"
-PLATFORMS: list[str] = ["switch", "button", "binary_sensor", "number"]  # only services for this MVP
+PLATFORMS: list[str] = ["switch", "button", "binary_sensor", "number", "sensor", "select"]  # only services for this MVP
 
 # Endpoint used for attribute write/query
 REQUEST_PATH = "/app/v1.0/lumi/res/write"  # per AqaraPOST examples
@@ -17,6 +17,12 @@ AREAS = {
     "CN": {"server": "https://aiot-rpc.aqara.cn", "appid": "444c476ef7135e53330f46e7", "appkey": "NULL"},
     "OTHER": {"server": "https://aiot-rpc-usa.aqara.com", "appid": "444c476ef7135e53330f46e7", "appkey": "NULL"},
 }
+
+G3_MODEL = "lumi.camera.gwpgl1"
+M3_MODELS = {"lumi.gateway.acn012", "lumi.gateway.agl004"}
+
+G3_DEVICE_LABEL = "Aqara G3"
+M3_DEVICE_LABEL = "Aqara Hub M3"
 
 # Public key used to encrypt MD5(password) (same as token generator script)
 AQARA_RSA_PUBKEY = """-----BEGIN PUBLIC KEY-----

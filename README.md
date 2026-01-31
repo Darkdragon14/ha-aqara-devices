@@ -4,7 +4,7 @@
 [![HACS Action](https://github.com/Darkdragon14/ha-aqara-devices/actions/workflows/hacs_action.yml/badge.svg)](https://github.com/Darkdragon14/ha-aqara-devices/actions/workflows/hacs_action.yml)
 [![release](https://img.shields.io/github/v/release/Darkdragon14/ha-aqara-devices.svg)](https://github.com/Darkdragon14/ha-aqara-devices/releases)
 
-`Aqara Devices (Hub G3 and FP2)` exposes the cloud features of the Aqara Camera Hub G3 (and planned FP2 sensors) directly inside Home Assistant. The integration keeps critical toggles, gesture events, PTZ controls, and media functions in sync so that automations can react instantly to what the camera is doing without touching the Aqara mobile app.
+`Aqara Devices (Hub G3 and M3)` exposes the cloud features of the Aqara Camera Hub G3 and Hub M3 (FP2 planned) directly inside Home Assistant. The integration keeps critical toggles, gesture events, PTZ controls, and media functions in sync so that automations can react instantly to what the camera is doing without touching the Aqara mobile app.
 
 ## Installation
 
@@ -32,13 +32,15 @@ This integration talks to the same API that the Aqara mobile application uses. T
 
 1. **Providing Aqara credentials** – the username/password are encrypted with the Aqara RSA key before being sent to the cloud.
 2. **Selecting your cloud area** – EU, US, CN, or OTHER so that requests are routed to the right backend.
-3. **Automatic discovery** – the component logs in, fetches all Aqara devices, then keeps only `lumi.camera.gwpgl1` entries (Aqara Camera Hub G3). FP2 occupancy sensors will reuse the same session in a future update.
+3. **Automatic discovery** – the component logs in, fetches all Aqara devices, then keeps `lumi.camera.gwpgl1` (Camera Hub G3) and `lumi.gateway.acn012`/`lumi.gateway.agl004` (Hub M3) entries. FP2 occupancy sensors will reuse the same session in a future update.
 4. **State syncing** – a coordinator polls `/app/v1.0/lumi/res/query` once per second to collect switch states, while gesture sensors use `/history/log` timestamps to emulate momentary binary sensors.
 5. **Commands** – switches and numbers call `/app/v1.0/lumi/res/write`, PTZ buttons call `/lumi/devex/camera/operate`, and the alarm bell button briefly enables the siren then resets it.
 
 Because the integration must log in on your behalf, make sure the Aqara account has two-factor actions resolved in the official app first, and prefer creating a dedicated Aqara sub-account for Home Assistant if possible.
 
 ### Supported entities
+
+#### Hub G3
 
 | Platform | Entities | Description |
 | --- | --- | --- |
@@ -48,6 +50,15 @@ Because the integration must log in on your behalf, make sure the Aqara account 
 | **Numbers** | Volume | Adjust the camera speaker volume (0–100). |
 
 Each G3 discovered in your Aqara account gets its own set of entities with device metadata so you can build automations, scenes, or dashboards right away.
+
+#### Hub M3 (minimal)
+
+| Platform | Entities | Description |
+| --- | --- | --- |
+| **Numbers** | System Volume, Alarm Volume, Doorbell Volume, Alarm Duration, Doorbell Duration | Control speaker volumes and ring durations. |
+| **Binary sensors** | Alarm Status, Device Online, Center Hub Connected | Observe alarm state and connectivity. |
+| **Sensors** | Temperature, Humidity | Ambient measurements reported by the hub. |
+| **Selects** | Gateway Language, Alarm Ringtone, Doorbell Ringtone | Change hub language and ringtones. |
 
 ## Future improvements
 
