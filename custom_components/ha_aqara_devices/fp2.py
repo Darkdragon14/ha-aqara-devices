@@ -9,7 +9,26 @@ from .const import (
     FP2_MOUNTING_POSITIONS,
     FP2_INSTALLATION_ANGLES,
     FP2_SETTING_VALUE_MAPS,
+    FP2_ZONE_COUNT,
+    FP2_MINUTE_ZONE_COUNT,
 )
+
+
+def _zone_presence_binary_sensor(index: int) -> dict:
+    return {
+        "name": f"Detection Area {index}",
+        "key": f"detection_area{index}",
+        "device_class": BinarySensorDeviceClass.OCCUPANCY,
+        "icon": "mdi:floor-plan",
+        "on_values": {"1"},
+        "enabled_default": False,
+    }
+
+
+FP2_ZONE_BINARY_SENSORS_DEF = [
+    _zone_presence_binary_sensor(index)
+    for index in range(1, FP2_ZONE_COUNT + 1)
+]
 
 FP2_BINARY_SENSORS_DEF = [
     {
@@ -26,6 +45,62 @@ FP2_BINARY_SENSORS_DEF = [
         "icon": "mdi:lan-connect",
         "on_values": {"0"},
     },
+    *FP2_ZONE_BINARY_SENSORS_DEF,
+]
+
+
+def _zone_statistics_sensor(index: int) -> dict:
+    return {
+        "name": f"Zone {index} People Count (10s)",
+        "key": f"zone{index}_statistics",
+        "icon": "mdi:counter",
+        "value_type": "int",
+        "state_class": SensorStateClass.MEASUREMENT,
+        "enabled_default": False,
+    }
+
+
+def _zone_minute_statistics_sensor(index: int) -> dict:
+    return {
+        "name": f"Zone {index} People Count (per minute)",
+        "key": f"zone{index}_people_counting_by_mins",
+        "icon": "mdi:counter",
+        "value_type": "float",
+        "state_class": SensorStateClass.MEASUREMENT,
+        "enabled_default": False,
+    }
+
+
+FP2_COUNT_SENSORS_DEF = [
+    {
+        "name": "People Counting",
+        "key": "people_counting",
+        "icon": "mdi:account-group",
+        "value_type": "float",
+        "state_class": SensorStateClass.MEASUREMENT,
+    },
+    {
+        "name": "People Counting (per minute)",
+        "key": "people_counting_by_mins",
+        "icon": "mdi:counter",
+        "value_type": "float",
+        "state_class": SensorStateClass.MEASUREMENT,
+    },
+    {
+        "name": "Whole Area People Count (10s)",
+        "key": "all_zone_statistics",
+        "icon": "mdi:home-group",
+        "value_type": "int",
+        "state_class": SensorStateClass.MEASUREMENT,
+    },
+    *[
+        _zone_statistics_sensor(index)
+        for index in range(1, FP2_ZONE_COUNT + 1)
+    ],
+    *[
+        _zone_minute_statistics_sensor(index)
+        for index in range(1, FP2_MINUTE_ZONE_COUNT + 1)
+    ],
 ]
 
 FP2_STATUS_SENSORS_DEF = [
@@ -141,6 +216,7 @@ FP2_SETTINGS_SENSORS_DEF = [
 ]
 
 FP2_SENSOR_SPECS = [
+    *FP2_COUNT_SENSORS_DEF,
     *FP2_STATUS_SENSORS_DEF,
     *FP2_SETTINGS_SENSORS_DEF,
 ]

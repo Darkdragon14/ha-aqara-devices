@@ -33,7 +33,7 @@ This integration talks to the same API that the Aqara mobile application uses. T
 1. **Providing Aqara credentials** – the username/password are encrypted with the Aqara RSA key before being sent to the cloud.
 2. **Selecting your cloud area** – EU, US, CN, or OTHER so that requests are routed to the right backend.
 3. **Automatic discovery** – the component logs in, fetches all Aqara devices, then keeps `lumi.camera.gwpgl1` entries (Aqara Camera Hub G3) and `lumi.motion.agl001` entries (Presence Sensor FP2). Both families reuse the same authenticated session.
-4. **State syncing** – a coordinator polls `/app/v1.0/lumi/res/query` once per second to collect G3 switch states, while gesture sensors use `/history/log` timestamps to emulate momentary binary sensors. FP2 devices combine `/res/query` and `/res/query/by/resourceId` calls to expose occupancy, heart rate/respiration metrics, illuminance, and configuration flags as entities.
+4. **State syncing** – a coordinator polls `/app/v1.0/lumi/res/query` once per second to collect G3 switch states, while gesture sensors use `/history/log` timestamps to emulate momentary binary sensors. FP2 devices combine `/res/query` and `/res/query/by/resourceId` calls to expose occupancy, sub-zone presence, per-zone counting metrics, heart rate/respiration metrics, illuminance, and configuration flags as entities.
 5. **Commands** – switches and numbers call `/app/v1.0/lumi/res/write`, PTZ buttons call `/lumi/devex/camera/operate`, and the alarm bell button briefly enables the siren then resets it.
 
 Because the integration must log in on your behalf, make sure the Aqara account has two-factor actions resolved in the official app first, and prefer creating a dedicated Aqara sub-account for Home Assistant if possible.
@@ -45,15 +45,16 @@ Because the integration must log in on your behalf, make sure the Aqara account 
 | **Switches (G3)** | Video, Detect Human, Detect Pet, Detect Gesture, Detect Face, Mode Cruise | Toggle the G3 camera processing pipelines remotely. |
 | **Buttons (G3)** | PTZ Up/Down/Left/Right, Ring Alarm Bell | Fire PTZ pulses or ring the built-in siren on demand. |
 | **Binary sensors (G3)** | Night vision, Gesture V sign/Four/High Five/Finger Gun/OK | Read-only sensors updated every second; gesture sensors stay on for ~10s to emulate momentary presses. |
-| **Binary sensors (FP2)** | Presence, Connectivity | Occupancy state and online/offline status for each FP2. |
-| **Sensors (FP2)** | Illuminance, Heart Rate, Respiration Rate, Body Movement, Sleep State, installation/mounting metadata, sensitivity/configuration selectors | Combines FP2 telemetry and configuration flags so dashboards and automations can react instantly. |
+| **Binary sensors (FP2)** | Presence, Connectivity, Detection Area 1-30 | Occupancy state and online/offline status for each FP2 plus per-area occupancy states. Detection Area entities are disabled by default. |
+| **Sensors (FP2)** | People Counting, People Counting (per minute), Whole Area People Count (10s), Zone 1-30 People Count (10s), Zone 1-7 People Count (per minute), Illuminance, Heart Rate, Respiration Rate, Body Movement, Sleep State, installation/mounting metadata, sensitivity/configuration selectors | Combines FP2 telemetry and configuration flags so dashboards and automations can react instantly. Zone-specific count entities are disabled by default. |
 | **Numbers (G3)** | Volume | Adjust the camera speaker volume (0–100). |
 
-Each G3 discovered in your Aqara account gets its own set of entities with device metadata so you can build automations, scenes, or dashboards right away.
+Each discovered G3 or FP2 in your Aqara account gets its own set of entities with device metadata so you can build automations, scenes, or dashboards right away.
+
+To keep Home Assistant entity lists clean, high-cardinality FP2 zone entities are created as **disabled by default**. Enable only the zones you really use in the entity registry.
 
 ## Future improvements
 
-* Expose FP2 zone assignments and history per-area to complement the global occupancy sensor. :rocket:
 * Provide in-UI feedback for failed PTZ or siren commands. :rocket:
 * Optionally throttle polling frequency per device to reduce cloud load. :hammer_and_wrench:
 * Improve error handling, translations, and diagnostics to simplify troubleshooting. :hammer_and_wrench:

@@ -191,6 +191,7 @@ class AqaraFP2BinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._attr_name = spec["name"]
         self._attr_icon = spec.get("icon")
         self._attr_unique_id = f"{did}_fp2_{self._key}"
+        self._attr_entity_registry_enabled_default = spec.get("enabled_default", True)
         device_class = spec.get("device_class")
         if isinstance(device_class, BinarySensorDeviceClass):
             self._attr_device_class = device_class
@@ -221,6 +222,7 @@ class AqaraFP2BinarySensor(CoordinatorEntity, BinarySensorEntity):
             return data.get(self._fallback_key)
         return None
 
+    @property
     def is_on(self) -> bool:
         raw = self._coordinator_value()
         if raw is None:

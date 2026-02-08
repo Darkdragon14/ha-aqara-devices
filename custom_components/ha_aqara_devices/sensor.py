@@ -82,6 +82,7 @@ class AqaraFP2Sensor(CoordinatorEntity, SensorEntity):
         self._attr_native_unit_of_measurement = spec.get("unit")
         self._attr_device_class = spec.get("device_class")
         self._attr_state_class = spec.get("state_class")
+        self._attr_entity_registry_enabled_default = spec.get("enabled_default", True)
 
     @property
     def device_info(self):

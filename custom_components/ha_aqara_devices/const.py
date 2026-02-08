@@ -22,7 +22,10 @@ AREAS = {
 G3_MODEL = "lumi.camera.gwpgl1"
 FP2_MODEL = "lumi.motion.agl001"
 
-FP2_STATUS_ATTRS: list[str] = [
+FP2_ZONE_COUNT = 30
+FP2_MINUTE_ZONE_COUNT = 7
+
+FP2_BASE_STATUS_ATTRS: list[str] = [
     "heartrate_value",
     "respiration_rate_value",
     "sleep_state",
@@ -34,6 +37,33 @@ FP2_STATUS_ATTRS: list[str] = [
     "view_zoom",
     "mounting_position",
     "attitude_status",
+]
+
+FP2_GLOBAL_COUNT_ATTRS: list[str] = [
+    "all_zone_statistics",
+    "people_counting",
+    "people_counting_by_mins",
+]
+
+FP2_ZONE_STATISTICS_ATTRS: list[str] = [
+    f"zone{index}_statistics" for index in range(1, FP2_ZONE_COUNT + 1)
+]
+
+FP2_ZONE_MINUTE_COUNT_ATTRS: list[str] = [
+    f"zone{index}_people_counting_by_mins"
+    for index in range(1, FP2_MINUTE_ZONE_COUNT + 1)
+]
+
+FP2_ZONE_PRESENCE_ATTRS: list[str] = [
+    f"detection_area{index}" for index in range(1, FP2_ZONE_COUNT + 1)
+]
+
+FP2_STATUS_ATTRS: list[str] = [
+    *FP2_BASE_STATUS_ATTRS,
+    *FP2_GLOBAL_COUNT_ATTRS,
+    *FP2_ZONE_STATISTICS_ATTRS,
+    *FP2_ZONE_MINUTE_COUNT_ATTRS,
+    *FP2_ZONE_PRESENCE_ATTRS,
 ]
 
 FP2_RESOURCE_IDS = [
