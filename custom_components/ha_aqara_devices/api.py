@@ -1,4 +1,5 @@
 from __future__ import annotations
+import asyncio
 import base64
 import hashlib
 import json
@@ -11,7 +12,22 @@ from aiohttp import ClientSession
 from Crypto.Cipher import PKCS1_v1_5
 from Crypto.PublicKey import RSA
 
-from .const import AQARA_RSA_PUBKEY, AREAS, REQUEST_PATH, QUERY_PATH, HISTORY_PATH, DEVICES_PATH, OPERATE_PATH
+from .const import (
+    AQARA_RSA_PUBKEY,
+    AREAS,
+    REQUEST_PATH,
+    QUERY_PATH,
+    HISTORY_PATH,
+    DEVICES_PATH,
+    OPERATE_PATH,
+    RESOURCE_QUERY_PATH,
+    G3_MODEL,
+    FP2_MODEL,
+    FP2_STATUS_ATTRS,
+    FP2_RESOURCE_IDS,
+    FP2_RESOURCE_KEY_MAP,
+    FP2_PRESENCE_RESOURCES,
+)
 from .switches import ALL_SWITCHES_DEF
 from .binary_sensors import ALL_BINARY_SENSORS_DEF
 from .numbers import ALL_NUMBERS_DEF
@@ -129,6 +145,31 @@ class AqaraApi:
         async with self._session.post(url, data=body, headers=self._rest_headers()) as resp:
             return await resp.json(content_type=None)
 
+    async def res_query_resource(self, payload: dict) -> Any:
+        url = f"{self._server}{RESOURCE_QUERY_PATH}"
+        body = json.dumps(payload)
+        async with self._session.post(url, data=body, headers=self._rest_headers()) as resp:
+            return await resp.json(content_type=None)
+
+    @staticmethod
+    def _flatten_result_items(data: Any) -> list[dict]:
+        raw_result = data.get("result", [])
+        if isinstance(raw_result, list):
+            return raw_result
+        if isinstance(raw_result, dict):
+            for key in ("attributes", "data", "list", "items", "result"):
+                maybe = raw_result.get(key)
+                if isinstance(maybe, list):
+                    return maybe
+        return []
+
+    @staticmethod
+    def _attr_value_from_item(item: dict) -> Any:
+        value = item.get("value")
+        if isinstance(value, dict) and "value" in value:
+            return value.get("value")
+        return value
+
     async def get_device_states(
         self,
         did: str,
@@ -170,20 +211,7 @@ class AqaraApi:
                 except Exception:
                     return 1 if str(v).strip().lower() in ("1", "on", "true", "yes") else 0
 
-            raw_result = data.get("result", [])
-
-            # Some gateways return a flat list; others may wrap deeper—be tolerant.
-            items = []
-            if isinstance(raw_result, list):
-                items = raw_result
-            elif isinstance(raw_result, dict):
-                # Try common containers
-                for k in ("attributes", "data", "list", "items"):
-                    v = raw_result.get(k)
-                    if isinstance(v, list):
-                        items = v
-                        break
-
+            items = self._flatten_result_items(data)
             for item in items:
                 key = item.get("attr")
                 val = item.get("value")
@@ -272,11 +300,116 @@ class AqaraApi:
 
         return body.get("result", {}).get("devices", [])
 
+    async def get_devices_by_model(self, model: str) -> list[dict[str, Any]]:
+        devices = await self.get_devices()
+        return [d for d in devices if d.get("model") == model]
+
     async def get_cameras(self) -> list[dict[str, Any]]:
         """Filter only Aqara G3 cameras."""
-        devices = await self.get_devices()
-        return [d for d in devices if d.get("model") == "lumi.camera.gwpgl1"]
-    
+        return await self.get_devices_by_model(G3_MODEL)
+
+    async def get_fp2_devices(self) -> list[dict[str, Any]]:
+        """Filter Aqara FP2 presence sensors."""
+        return await self.get_devices_by_model(FP2_MODEL)
+
+    async def get_fp2_status(self, did: str) -> dict[str, Any]:
+        payload = {
+            "data": [{
+                "options": FP2_STATUS_ATTRS,
+                "subjectId": did,
+            }]
+        }
+        data = await self.res_query(payload)
+        if str(data.get("code")) != "0":
+            raise RuntimeError(f"Failed to query FP2 status: {data}")
+        status: dict[str, Any] = {}
+        for item in self._flatten_result_items(data):
+            attr = item.get("attr")
+            if not attr:
+                continue
+            status[attr] = self._attr_value_from_item(item)
+        return status
+
+    async def get_fp2_settings(self, did: str) -> dict[str, Any]:
+        payload = {
+            "data": [{
+                "options": FP2_RESOURCE_IDS,
+                "subjectId": did,
+            }]
+        }
+        data = await self.res_query_resource(payload)
+        if str(data.get("code")) != "0":
+            raise RuntimeError(f"Failed to query FP2 settings: {data}")
+        settings: dict[str, Any] = {}
+        for item in self._flatten_result_items(data):
+            rid = str(item.get("resourceId") or item.get("attr") or "")
+            key = FP2_RESOURCE_KEY_MAP.get(rid)
+            if not key:
+                continue
+            settings[key] = self._attr_value_from_item(item)
+        return settings
+
+    async def get_fp2_presence(self, did: str) -> dict[str, Any]:
+        if not FP2_PRESENCE_RESOURCES:
+            return {}
+        payload = {
+            "resourceIds": FP2_PRESENCE_RESOURCES,
+            "scanId": "",
+            "size": 5,
+            "startTime": 1514736000000,
+            "subjectId": did,
+        }
+        data = await self.res_history(payload)
+        if str(data.get("code")) != "0":
+            raise RuntimeError(f"Failed to query FP2 presence history: {data}")
+        best_ts = -1.0
+        best_val: Any = None
+        best_rid: str | None = None
+        raw_result = data.get("result") or {}
+        events = []
+        if isinstance(raw_result, list):
+            events = raw_result
+        elif isinstance(raw_result, dict):
+            for key in ("data", "list", "items"):
+                maybe = raw_result.get(key)
+                if isinstance(maybe, list):
+                    events = maybe
+                    break
+        for event in events or []:
+            rid = str(event.get("resourceId") or event.get("attr") or "")
+            if rid not in FP2_PRESENCE_RESOURCES:
+                continue
+            ts = event.get("timeStamp") or event.get("timestamp") or event.get("time")
+            try:
+                ts_val = float(ts)
+            except (TypeError, ValueError):
+                continue
+            if ts_val > 1_000_000_000_000:
+                ts_val = ts_val / 1000.0
+            if ts_val > best_ts:
+                best_ts = ts_val
+                best_val = event.get("value")
+                best_rid = rid
+        if best_val is None:
+            return {}
+        presence = 1 if str(best_val) == "1" else 0
+        return {
+            "fp2_presence_state": presence,
+            "fp2_presence_ts": best_ts,
+            "fp2_presence_source": best_rid,
+        }
+
+    async def get_fp2_full_state(self, did: str) -> dict[str, Any]:
+        status, settings, presence = await asyncio.gather(
+            self.get_fp2_status(did),
+            self.get_fp2_settings(did),
+            self.get_fp2_presence(did),
+        )
+        merged = {}
+        merged.update(status)
+        merged.update(settings)
+        merged.update(presence)
+        return merged
 
     async def camera_operate(self, did: str, action: str) -> Dict[str, Any]:
         payload = {
