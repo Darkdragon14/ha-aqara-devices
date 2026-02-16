@@ -1,6 +1,6 @@
 {
   "domain": "ha_aqara_devices",
-  "name": "Aqara Devices (Hub G3 and M3)",
+  "name": "Aqara Devices (Hub G3, hub M3 and FP2)",
   "codeowners": ["@Darkdragon14"],
   "config_flow": true,
   "documentation": "https://github.com/ton-repo/aqara_g3_integration",
@@ -9,5 +9,5 @@
   "requirements": [
     "pycryptodome>=3.20.0"
   ],
-    "version": "0.2.0-beta"
+    "version": "0.3.0-beta"
 }
