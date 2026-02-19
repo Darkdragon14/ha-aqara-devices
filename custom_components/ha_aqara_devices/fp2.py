@@ -43,7 +43,7 @@ FP2_BINARY_SENSORS_DEF = [
         "key": "device_offline_status",
         "device_class": BinarySensorDeviceClass.CONNECTIVITY,
         "icon": "mdi:lan-connect",
-        "on_values": {"0"},
+        "on_values": {"1"},
     },
     *FP2_ZONE_BINARY_SENSORS_DEF,
 ]
