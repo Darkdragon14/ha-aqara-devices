@@ -10,7 +10,7 @@ from .const import DOMAIN
 DATA_SCHEMA = vol.Schema({
     vol.Required("username"): str,
     vol.Required("password"): str,
-    vol.Required("area", default="EU"): vol.In(["EU","US","CN","OTHER"]),
+    vol.Required("area", default="EU"): vol.In(["EU","US","CN", "RU", "OTHER"]),
 })
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

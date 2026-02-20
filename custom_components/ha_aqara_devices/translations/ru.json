@@ -1,0 +1,32 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Aqara FP2",
+                "description": "Настройка интеграции Aqara FP2.",
+                "data": {
+                    "email": "Электронная почта",
+                    "password": "Пароль",
+                    "region": "Регион"
+                }
+            }
+        },
+        "error": {
+            "auth": "Ошибка аутентификации. Проверьте свои учетные данные.",
+            "no_devices_found": "Устройства FP2 не найдены."
+        },
+        "abort": {
+            "already_configured": "Это устройство уже настроено."
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "night_vision": { "name": "Ночное видение" },
+            "gesture_v_sign": { "name": "Жест: V (мир)" },
+            "gesture_four": { "name": "Жест: Четыре" },
+            "gesture_high_five": { "name": "Жест: Дай пять" },
+            "gesture_finger_gun": { "name": "Жест: Пистолет" },
+            "gesture_ok": { "name": "Жест: OK" }
+        }
+    }
+}
