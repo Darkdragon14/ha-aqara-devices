@@ -17,8 +17,8 @@ jobs:
 
       - name: Create zip
         run: |
-          cd custom_components
-          zip -r ha-aqara-devices.zip ha_aqara_devices
+          cd custom_components/ha_aqara_devices
+          zip ha-aqara-devices.zip -r ./
 
       - name: Upload release asset
         uses: svenstaro/upload-release-action@v2
