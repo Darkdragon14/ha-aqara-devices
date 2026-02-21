@@ -174,7 +174,7 @@ class AqaraApi:
         self,
         did: str,
         switch_defs: Iterable[Dict[str, Any]] = ALL_DEF,
-    ) -> Dict[str, int]:
+    ) -> Dict[str, Any]:
         """
         Query multiple boolean-like attributes in one call, based on switch defs.
         Returns a dict { <inApp>: 0|1, ... } for all provided switch_defs.
@@ -185,14 +185,14 @@ class AqaraApi:
         history_defs = [spec for spec in switch_defs if spec.get("history_resource")]
 
         # Initialize result with 0 for every inApp (so missing attrs default to 0)
-        result_map: Dict[str, int | float] = {spec["inApp"]: 0 for spec in switch_defs}
+        result_map: Dict[str, Any] = {spec["inApp"]: spec.get("default", 0) for spec in switch_defs}
 
         if standard_defs:
-            # Map api -> inApp for fast reverse lookup
-            api_to_inapp = {spec["api"]: spec["inApp"] for spec in standard_defs}
+            # Map api -> spec for fast reverse lookup
+            api_to_spec = {spec["api"]: spec for spec in standard_defs}
 
             # Build options list from all APIs
-            options = list(api_to_inapp.keys())
+            options = list(api_to_spec.keys())
 
             payload = {
                 "data": [{
@@ -211,16 +211,42 @@ class AqaraApi:
                 except Exception:
                     return 1 if str(v).strip().lower() in ("1", "on", "true", "yes") else 0
 
+            def _coerce_value(spec: Dict[str, Any], val: Any) -> Any:
+                if val is None:
+                    return spec.get("default", 0)
+                value_type = spec.get("value_type") or spec.get("type")
+                if value_type in ("int", "integer", "uint8_t", "uint16_t", "uint32_t"):
+                    try:
+                        parsed: Any = int(float(val))
+                    except Exception:
+                        parsed = 0
+                elif value_type == "float":
+                    try:
+                        parsed = float(val)
+                    except Exception:
+                        parsed = 0.0
+                elif value_type == "string":
+                    parsed = "" if val is None else str(val)
+                elif value_type == "bool":
+                    parsed = _to01(val)
+                else:
+                    parsed = _to01(val)
+                scale = spec.get("scale")
+                if scale is not None:
+                    try:
+                        parsed = float(parsed) * float(scale)
+                    except Exception:
+                        pass
+                return parsed
+
             items = self._flatten_result_items(data)
             for item in items:
                 key = item.get("attr")
-                val = item.get("value")
-                if key in api_to_inapp:
-                    in_app = api_to_inapp[key]
-                    if in_app == "volume":
-                        result_map[in_app] = int(val)
-                    else:
-                        result_map[in_app] = _to01(val)
+                val = self._attr_value_from_item(item)
+                spec = api_to_spec.get(key)
+                if spec:
+                    in_app = spec["inApp"]
+                    result_map[in_app] = _coerce_value(spec, val)
 
         if history_defs:
             result_map.update(await self._history_states(did, history_defs))

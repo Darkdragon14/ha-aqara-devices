@@ -1,17 +1,21 @@
 from __future__ import annotations
-import logging
-from typing import Any
 
 from importlib import import_module
+import logging
 
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.exceptions import HomeAssistantError, ConfigEntryNotReady
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .api import AqaraApi
-from .const import DOMAIN, PLATFORMS, G3_MODEL, FP2_MODEL
+from .binary_sensors import ALL_BINARY_SENSORS_DEF, M3_BINARY_SENSORS_DEF
+from .const import DOMAIN, FP2_MODEL, G3_MODEL, M3_MODELS, PLATFORMS
+from .numbers import ALL_NUMBERS_DEF, M3_NUMBERS_DEF
+from .selects import M3_SELECTS_DEF
+from .sensors import M3_SENSORS_DEF
+from .switches import ALL_SWITCHES_DEF
 
 # Preload platform modules so Home Assistant doesn't import them inside the event loop
 for _platform in PLATFORMS:
@@ -21,8 +25,10 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
@@ -33,17 +39,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await api.login(entry.data["username"], entry.data["password"])
         devices = await api.get_devices()
+
         cameras = [device for device in devices if device.get("model") == G3_MODEL]
+        hubs_m3 = [device for device in devices if device.get("model") in M3_MODELS]
         fp2_devices = [device for device in devices if device.get("model") == FP2_MODEL]
-        if not cameras and not fp2_devices:
-            raise ConfigEntryNotReady("No Aqara G3 or FP2 devices found")
+
+        if not cameras and not hubs_m3 and not fp2_devices:
+            raise ConfigEntryNotReady("No Aqara G3, M3, or FP2 devices found")
+
+        g3_probe_defs = ALL_BINARY_SENSORS_DEF + ALL_SWITCHES_DEF + ALL_NUMBERS_DEF
+        m3_probe_defs = M3_BINARY_SENSORS_DEF + M3_NUMBERS_DEF + M3_SENSORS_DEF + M3_SELECTS_DEF
 
         for cam in cameras:
             did = cam["did"]
             try:
-                await api.get_device_states(did)
+                await api.get_device_states(did, g3_probe_defs)
             except Exception as e:
                 raise ConfigEntryNotReady(f"G3 probe failed for {did}: {e}") from e
+
+        for hub in hubs_m3:
+            did = hub["did"]
+            try:
+                await api.get_device_states(did, m3_probe_defs)
+            except Exception as e:
+                raise ConfigEntryNotReady(f"M3 probe failed for {did}: {e}") from e
 
         for fp2 in fp2_devices:
             did = fp2["did"]
@@ -59,12 +78,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id] = {
         "api": api,
-        "cameras": cameras, 
+        "cameras": cameras,
+        "hubs_m3": hubs_m3,
         "fp2_devices": fp2_devices,
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

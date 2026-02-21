@@ -4,7 +4,7 @@
 [![HACS Action](https://github.com/Darkdragon14/ha-aqara-devices/actions/workflows/hacs_action.yml/badge.svg)](https://github.com/Darkdragon14/ha-aqara-devices/actions/workflows/hacs_action.yml)
 [![release](https://img.shields.io/github/v/release/Darkdragon14/ha-aqara-devices.svg)](https://github.com/Darkdragon14/ha-aqara-devices/releases)
 
-`Aqara Devices (Hub G3 and FP2)` exposes the cloud features of the Aqara Camera Hub G3 and Presence Sensor FP2 directly inside Home Assistant. The integration keeps critical toggles, gesture events, PTZ controls, and FP2 telemetry in sync so that automations can react instantly without touching the Aqara mobile app.
+`Aqara Devices (Hub G3, Hub M3 and FP2)` exposes the cloud features of the Aqara Camera Hub G3, Hub M3, and Presence Sensor FP2 directly inside Home Assistant. The integration keeps critical toggles, gesture events, PTZ controls, and FP2 telemetry in sync so that automations can react instantly without touching the Aqara mobile app.
 
 ## Installation
 
@@ -32,13 +32,15 @@ This integration talks to the same API that the Aqara mobile application uses. T
 
 1. **Providing Aqara credentials** – the username/password are encrypted with the Aqara RSA key before being sent to the cloud.
 2. **Selecting your cloud area** – EU, US, CN, or OTHER so that requests are routed to the right backend.
-3. **Automatic discovery** – the component logs in, fetches all Aqara devices, then keeps `lumi.camera.gwpgl1` entries (Aqara Camera Hub G3) and `lumi.motion.agl001` entries (Presence Sensor FP2). Both families reuse the same authenticated session.
-4. **State syncing** – a coordinator polls `/app/v1.0/lumi/res/query` once per second to collect G3 switch states, while gesture sensors use `/history/log` timestamps to emulate momentary binary sensors. FP2 devices combine `/res/query` and `/res/query/by/resourceId` calls to expose occupancy, sub-zone presence, per-zone counting metrics, heart rate/respiration metrics, illuminance, and configuration flags as entities.
+3. **Automatic discovery** – the component logs in, fetches all Aqara devices, then keeps `lumi.camera.gwpgl1` entries (Camera Hub G3), `lumi.gateway.acn012`/`lumi.gateway.agl004` entries (Hub M3), and `lumi.motion.agl001` entries (Presence Sensor FP2). All families reuse the same authenticated session.
+4. **State syncing** – a coordinator polls `/app/v1.0/lumi/res/query` once per second to collect G3/M3 states, while gesture sensors use `/history/log` timestamps to emulate momentary binary sensors. FP2 devices combine `/res/query`, `/res/query/by/resourceId`, and `/history/log` calls to expose occupancy, sub-zone presence, per-zone counting metrics, heart rate/respiration metrics, illuminance, and configuration flags as entities.
 5. **Commands** – switches and numbers call `/app/v1.0/lumi/res/write`, PTZ buttons call `/lumi/devex/camera/operate`, and the alarm bell button briefly enables the siren then resets it.
 
 Because the integration must log in on your behalf, make sure the Aqara account has two-factor actions resolved in the official app first, and prefer creating a dedicated Aqara sub-account for Home Assistant if possible.
 
 ### Supported entities
+
+#### Hub G3 and FP2
 
 | Platform | Entities | Description |
 | --- | --- | --- |
@@ -49,9 +51,18 @@ Because the integration must log in on your behalf, make sure the Aqara account 
 | **Sensors (FP2)** | People Counting, People Counting (per minute), Whole Area People Count (10s), Zone 1-30 People Count (10s), Zone 1-7 People Count (per minute), Illuminance, Heart Rate, Respiration Rate, Body Movement, Sleep State, installation/mounting metadata, sensitivity/configuration selectors | Combines FP2 telemetry and configuration flags so dashboards and automations can react instantly. Zone-specific count entities are disabled by default. |
 | **Numbers (G3)** | Volume | Adjust the camera speaker volume (0–100). |
 
-Each discovered G3 or FP2 in your Aqara account gets its own set of entities with device metadata so you can build automations, scenes, or dashboards right away.
+Each discovered G3, M3, or FP2 in your Aqara account gets its own set of entities with device metadata so you can build automations, scenes, or dashboards right away.
 
 To keep Home Assistant entity lists clean, high-cardinality FP2 zone entities are created as **disabled by default**. Enable only the zones you really use in the entity registry.
+
+#### Hub M3 (minimal)
+
+| Platform | Entities | Description |
+| --- | --- | --- |
+| **Numbers** | System Volume, Alarm Volume, Doorbell Volume, Alarm Duration, Doorbell Duration | Control speaker volumes and ring durations. |
+| **Binary sensors** | Alarm Status, Device Online, Center Hub Connected | Observe alarm state and connectivity. |
+| **Sensors** | Temperature, Humidity | Ambient measurements reported by the hub. |
+| **Selects** | Gateway Language, Alarm Ringtone, Doorbell Ringtone | Change hub language and ringtones. |
 
 ## Future improvements
 

@@ -6,7 +6,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 
 from .api import AqaraApi
-from .const import DOMAIN
+from .const import DOMAIN, G3_MODEL, G3_DEVICE_LABEL
+from .device_info import build_device_info
 
 PTZ_ACTIONS: dict[str, str] = {
     "up": "up_always",
@@ -52,17 +53,12 @@ class AqaraG3PTZButton(ButtonEntity):
         self._attr_icon = ICONS[direction]
         self._attr_unique_id = f"{did}_ptz_{direction}"
         self._device_name = device_name
+        self._model = G3_MODEL
+        self._device_label = G3_DEVICE_LABEL
 
     @property
     def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._did)},
-            "manufacturer": "Aqara",
-            "model": "Camera Hub G3",
-            "name": f"Aqara G3 ({self._device_name})",
-            "model_id": self._did,
-            "model": "lumi.camera.gwpgl1",
-        }
+        return build_device_info(self._did, self._device_name, self._model, self._device_label)
 
     async def async_press(self) -> None:
         action = PTZ_ACTIONS[self._direction]
@@ -79,17 +75,12 @@ class AqaraG3RingAlarmBell(ButtonEntity):
         self._attr_icon = ICONS[RING_ALARM_BELL]
         self._attr_unique_id = f"{did}_ring_alarm_bell"
         self._device_name = device_name
+        self._model = G3_MODEL
+        self._device_label = G3_DEVICE_LABEL
 
     @property
     def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._did)},
-            "manufacturer": "Aqara",
-            "model": "Camera Hub G3",
-            "name": f"Aqara G3 ({self._device_name})",
-            "model_id": self._did,
-            "model": "lumi.camera.gwpgl1",
-        }
+        return build_device_info(self._did, self._device_name, self._model, self._device_label)
 
     async def async_press(self) -> None:
         payload = {

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 DOMAIN = "ha_aqara_devices"
-PLATFORMS: list[str] = ["switch", "button", "binary_sensor", "number", "sensor"]
+PLATFORMS: list[str] = ["switch", "button", "binary_sensor", "number", "sensor", "select"]  # only services for this MVP
 
 # Endpoint used for attribute write/query
 REQUEST_PATH = "/app/v1.0/lumi/res/write"  # per AqaraPOST examples
@@ -21,6 +21,10 @@ AREAS = {
 }
 
 G3_MODEL = "lumi.camera.gwpgl1"
+M3_MODELS = {"lumi.gateway.acn012", "lumi.gateway.agl004"}
+
+G3_DEVICE_LABEL = "Aqara G3"
+M3_DEVICE_LABEL = "Aqara Hub M3"
 FP2_MODEL = "lumi.motion.agl001"
 
 FP2_ZONE_COUNT = 30

@@ -37,3 +37,36 @@ ALL_BINARY_SENSORS_DEF = [
     NIGHT_VISION,
     *GESTURE_SENSORS,
 ]
+
+M3_ALARM_STATUS = {
+    "name": "Alarm Status",
+    "icon": "mdi:alarm-bell",
+    "inApp": "alarm_status",
+    "api": "alarm_status",
+    "device_class": "safety",
+    "value_type": "bool",
+}
+
+M3_DEVICE_ONLINE_STATUS = {
+    "name": "Device Online",
+    "icon": "mdi:lan-connect",
+    "inApp": "device_online_status",
+    "api": "device_offline_status",
+    "device_class": "connectivity",
+    "value_type": "bool",
+}
+
+M3_CENTER_HUB_CONNECTED = {
+    "name": "Center Hub Connected",
+    "icon": "mdi:lan-connect",
+    "inApp": "connect_center_hub_state",
+    "api": "connect_center_hub_state",
+    "device_class": "connectivity",
+    "value_type": "bool",
+}
+
+M3_BINARY_SENSORS_DEF = [
+    M3_ALARM_STATUS,
+    M3_DEVICE_ONLINE_STATUS,
+    M3_CENTER_HUB_CONNECTED,
+]
