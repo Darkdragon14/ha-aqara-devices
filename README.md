@@ -32,7 +32,7 @@ This integration talks to the same API that the Aqara mobile application uses. T
 
 1. **Providing Aqara credentials** – the username/password are encrypted with the Aqara RSA key before being sent to the cloud.
 2. **Selecting your cloud area** – EU, US, CN, or OTHER so that requests are routed to the right backend.
-3. **Automatic discovery** – the component logs in, fetches all Aqara devices, then keeps `lumi.camera.gwpgl1` entries (Camera Hub G3), `lumi.gateway.acn012`/`lumi.gateway.agl004` entries (Hub M3), and `lumi.motion.agl001` entries (Presence Sensor FP2). All families reuse the same authenticated session.
+3. **Automatic discovery** – the component logs in, fetches all Aqara devices, then keeps `lumi.camera.gwpgl1`/`lumi.camera.gwpagl01` entries (Camera Hub G3), `lumi.gateway.acn012`/`lumi.gateway.agl004` entries (Hub M3), and `lumi.motion.agl001` entries (Presence Sensor FP2). All families reuse the same authenticated session.
 4. **State syncing** – a coordinator polls `/app/v1.0/lumi/res/query` once per second to collect G3/M3 states, while gesture sensors use `/history/log` timestamps to emulate momentary binary sensors. FP2 devices combine `/res/query`, `/res/query/by/resourceId`, and `/history/log` calls to expose occupancy, sub-zone presence, per-zone counting metrics, heart rate/respiration metrics, illuminance, and configuration flags as entities.
 5. **Commands** – switches and numbers call `/app/v1.0/lumi/res/write`, PTZ buttons call `/lumi/devex/camera/operate`, and the alarm bell button briefly enables the siren then resets it.
 

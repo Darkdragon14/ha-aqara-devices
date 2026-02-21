@@ -14,7 +14,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .api import AqaraApi
-from .const import DOMAIN, FP2_MODEL, M3_DEVICE_LABEL
+from .const import DOMAIN, FP2_DEVICE_LABEL, FP2_MODEL, M3_DEVICE_LABEL
 from .device_info import build_device_info
 from .fp2 import FP2_SENSOR_SPECS
 from .sensors import M3_SENSORS_DEF
@@ -178,7 +178,7 @@ class AqaraFP2Sensor(CoordinatorEntity, SensorEntity):
 
     @property
     def device_info(self):
-        return build_device_info(self._did, self._device_name, FP2_MODEL, "Aqara FP2")
+        return build_device_info(self._did, self._device_name, FP2_MODEL, FP2_DEVICE_LABEL)
 
     @property
     def native_value(self):

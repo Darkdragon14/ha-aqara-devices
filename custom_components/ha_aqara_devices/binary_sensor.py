@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .api import AqaraApi
 from .binary_sensors import ALL_BINARY_SENSORS_DEF, M3_BINARY_SENSORS_DEF
-from .const import DOMAIN, FP2_MODEL, G3_DEVICE_LABEL, G3_MODEL, M3_DEVICE_LABEL
+from .const import DOMAIN, FP2_DEVICE_LABEL, FP2_MODEL, G3_DEVICE_LABEL, G3_MODEL, M3_DEVICE_LABEL
 from .device_info import build_device_info
 from .fp2 import FP2_BINARY_SENSORS_DEF
 
@@ -239,7 +239,7 @@ class AqaraFP2BinarySensor(CoordinatorEntity, BinarySensorEntity):
 
     @property
     def device_info(self):
-        return build_device_info(self._did, self._device_name, FP2_MODEL, "Aqara FP2")
+        return build_device_info(self._did, self._device_name, FP2_MODEL, FP2_DEVICE_LABEL)
 
     def _coordinator_value(self):
         data = self.coordinator.data or {}
