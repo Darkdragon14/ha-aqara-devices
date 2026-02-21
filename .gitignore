@@ -205,3 +205,7 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+Aqara_G3_nodered.json
+log.txt
+Aqara_FP2_nodered.json

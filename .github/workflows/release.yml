@@ -1,0 +1,30 @@
+name: Build Release Asset
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create zip
+        run: |
+          cd custom_components
+          zip -r ha-aqara-devices.zip ha_aqara_devices
+
+      - name: Upload release asset
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: custom_components/ha-aqara-devices.zip
+          asset_name: ha-aqara-devices.zip
+          tag: ${{ github.ref }}
+          overwrite: true
