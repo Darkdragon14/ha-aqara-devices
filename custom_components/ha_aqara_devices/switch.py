@@ -30,6 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     for cam in cameras:
         did = cam["did"]
         name = cam["deviceName"]
+        model = cam.get("model") or G3_MODEL
 
         async def _async_update_video_data(did_local=did):
             try:
@@ -51,6 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                 coordinator,
                 did,
                 name,
+                model,
                 api,
                 switch_def,
             )
@@ -66,6 +68,7 @@ class AqaraG3Switch(CoordinatorEntity, SwitchEntity):
         coordinator: DataUpdateCoordinator,
         did: str,
         device_name: str,
+        model: str,
         api: AqaraApi,
         spec: Dict[str, Any],
     ):
@@ -74,7 +77,7 @@ class AqaraG3Switch(CoordinatorEntity, SwitchEntity):
         self._device_name = device_name
         self._api = api
         self._spec = spec
-        self._model = G3_MODEL
+        self._model = model
         self._device_label = G3_DEVICE_LABEL
 
         self._attr_name = spec["name"]

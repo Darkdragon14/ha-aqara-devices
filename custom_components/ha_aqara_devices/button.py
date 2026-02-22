@@ -35,9 +35,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     for cam in cameras:
         did = cam["did"]
         name = cam["deviceName"]
-        entities.append(AqaraG3RingAlarmBell(api, did, name))
+        model = cam.get("model") or G3_MODEL
+        entities.append(AqaraG3RingAlarmBell(api, did, name, model))
         for direction in ("up", "down", "left", "right"):
-            entities.append(AqaraG3PTZButton(api, did, name, direction))
+            entities.append(AqaraG3PTZButton(api, did, name, model, direction))
 
     async_add_entities(entities)
 
@@ -45,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 class AqaraG3PTZButton(ButtonEntity):
     _attr_has_entity_name = True
 
-    def __init__(self, api: AqaraApi, did: str, device_name: str, direction: str) -> None:
+    def __init__(self, api: AqaraApi, did: str, device_name: str, model: str, direction: str) -> None:
         self._api = api
         self._did = did
         self._direction = direction
@@ -53,7 +54,7 @@ class AqaraG3PTZButton(ButtonEntity):
         self._attr_icon = ICONS[direction]
         self._attr_unique_id = f"{did}_ptz_{direction}"
         self._device_name = device_name
-        self._model = G3_MODEL
+        self._model = model
         self._device_label = G3_DEVICE_LABEL
 
     @property
@@ -68,14 +69,14 @@ class AqaraG3PTZButton(ButtonEntity):
 class AqaraG3RingAlarmBell(ButtonEntity):
     _attr_has_entity_name = True
 
-    def __init__(self, api: AqaraApi, did: str, device_name: str) -> None:
+    def __init__(self, api: AqaraApi, did: str, device_name: str, model: str) -> None:
         self._api = api
         self._did = did
         self._attr_name = "Ring Alarm Bell"
         self._attr_icon = ICONS[RING_ALARM_BELL]
         self._attr_unique_id = f"{did}_ring_alarm_bell"
         self._device_name = device_name
-        self._model = G3_MODEL
+        self._model = model
         self._device_label = G3_DEVICE_LABEL
 
     @property

@@ -21,7 +21,7 @@ from .const import (
     DEVICES_PATH,
     OPERATE_PATH,
     RESOURCE_QUERY_PATH,
-    G3_MODEL,
+    G3_MODELS,
     FP2_MODEL,
     FP2_STATUS_ATTRS,
     FP2_RESOURCE_IDS,
@@ -332,7 +332,8 @@ class AqaraApi:
 
     async def get_cameras(self) -> list[dict[str, Any]]:
         """Filter only Aqara G3 cameras."""
-        return await self.get_devices_by_model(G3_MODEL)
+        devices = await self.get_devices()
+        return [d for d in devices if d.get("model") in G3_MODELS]
 
     async def get_fp2_devices(self) -> list[dict[str, Any]]:
         """Filter Aqara FP2 presence sensors."""

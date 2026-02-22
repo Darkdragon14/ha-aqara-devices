@@ -11,7 +11,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .api import AqaraApi
 from .binary_sensors import ALL_BINARY_SENSORS_DEF, M3_BINARY_SENSORS_DEF
-from .const import DOMAIN, FP2_MODEL, G3_MODEL, M3_MODELS, PLATFORMS
+from .const import DOMAIN, FP2_MODEL, G3_MODELS, M3_MODELS, PLATFORMS
 from .numbers import ALL_NUMBERS_DEF, M3_NUMBERS_DEF
 from .selects import M3_SELECTS_DEF
 from .sensors import M3_SENSORS_DEF
@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await api.login(entry.data["username"], entry.data["password"])
         devices = await api.get_devices()
 
-        cameras = [device for device in devices if device.get("model") == G3_MODEL]
+        cameras = [device for device in devices if device.get("model") in G3_MODELS]
         hubs_m3 = [device for device in devices if device.get("model") in M3_MODELS]
         fp2_devices = [device for device in devices if device.get("model") == FP2_MODEL]
 
