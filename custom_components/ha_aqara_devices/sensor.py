@@ -14,8 +14,16 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .api import AqaraApi
-from .const import DOMAIN, FP2_DEVICE_LABEL, FP2_MODEL, M3_DEVICE_LABEL
+from .const import (
+    DOMAIN,
+    FP2_DEVICE_LABEL,
+    FP2_MODEL,
+    FP300_DEVICE_LABEL,
+    FP300_MODEL,
+    M3_DEVICE_LABEL,
+)
 from .device_info import build_device_info
+from .fp300 import FP300_SENSOR_SPECS
 from .fp2 import FP2_SENSOR_SPECS
 from .sensors import M3_SENSORS_DEF
 
@@ -26,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     data = hass.data[DOMAIN][entry.entry_id]
     api: AqaraApi = data["api"]
     hubs_m3: list[dict] = data.get("hubs_m3", [])
-    fp2_devices: list[dict] = data.get("fp2_devices", [])
+    presence_devices: list[dict] = data.get("presence_devices", [])
 
     entities: list[SensorEntity] = []
 
@@ -61,32 +69,43 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                 )
             )
 
-    for fp2 in fp2_devices:
-        did = fp2["did"]
-        name = fp2["deviceName"]
+    for presence in presence_devices:
+        did = presence["did"]
+        name = presence["deviceName"]
+        model = presence.get("model") or ""
+        if model == FP2_MODEL:
+            specs = FP2_SENSOR_SPECS
+            device_label = FP2_DEVICE_LABEL
+        elif model == FP300_MODEL:
+            specs = FP300_SENSOR_SPECS
+            device_label = FP300_DEVICE_LABEL
+        else:
+            continue
 
-        async def _async_update_fp2_data(did_local=did):
+        async def _async_update_presence_data(did_local=did, model_local=model):
             try:
-                return await api.get_fp2_full_state(did_local)
+                return await api.get_presence_core_state(did_local, model_local)
             except Exception as e:
                 raise UpdateFailed(str(e)) from e
 
         coordinator = DataUpdateCoordinator(
             hass,
             _LOGGER,
-            name=f"{DOMAIN}-fp2-sensor-{did}",
-            update_method=_async_update_fp2_data,
+            name=f"{DOMAIN}-presence-sensor-{did}",
+            update_method=_async_update_presence_data,
             update_interval=timedelta(seconds=2),
         )
         await coordinator.async_config_entry_first_refresh()
 
-        for spec in FP2_SENSOR_SPECS:
+        for spec in specs:
             entities.append(
                 AqaraFP2Sensor(
                     coordinator,
                     did,
                     name,
                     spec,
+                    model,
+                    device_label,
                 )
             )
 
@@ -159,11 +178,15 @@ class AqaraFP2Sensor(CoordinatorEntity, SensorEntity):
         did: str,
         device_name: str,
         spec: Dict[str, Any],
+        model: str,
+        device_label: str,
     ):
         super().__init__(coordinator)
         self._did = did
         self._device_name = device_name
         self._spec = spec
+        self._model = model
+        self._device_label = device_label
         self._key = spec["key"]
 
         self._attr_name = spec["name"]
@@ -178,7 +201,7 @@ class AqaraFP2Sensor(CoordinatorEntity, SensorEntity):
 
     @property
     def device_info(self):
-        return build_device_info(self._did, self._device_name, FP2_MODEL, FP2_DEVICE_LABEL)
+        return build_device_info(self._did, self._device_name, self._model, self._device_label)
 
     @property
     def native_value(self):

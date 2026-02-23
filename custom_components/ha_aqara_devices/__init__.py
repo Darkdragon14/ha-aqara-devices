@@ -11,7 +11,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .api import AqaraApi
 from .binary_sensors import ALL_BINARY_SENSORS_DEF, M3_BINARY_SENSORS_DEF
-from .const import DOMAIN, FP2_MODEL, G3_MODELS, M3_MODELS, PLATFORMS
+from .const import DOMAIN, G3_MODELS, M3_MODELS, PLATFORMS, PRESENCE_MODELS
 from .numbers import ALL_NUMBERS_DEF, M3_NUMBERS_DEF
 from .selects import M3_SELECTS_DEF
 from .sensors import M3_SENSORS_DEF
@@ -42,10 +42,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         cameras = [device for device in devices if device.get("model") in G3_MODELS]
         hubs_m3 = [device for device in devices if device.get("model") in M3_MODELS]
-        fp2_devices = [device for device in devices if device.get("model") == FP2_MODEL]
+        presence_devices = [device for device in devices if device.get("model") in PRESENCE_MODELS]
 
-        if not cameras and not hubs_m3 and not fp2_devices:
-            raise ConfigEntryNotReady("No Aqara G3, M3, or FP2 devices found")
+        if not cameras and not hubs_m3 and not presence_devices:
+            raise ConfigEntryNotReady("No Aqara G3, M3, FP2, or FP300 devices found")
 
         g3_probe_defs = ALL_BINARY_SENSORS_DEF + ALL_SWITCHES_DEF + ALL_NUMBERS_DEF
         m3_probe_defs = M3_BINARY_SENSORS_DEF + M3_NUMBERS_DEF + M3_SENSORS_DEF + M3_SELECTS_DEF
@@ -64,12 +64,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             except Exception as e:
                 raise ConfigEntryNotReady(f"M3 probe failed for {did}: {e}") from e
 
-        for fp2 in fp2_devices:
-            did = fp2["did"]
+        for presence in presence_devices:
+            did = presence["did"]
+            model = str(presence.get("model") or "")
             try:
-                await api.get_fp2_full_state(did)
+                await api.get_presence_core_state(did, model)
             except Exception as e:
-                raise ConfigEntryNotReady(f"FP2 probe failed for {did}: {e}") from e
+                raise ConfigEntryNotReady(f"Presence probe failed for {did}: {e}") from e
 
     except ConfigEntryNotReady:
         raise
@@ -80,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "api": api,
         "cameras": cameras,
         "hubs_m3": hubs_m3,
-        "fp2_devices": fp2_devices,
+        "presence_devices": presence_devices,
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
