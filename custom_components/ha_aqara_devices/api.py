@@ -23,6 +23,8 @@ from .const import (
     RESOURCE_QUERY_PATH,
     G3_MODELS,
     FP2_MODEL,
+    FP300_MODEL,
+    FP300_CORE_STATUS_ATTRS,
     FP2_STATUS_ATTRS,
     FP2_RESOURCE_IDS,
     FP2_RESOURCE_KEY_MAP,
@@ -338,6 +340,28 @@ class AqaraApi:
     async def get_fp2_devices(self) -> list[dict[str, Any]]:
         """Filter Aqara FP2 presence sensors."""
         return await self.get_devices_by_model(FP2_MODEL)
+
+    async def get_presence_core_state(self, did: str, model: str) -> dict[str, Any]:
+        if model == FP2_MODEL:
+            return await self.get_fp2_full_state(did)
+        if model == FP300_MODEL:
+            payload = {
+                "data": [{
+                    "options": FP300_CORE_STATUS_ATTRS,
+                    "subjectId": did,
+                }]
+            }
+            data = await self.res_query(payload)
+            if str(data.get("code")) != "0":
+                raise RuntimeError(f"Failed to query FP300 status: {data}")
+            status: dict[str, Any] = {}
+            for item in self._flatten_result_items(data):
+                attr = item.get("attr")
+                if not attr:
+                    continue
+                status[attr] = self._attr_value_from_item(item)
+            return status
+        raise RuntimeError(f"Unsupported presence model: {model}")
 
     async def get_fp2_status(self, did: str) -> dict[str, Any]:
         payload = {

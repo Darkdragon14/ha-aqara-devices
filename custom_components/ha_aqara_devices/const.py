@@ -22,12 +22,23 @@ AREAS = {
 
 G3_MODEL = "lumi.camera.gwpgl1"
 FP2_MODEL = "lumi.motion.agl001"
+FP300_MODEL = "lumi.sensor_occupy.agl8"
 G3_MODELS = {"lumi.camera.gwpgl1", "lumi.camera.gwpagl01"}
 M3_MODELS = {"lumi.gateway.acn012", "lumi.gateway.agl004"}
+PRESENCE_MODELS = {FP2_MODEL, FP300_MODEL}
 
 G3_DEVICE_LABEL = "Aqara G3"
 M3_DEVICE_LABEL = "Aqara Hub M3"
 FP2_DEVICE_LABEL = "Aqara FP2"
+FP300_DEVICE_LABEL = "Presence Multi-Sensor FP300"
+
+FP300_CORE_STATUS_ATTRS: list[str] = [
+    "report_status01",
+    "environment_temperature",
+    "environment_humidity",
+    "lux",
+    "battery_percentage",
+]
 
 FP2_ZONE_COUNT = 30
 FP2_MINUTE_ZONE_COUNT = 7
