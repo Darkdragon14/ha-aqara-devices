@@ -24,6 +24,7 @@ FP300_SENSOR_SPECS = [
         "unit": "°C",
         "icon": "mdi:thermometer",
         "value_type": "float",
+        "scale": 0.01,
     },
     {
         "name": "Humidity",
@@ -33,6 +34,7 @@ FP300_SENSOR_SPECS = [
         "unit": "%",
         "icon": "mdi:water-percent",
         "value_type": "float",
+        "scale": 0.01,
     },
     {
         "name": "Illuminance",

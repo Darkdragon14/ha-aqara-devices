@@ -194,6 +194,7 @@ class AqaraFP2Sensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{did}_fp2_sensor_{self._key}"
         self._value_type = spec.get("value_type")
         self._value_map = spec.get("value_map") or {}
+        self._scale = spec.get("scale")
         self._attr_native_unit_of_measurement = spec.get("unit")
         self._attr_device_class = spec.get("device_class")
         self._attr_state_class = spec.get("state_class")
@@ -211,14 +212,32 @@ class AqaraFP2Sensor(CoordinatorEntity, SensorEntity):
             return None
         if self._value_map:
             return self._value_map.get(str(raw), raw)
+
+        def _apply_scale(value: int | float):
+            if self._scale is None:
+                return value
+            try:
+                return float(value) * float(self._scale)
+            except (TypeError, ValueError):
+                return value
+
         if self._value_type == "int":
             try:
-                return int(raw)
+                parsed = int(raw)
             except (TypeError, ValueError):
                 return None
+            return _apply_scale(parsed)
         if self._value_type == "float":
             try:
-                return float(raw)
+                parsed = float(raw)
             except (TypeError, ValueError):
                 return None
+            return _apply_scale(parsed)
+
+        if self._scale is not None:
+            try:
+                return float(raw) * float(self._scale)
+            except (TypeError, ValueError):
+                return raw
+
         return raw
