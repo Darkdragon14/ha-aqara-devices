@@ -35,6 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     api: AqaraApi = data["api"]
     hubs_m3: list[dict] = data.get("hubs_m3", [])
     presence_devices: list[dict] = data.get("presence_devices", [])
+    presence_coordinators: dict[str, dict[str, DataUpdateCoordinator]] = data.get("presence_coordinators", {})
 
     entities: list[SensorEntity] = []
 
@@ -82,22 +83,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         else:
             continue
 
-        async def _async_update_presence_data(did_local=did, model_local=model):
-            try:
-                return await api.get_presence_core_state(did_local, model_local)
-            except Exception as e:
-                raise UpdateFailed(str(e)) from e
-
-        coordinator = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name=f"{DOMAIN}-presence-sensor-{did}",
-            update_method=_async_update_presence_data,
-            update_interval=timedelta(seconds=2),
-        )
-        await coordinator.async_config_entry_first_refresh()
+        device_coordinators = presence_coordinators.get(did)
+        if not device_coordinators:
+            continue
 
         for spec in specs:
+            coordinator = device_coordinators.get(spec.get("poll_group", "medium"))
+            if coordinator is None:
+                continue
             entities.append(
                 AqaraFP2Sensor(
                     coordinator,

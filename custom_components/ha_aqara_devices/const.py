@@ -32,30 +32,58 @@ M3_DEVICE_LABEL = "Aqara Hub M3"
 FP2_DEVICE_LABEL = "Aqara FP2"
 FP300_DEVICE_LABEL = "Presence Multi-Sensor FP300"
 
-FP300_CORE_STATUS_ATTRS: list[str] = [
+FP2_FAST_INTERVAL_SECONDS = 2
+FP2_PRESENCE_INTERVAL_SECONDS = 5
+FP300_FAST_INTERVAL_SECONDS = 5
+PRESENCE_MEDIUM_INTERVAL_SECONDS = 30
+PRESENCE_SLOW_INTERVAL_SECONDS = 300
+PRESENCE_UNAVAILABLE_AFTER_FAILURES = 3
+FP2_FAST_UNAVAILABLE_AFTER_FAILURES = 5
+FP2_PRESENCE_UNAVAILABLE_AFTER_FAILURES = 8
+FP300_FAST_UNAVAILABLE_AFTER_FAILURES = 5
+
+FP300_FAST_STATUS_ATTRS: list[str] = [
     "report_status01",
+]
+
+FP300_MEDIUM_STATUS_ATTRS: list[str] = [
     "environment_temperature",
     "environment_humidity",
     "lux",
+]
+
+FP300_SLOW_STATUS_ATTRS: list[str] = [
     "battery_percentage",
 ]
 
-FP2_ZONE_COUNT = 30
-FP2_MINUTE_ZONE_COUNT = 7
+FP300_CORE_STATUS_ATTRS: list[str] = [
+    *FP300_FAST_STATUS_ATTRS,
+    *FP300_MEDIUM_STATUS_ATTRS,
+    *FP300_SLOW_STATUS_ATTRS,
+]
 
-FP2_BASE_STATUS_ATTRS: list[str] = [
+FP2_FAST_STATUS_BASE_ATTRS: list[str] = [
+    "body_movement_value",
+    "device_offline_status",
+]
+
+FP2_MEDIUM_STATUS_BASE_ATTRS: list[str] = [
     "heartrate_value",
     "respiration_rate_value",
     "sleep_state",
-    "body_movement_value",
     "lux",
+]
+
+FP2_SLOW_STATUS_ATTRS: list[str] = [
     "installation_angle",
     "set_device_mode4",
-    "device_offline_status",
     "view_zoom",
     "mounting_position",
     "attitude_status",
 ]
+
+FP2_ZONE_COUNT = 30
+FP2_MINUTE_ZONE_COUNT = 7
 
 FP2_GLOBAL_COUNT_ATTRS: list[str] = [
     "all_zone_statistics",
@@ -76,12 +104,22 @@ FP2_ZONE_PRESENCE_ATTRS: list[str] = [
     f"detection_area{index}" for index in range(1, FP2_ZONE_COUNT + 1)
 ]
 
-FP2_STATUS_ATTRS: list[str] = [
-    *FP2_BASE_STATUS_ATTRS,
+FP2_FAST_STATUS_ATTRS: list[str] = [
+    *FP2_FAST_STATUS_BASE_ATTRS,
+    *FP2_ZONE_PRESENCE_ATTRS,
+]
+
+FP2_MEDIUM_STATUS_ATTRS: list[str] = [
+    *FP2_MEDIUM_STATUS_BASE_ATTRS,
     *FP2_GLOBAL_COUNT_ATTRS,
     *FP2_ZONE_STATISTICS_ATTRS,
     *FP2_ZONE_MINUTE_COUNT_ATTRS,
-    *FP2_ZONE_PRESENCE_ATTRS,
+]
+
+FP2_STATUS_ATTRS: list[str] = [
+    *FP2_FAST_STATUS_ATTRS,
+    *FP2_MEDIUM_STATUS_ATTRS,
+    *FP2_SLOW_STATUS_ATTRS,
 ]
 
 FP2_RESOURCE_IDS = [

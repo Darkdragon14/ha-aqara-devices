@@ -8,6 +8,7 @@ FP300_BINARY_SENSORS_DEF = [
     {
         "name": "Presence",
         "key": "report_status01",
+        "poll_group": "fast",
         "device_class": BinarySensorDeviceClass.OCCUPANCY,
         "icon": "mdi:motion-sensor",
         "on_values": {"1"},
@@ -19,6 +20,7 @@ FP300_SENSOR_SPECS = [
     {
         "name": "Temperature",
         "key": "environment_temperature",
+        "poll_group": "medium",
         "device_class": SensorDeviceClass.TEMPERATURE,
         "state_class": SensorStateClass.MEASUREMENT,
         "unit": "°C",
@@ -29,6 +31,7 @@ FP300_SENSOR_SPECS = [
     {
         "name": "Humidity",
         "key": "environment_humidity",
+        "poll_group": "medium",
         "device_class": SensorDeviceClass.HUMIDITY,
         "state_class": SensorStateClass.MEASUREMENT,
         "unit": "%",
@@ -39,6 +42,7 @@ FP300_SENSOR_SPECS = [
     {
         "name": "Illuminance",
         "key": "lux",
+        "poll_group": "medium",
         "device_class": SensorDeviceClass.ILLUMINANCE,
         "state_class": SensorStateClass.MEASUREMENT,
         "unit": "lx",
@@ -48,6 +52,7 @@ FP300_SENSOR_SPECS = [
     {
         "name": "Battery",
         "key": "battery_percentage",
+        "poll_group": "slow",
         "device_class": SensorDeviceClass.BATTERY,
         "state_class": SensorStateClass.MEASUREMENT,
         "unit": "%",
