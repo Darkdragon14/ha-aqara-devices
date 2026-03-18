@@ -133,6 +133,8 @@ class AqaraApi:
             "Userid": self._userid,
             "Token": self._token,
             "Content-Type": "application/json; charset=utf-8",
+            "Time": str(int(time.time() * 1000)),
+            "Nonce": str(uuid.uuid4()).replace("-", ""),
         }
 
     async def res_write(self, payload: dict) -> Any:
@@ -327,12 +329,22 @@ class AqaraApi:
             "Content-Type": "application/json; charset=utf-8",
         }
 
-        async with self._session.get(url, headers=self._rest_headers(), json={}) as resp:
+        async with self._session.get(url, headers=self._rest_headers()) as resp:
             if resp.status != 200:
                 raise Exception(f"Failed to fetch devices: {resp.status}")
             body = await resp.json()
 
-        return body.get("result", {}).get("devices", [])
+        result = body.get("result", {})
+        if isinstance(result, str):
+            if result.strip():
+                try:
+                    result = json.loads(result)
+                except Exception:
+                    result = {}
+            else:
+                result = {}
+        devices = result.get("devices", [])
+        return devices if isinstance(devices, list) else []
 
     async def get_devices_by_model(self, model: str) -> list[dict[str, Any]]:
         devices = await self.get_devices()
