@@ -123,42 +123,71 @@ class AqaraApi:
         self._userid = res.get("userId") or res.get("userid")
         return self._token
 
-    def _rest_headers(self) -> dict:
-        """Headers for res/write and res/query (token-based, no Sign)."""
+    def _signed_headers(self, request_body: str) -> dict:
+        """Headers for signed authenticated requests."""
         if not self._token or not self._userid:
             raise RuntimeError("Not logged in: token/userid missing")
-        return {
+
+        headers = {
+            **self._base_headers,
             "Sys-Type": "1",
             "Appid": self._appid,
+            "Appkey": self._appkey,
             "Userid": self._userid,
             "Token": self._token,
-            "Content-Type": "application/json; charset=utf-8",
             "Time": str(int(time.time() * 1000)),
             "Nonce": str(uuid.uuid4()).replace("-", ""),
+            "RequestBody": request_body,
+            "Content-Type": "application/json; charset=utf-8",
         }
+        headers["Sign"] = self._sign(headers)
+        del headers["Appkey"]
+        del headers["RequestBody"]
+        return headers
+
+    def _device_query_headers(self, request_body: str = "") -> dict:
+        """Headers for device list query endpoint."""
+        if not self._token or not self._userid:
+            raise RuntimeError("Not logged in: token/userid missing")
+
+        headers = {
+            **self._base_headers,
+            "Appid": self._appid,
+            "Appkey": self._appkey,
+            "Userid": self._userid,
+            "Token": self._token,
+            "Nonce": str(uuid.uuid4()).replace("-", ""),
+            "Time": str(int(time.time() * 1000)),
+            "RequestBody": request_body,
+            "Content-Type": "application/json; charset=utf-8",
+        }
+        headers["Sign"] = self._sign(headers)
+        del headers["Appkey"]
+        del headers["RequestBody"]
+        return headers
 
     async def res_write(self, payload: dict) -> Any:
         url = f"{self._server}{REQUEST_PATH}"
         body = json.dumps(payload)
-        async with self._session.post(url, data=body, headers=self._rest_headers()) as resp:
+        async with self._session.post(url, data=body, headers=self._signed_headers(body)) as resp:
             return await resp.json(content_type=None)
 
     async def res_query(self, payload: dict) -> Any:
         url = f"{self._server}{QUERY_PATH}"
         body = json.dumps(payload)
-        async with self._session.post(url, data=body, headers=self._rest_headers()) as resp:
+        async with self._session.post(url, data=body, headers=self._signed_headers(body)) as resp:
             return await resp.json(content_type=None)
 
     async def res_history(self, payload: dict) -> Any:
         url = f"{self._server}{HISTORY_PATH}"
         body = json.dumps(payload)
-        async with self._session.post(url, data=body, headers=self._rest_headers()) as resp:
+        async with self._session.post(url, data=body, headers=self._signed_headers(body)) as resp:
             return await resp.json(content_type=None)
 
     async def res_query_resource(self, payload: dict) -> Any:
         url = f"{self._server}{RESOURCE_QUERY_PATH}"
         body = json.dumps(payload)
-        async with self._session.post(url, data=body, headers=self._rest_headers()) as resp:
+        async with self._session.post(url, data=body, headers=self._signed_headers(body)) as resp:
             return await resp.json(content_type=None)
 
     @staticmethod
@@ -321,18 +350,12 @@ class AqaraApi:
     async def get_devices(self) -> list[dict[str, Any]]:
         """Fetch all devices from Aqara cloud."""
         url = f"{self._server}{DEVICES_PATH}"
-        headers = {
-            "Sys-type": "1",
-            "AppId": "444c476ef7135e53330f46e7",
-            "UserId": self._userid,
-            "Token": self._token,
-            "Content-Type": "application/json; charset=utf-8",
-        }
+        headers = self._device_query_headers()
 
-        async with self._session.get(url, headers=self._rest_headers()) as resp:
+        async with self._session.get(url, headers=headers) as resp:
             if resp.status != 200:
                 raise Exception(f"Failed to fetch devices: {resp.status}")
-            body = await resp.json()
+            body = await resp.json(content_type=None)
 
         result = body.get("result", {})
         if isinstance(result, str):
@@ -507,7 +530,7 @@ class AqaraApi:
         }
         url = f"{self._server}{OPERATE_PATH}"
         body = json.dumps(payload)
-        async with self._session.post(url, data=body, headers=self._rest_headers()) as resp:
+        async with self._session.post(url, data=body, headers=self._signed_headers(body)) as resp:
             if resp.status != 200:
                 raise Exception(f"Failed to fetch devices: {resp.status}")
             return True
