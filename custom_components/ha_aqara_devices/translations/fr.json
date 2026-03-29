@@ -3,20 +3,52 @@
         "step": {
             "user": {
                 "title": "Aqara FP2",
-                "description": "Configurez votre intégration Aqara FP2.",
+                "description": "Configurez votre integration Aqara Open API et demandez un code d'autorisation.",
                 "data": {
-                    "email": "Email",
-                    "password": "Mot de passe",
-                    "region": "Région"
+                    "account": "Compte Aqara (email ou telephone)",
+                    "area": "Region",
+                    "bridge_url": "URL du bridge",
+                    "bridge_token": "Jeton du bridge"
+                }
+            },
+            "auth_code": {
+                "title": "Code d'autorisation",
+                "description": "Saisissez le code de verification envoye par Aqara a votre email ou a votre telephone.",
+                "data": {
+                    "auth_code": "Code d'autorisation"
                 }
             }
         },
         "error": {
-            "auth": "Impossible de s'authentifier, veuillez vérifier vos identifiants.",
-            "no_devices_found": "Aucun appareil FP2 n'a été trouvé."
+            "auth": "Echec de l'authentification. Verifiez le compte, la region et le code d'autorisation.",
+            "no_devices_found": "Aucun appareil FP2 n'a ete trouve."
         },
         "abort": {
-            "already_configured": "Cet appareil est déjà configuré."
+            "already_configured": "Cet appareil est deja configure."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Aqara FP2",
+                "description": "Mettez a jour les informations de votre compte Aqara Open API ou les parametres de connexion du bridge.",
+                "data": {
+                    "account": "Compte Aqara (email ou telephone)",
+                    "area": "Region",
+                    "bridge_url": "URL du bridge",
+                    "bridge_token": "Jeton du bridge"
+                }
+            },
+            "auth_code": {
+                "title": "Code d'autorisation",
+                "description": "Saisissez le code de verification envoye par Aqara a votre email ou a votre telephone.",
+                "data": {
+                    "auth_code": "Code d'autorisation"
+                }
+            }
+        },
+        "error": {
+            "auth": "Echec de l'authentification. Verifiez le compte, la region et le code d'autorisation."
         }
     },
     "entity": {

@@ -3,25 +3,33 @@
         "step": {
             "user": {
                 "title": "Aqara FP2",
-                "description": "Configura tu integración de Aqara FP2.",
+                "description": "Configura tu integracion de Aqara Open API y solicita un codigo de autorizacion.",
                 "data": {
-                    "email": "Correo electrónico",
-                    "password": "Contraseña",
-                    "region": "Región"
+                    "account": "Cuenta de Aqara (correo o telefono)",
+                    "area": "Region",
+                    "bridge_url": "URL del bridge",
+                    "bridge_token": "Token del bridge"
+                }
+            },
+            "auth_code": {
+                "title": "Codigo de autorizacion",
+                "description": "Introduce el codigo de verificacion que Aqara envio a tu correo electronico o telefono.",
+                "data": {
+                    "auth_code": "Codigo de autorizacion"
                 }
             }
         },
         "error": {
-            "auth": "Falló la autenticación, verifica tus credenciales.",
+            "auth": "Fallo la autenticacion. Verifica la cuenta, la region y el codigo de autorizacion.",
             "no_devices_found": "No se encontraron dispositivos FP2."
         },
         "abort": {
-            "already_configured": "Este dispositivo ya está configurado."
+            "already_configured": "Este dispositivo ya esta configurado."
         }
     },
     "entity": {
         "binary_sensor": {
-            "night_vision": { "name": "Visión nocturna" },
+            "night_vision": { "name": "Vision nocturna" },
             "gesture_v_sign": { "name": "Gesto signo V" },
             "gesture_four": { "name": "Gesto cuatro" },
             "gesture_high_five": { "name": "Gesto choca esos cinco" },

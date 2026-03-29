@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 import time
 from typing import Any, Dict
@@ -11,10 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
-    UpdateFailed,
 )
 
-from .api import AqaraApi
 from .binary_sensors import ALL_BINARY_SENSORS_DEF, M3_BINARY_SENSORS_DEF
 from .const import (
     DOMAIN,
@@ -35,10 +32,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     data = hass.data[DOMAIN][entry.entry_id]
-    api: AqaraApi = data["api"]
+    api = data["api"]
     cameras: list[dict] = data["cameras"]
     hubs_m3: list[dict] = data.get("hubs_m3", [])
     presence_devices: list[dict] = data.get("presence_devices", [])
+    camera_coordinators: dict[str, DataUpdateCoordinator] = data.get("camera_coordinators", {})
+    m3_coordinators: dict[str, DataUpdateCoordinator] = data.get("m3_coordinators", {})
     presence_coordinators: dict[str, dict[str, DataUpdateCoordinator]] = data.get("presence_coordinators", {})
 
     entities = []
@@ -47,20 +46,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         did = cam["did"]
         name = cam["deviceName"]
         model = cam.get("model") or G3_MODEL
-
-        async def _async_update_video_data(did_local=did):
-            try:
-                return await api.get_device_states(did_local, ALL_BINARY_SENSORS_DEF)
-            except Exception as e:
-                raise UpdateFailed(str(e)) from e
-
-        coordinator = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name=f"{DOMAIN}-camera-binary_sensor-{did}",
-            update_method=_async_update_video_data,
-            update_interval=timedelta(seconds=1),
-        )
+        coordinator = camera_coordinators.get(did)
+        if coordinator is None:
+            continue
 
         for binary_sensor_def in ALL_BINARY_SENSORS_DEF:
             entities.append(
@@ -79,20 +67,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         did = hub["did"]
         name = hub["deviceName"]
         model = hub["model"]
-
-        async def _async_update_m3_data(did_local=did):
-            try:
-                return await api.get_device_states(did_local, M3_BINARY_SENSORS_DEF)
-            except Exception as e:
-                raise UpdateFailed(str(e)) from e
-
-        coordinator = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name=f"{DOMAIN}-hub-m3-binary_sensor-{did}",
-            update_method=_async_update_m3_data,
-            update_interval=timedelta(seconds=1),
-        )
+        coordinator = m3_coordinators.get(did)
+        if coordinator is None:
+            continue
 
         for binary_sensor_def in M3_BINARY_SENSORS_DEF:
             entities.append(

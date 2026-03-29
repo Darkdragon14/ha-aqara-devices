@@ -1,5 +1,4 @@
 from __future__ import annotations
-from datetime import timedelta
 from typing import Any, Dict
 import logging
 
@@ -9,7 +8,6 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
-    UpdateFailed,
 )
 
 from .api import AqaraApi
@@ -24,6 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     data = hass.data[DOMAIN][entry.entry_id]
     api: AqaraApi = data["api"]
     hubs_m3: list[dict] = data.get("hubs_m3", [])
+    m3_coordinators: dict[str, DataUpdateCoordinator] = data.get("m3_coordinators", {})
 
     entities: list[SelectEntity] = []
 
@@ -31,20 +30,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         did = hub["did"]
         name = hub["deviceName"]
         model = hub["model"]
-
-        async def _async_update_m3_data(did_local=did):
-            try:
-                return await api.get_device_states(did_local, M3_SELECTS_DEF)
-            except Exception as e:
-                raise UpdateFailed(str(e)) from e
-
-        coordinator = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name=f"{DOMAIN}-hub-m3-select-{did}",
-            update_method=_async_update_m3_data,
-            update_interval=timedelta(seconds=1),
-        )
+        coordinator = m3_coordinators.get(did)
+        if coordinator is None:
+            continue
 
         for select_def in M3_SELECTS_DEF:
             select = AqaraSelect(

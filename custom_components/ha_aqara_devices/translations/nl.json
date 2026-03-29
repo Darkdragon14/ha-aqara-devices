@@ -3,16 +3,24 @@
         "step": {
             "user": {
                 "title": "Aqara FP2",
-                "description": "Stel je Aqara FP2-integratie in.",
+                "description": "Stel je Aqara Open API-integratie in en vraag een autorisatiecode aan.",
                 "data": {
-                    "email": "E-mail",
-                    "password": "Wachtwoord",
-                    "region": "Regio"
+                    "account": "Aqara-account (e-mail of telefoon)",
+                    "area": "Regio",
+                    "bridge_url": "Bridge-URL",
+                    "bridge_token": "Bridge-token"
+                }
+            },
+            "auth_code": {
+                "title": "Autorisatiecode",
+                "description": "Voer de verificatiecode in die Aqara naar je e-mail of telefoon heeft gestuurd.",
+                "data": {
+                    "auth_code": "Autorisatiecode"
                 }
             }
         },
         "error": {
-            "auth": "Authenticatie mislukt, controleer je inloggegevens.",
+            "auth": "Authenticatie mislukt. Controleer het account, de regio en de autorisatiecode.",
             "no_devices_found": "Er zijn geen FP2-apparaten gevonden."
         },
         "abort": {

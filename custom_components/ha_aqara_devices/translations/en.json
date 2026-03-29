@@ -3,20 +3,52 @@
         "step": {
             "user": {
                 "title": "Aqara FP2",
-                "description": "Set up your Aqara FP2 integration.",
+                "description": "Set up your Aqara Open API integration and request an authorization code.",
                 "data": {
-                    "email": "Email",
-                    "password": "Password",
-                    "region": "Region"
+                    "account": "Aqara account (email or phone)",
+                    "area": "Region",
+                    "bridge_url": "Bridge URL",
+                    "bridge_token": "Bridge token"
+                }
+            },
+            "auth_code": {
+                "title": "Authorization Code",
+                "description": "Enter the verification code sent by Aqara to your email or phone.",
+                "data": {
+                    "auth_code": "Authorization code"
                 }
             }
         },
         "error": {
-            "auth": "Authentication failed, please check your credentials.",
+            "auth": "Authentication failed, please verify the account, region, and authorization code.",
             "no_devices_found": "No FP2 devices were found."
         },
         "abort": {
             "already_configured": "This device is already configured."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Aqara FP2",
+                "description": "Update your Aqara Open API account details or bridge connection settings.",
+                "data": {
+                    "account": "Aqara account (email or phone)",
+                    "area": "Region",
+                    "bridge_url": "Bridge URL",
+                    "bridge_token": "Bridge token"
+                }
+            },
+            "auth_code": {
+                "title": "Authorization Code",
+                "description": "Enter the verification code sent by Aqara to your email or phone.",
+                "data": {
+                    "auth_code": "Authorization code"
+                }
+            }
+        },
+        "error": {
+            "auth": "Authentication failed, please verify the account, region, and authorization code."
         }
     },
     "entity": {

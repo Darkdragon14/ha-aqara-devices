@@ -21,10 +21,10 @@ ICONS: dict[str, str] = {
     "down": "mdi:arrow-down-bold",
     "left": "mdi:arrow-left-bold",
     "right": "mdi:arrow-right-bold",
-    "alarm_status": "mdi:bell-alert",
+    "ring_alarm_bell": "mdi:bell-alert",
 }
 
-RING_ALARM_BELL =  "alarm_status"
+RING_ALARM_BELL = "14.1.111"
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     data = hass.data[DOMAIN][entry.entry_id]
@@ -73,7 +73,7 @@ class AqaraG3RingAlarmBell(ButtonEntity):
         self._api = api
         self._did = did
         self._attr_name = "Ring Alarm Bell"
-        self._attr_icon = ICONS[RING_ALARM_BELL]
+        self._attr_icon = ICONS["ring_alarm_bell"]
         self._attr_unique_id = f"{did}_ring_alarm_bell"
         self._device_name = device_name
         self._model = model
