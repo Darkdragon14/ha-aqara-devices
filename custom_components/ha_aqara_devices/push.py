@@ -316,7 +316,8 @@ class AqaraBridgePushManager:
                 return
 
             group_state_cache = self._presence_state.setdefault(did, {}).setdefault(group, {})
-            state = dict(group_state_cache or coordinator.data or {})
+            coordinator_state = coordinator.data if isinstance(coordinator.data, dict) and coordinator.data else None
+            state = dict(coordinator_state or group_state_cache or {})
             state[key] = coerce_spec_value(spec, value, apply_scale=False)
             self._presence_state[did][group] = state
             coordinator.async_set_updated_data(state)
