@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Dict
+from typing import Any, Callable, Dict
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass, BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -146,6 +147,8 @@ class AqaraBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._attr_translation_key = spec.get("translation_key")
         self._value_type = spec.get("value_type")
         self._hold_seconds = spec.get("hold_seconds", 5)
+        self._clear_listener: Callable[[], None] | None = None
+        self._last_timestamp: float | None = None
 
         device_class = spec.get("device_class")
         if isinstance(device_class, BinarySensorDeviceClass):
@@ -162,6 +165,15 @@ class AqaraBinarySensor(CoordinatorEntity, BinarySensorEntity):
     def device_info(self):
         return build_device_info(self._did, self._device_name, self._model, self._device_label)
 
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        if self._value_type == "timestamp":
+            self._schedule_auto_clear(self.coordinator.data or {})
+
+    async def async_will_remove_from_hass(self) -> None:
+        self._cancel_auto_clear()
+        await super().async_will_remove_from_hass()
+
     @staticmethod
     def _truthy(val: Any) -> bool:
         if isinstance(val, bool):
@@ -175,6 +187,55 @@ class AqaraBinarySensor(CoordinatorEntity, BinarySensorEntity):
             return bool(int(val))
         except Exception:
             return False
+
+    def _cancel_auto_clear(self) -> None:
+        if self._clear_listener is not None:
+            self._clear_listener()
+            self._clear_listener = None
+
+    def _normalize_timestamp(self, raw: Any) -> float | None:
+        if not raw:
+            return None
+        try:
+            ts = float(raw)
+        except (TypeError, ValueError):
+            return None
+        if ts > 1_000_000_000_000:
+            ts /= 1000.0
+        if ts <= 0:
+            return None
+        return ts
+
+    def _schedule_auto_clear(self, data: dict[str, Any]) -> None:
+        raw = data.get(self._spec["inApp"])
+        ts = self._normalize_timestamp(raw)
+        self._cancel_auto_clear()
+        self._last_timestamp = ts
+        if ts is None:
+            return
+
+        clear_at = ts + max(self._hold_seconds, 1)
+        delay = clear_at - time.time()
+        if delay <= 0:
+            return
+
+        @callback
+        def _clear_state(_now) -> None:
+            self._clear_listener = None
+            self.async_write_ha_state()
+
+        self._clear_listener = async_call_later(self.hass, delay, _clear_state)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        if self._value_type == "timestamp":
+            data = self.coordinator.data or {}
+            ts = self._normalize_timestamp(data.get(self._spec["inApp"]))
+            if ts != self._last_timestamp:
+                self._schedule_auto_clear(data)
+            elif ts is not None and self._clear_listener is None and self.is_on:
+                self._schedule_auto_clear(data)
+        super()._handle_coordinator_update()
 
     @property
     def is_on(self) -> bool:

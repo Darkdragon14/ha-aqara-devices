@@ -7,7 +7,7 @@ NIGHT_VISION = {
 }
 
 GESTURE_RESOURCE_ID = "13.96.85"
-GESTURE_HOLD_SECONDS = 10
+GESTURE_HOLD_SECONDS = 5
 
 
 def _gesture_sensor(name: str, translation_key: str, in_app: str, value: str) -> dict:
