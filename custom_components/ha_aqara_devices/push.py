@@ -10,18 +10,14 @@ from typing import Any
 from aiohttp import ClientSession, ClientTimeout
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .api import AqaraApi
+from .api import AqaraApi, AqaraAuthError
 from .bridge_specs import (
     FP2_GROUP_SPEC_MAPS,
-    FP2_SUBSCRIPTION_RESOURCE_IDS,
     FP300_GROUP_SPEC_MAPS,
-    FP300_SUBSCRIPTION_RESOURCE_IDS,
     GESTURE_RESOURCE_ID,
     G3_GESTURE_VALUE_MAP,
     G3_RESOURCE_SPEC_MAP,
-    G3_SUBSCRIPTION_RESOURCE_IDS,
     M3_RESOURCE_SPEC_MAP,
-    M3_SUBSCRIPTION_RESOURCE_IDS,
     coerce_spec_value,
     spec_state_key,
 )
@@ -44,6 +40,7 @@ class AqaraBridgePushManager:
         camera_coordinators: dict[str, DataUpdateCoordinator],
         m3_coordinators: dict[str, DataUpdateCoordinator],
         presence_coordinators: dict[str, dict[str, DataUpdateCoordinator]],
+        subscriptions: list[dict[str, Any]],
     ) -> None:
         self._hass = hass
         self._session = session
@@ -62,13 +59,41 @@ class AqaraBridgePushManager:
             did: {group: {} for group in coordinators}
             for did, coordinators in presence_coordinators.items()
         }
+        self._subscriptions = self._normalize_subscriptions(subscriptions)
         self._listen_task: asyncio.Task[None] | None = None
         self._stop_event = asyncio.Event()
         self._connected_event = asyncio.Event()
+        self._subscribed = False
         self._started = False
+
+    @staticmethod
+    def _normalize_subscriptions(subscriptions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        merged: dict[str, dict[str, None]] = {}
+        for subscription in subscriptions:
+            subject_id = str(subscription.get("subjectId") or "").strip()
+            if not subject_id:
+                continue
+            resource_map = merged.setdefault(subject_id, {})
+            for resource_id in subscription.get("resourceIds") or []:
+                normalized_resource = str(resource_id or "").strip()
+                if normalized_resource:
+                    resource_map[normalized_resource] = None
+        return [
+            {"subjectId": subject_id, "resourceIds": list(resource_map)}
+            for subject_id, resource_map in merged.items()
+            if resource_map
+        ]
+
+    def _subscription_resource_count(self) -> int:
+        return sum(len(subscription["resourceIds"]) for subscription in self._subscriptions)
 
     async def async_start(self) -> None:
         if self._started:
+            return
+
+        if not self._subscriptions:
+            _LOGGER.info("No active Aqara bridge subscriptions for enabled entities; skipping SSE startup")
+            self._started = True
             return
 
         await self._api.ensure_valid_access_token()
@@ -88,6 +113,17 @@ class AqaraBridgePushManager:
     async def async_stop(self) -> None:
         self._stop_event.set()
         self._connected_event.clear()
+
+        if self._subscribed:
+            try:
+                await self._unsubscribe_all_resources()
+            except AqaraAuthError as err:
+                _LOGGER.warning("Aqara bridge unsubscribe skipped because authentication failed: %s", err)
+            except Exception as err:
+                _LOGGER.warning("Aqara bridge unsubscribe failed during shutdown: %s", err)
+            finally:
+                self._subscribed = False
+
         task = self._listen_task
         self._listen_task = None
         self._started = False
@@ -113,29 +149,31 @@ class AqaraBridgePushManager:
             )
 
     async def _subscribe_all_resources(self) -> None:
-        subscriptions: list[dict[str, Any]] = []
-
-        for did in self._cameras:
-            subscriptions.append({"subjectId": did, "resourceIds": G3_SUBSCRIPTION_RESOURCE_IDS})
-        for did in self._hubs_m3:
-            subscriptions.append({"subjectId": did, "resourceIds": M3_SUBSCRIPTION_RESOURCE_IDS})
-        for did, device in self._presence_devices.items():
-            model = str(device.get("model") or "")
-            if model == FP2_MODEL:
-                resource_ids = FP2_SUBSCRIPTION_RESOURCE_IDS
-            elif model == FP300_MODEL:
-                resource_ids = FP300_SUBSCRIPTION_RESOURCE_IDS
-            else:
-                continue
-            subscriptions.append({"subjectId": did, "resourceIds": resource_ids})
-
-        if not subscriptions:
+        if not self._subscriptions:
             return
 
-        response = await self._api.subscribe_resources(subscriptions)
+        response = await self._api.subscribe_resources(self._subscriptions)
         if str(response.get("code")) != "0":
             raise RuntimeError(f"Failed to subscribe bridge resources: {response}")
-        _LOGGER.info("Subscribed Aqara bridge resources for %s device(s)", len(subscriptions))
+        self._subscribed = True
+        _LOGGER.info(
+            "Subscribed Aqara bridge resources for %s device(s), %s resource(s)",
+            len(self._subscriptions),
+            self._subscription_resource_count(),
+        )
+
+    async def _unsubscribe_all_resources(self) -> None:
+        if not self._subscriptions:
+            return
+
+        response = await self._api.unsubscribe_resources(self._subscriptions)
+        if str(response.get("code")) != "0":
+            raise RuntimeError(f"Failed to unsubscribe bridge resources: {response}")
+        _LOGGER.info(
+            "Unsubscribed Aqara bridge resources for %s device(s), %s resource(s)",
+            len(self._subscriptions),
+            self._subscription_resource_count(),
+        )
 
     async def _listen_loop(self) -> None:
         reconnect_delay = 1.0
@@ -199,15 +237,38 @@ class AqaraBridgePushManager:
                 await self._dispatch_sse_event(event_name, data_lines)
 
     async def _dispatch_sse_event(self, event_name: str | None, data_lines: list[str]) -> None:
-        if event_name in (None, "", "ready", "heartbeat") or not data_lines:
+        if event_name in (None, "", "heartbeat") or not data_lines:
             return
 
         payload = json.loads("\n".join(data_lines))
-        if not isinstance(payload, dict) or payload.get("type") != "resource_report":
+        if not isinstance(payload, dict):
             return
-        await self._handle_message(payload)
 
-    async def _handle_message(self, payload: dict[str, Any]) -> None:
+        payload_type = str(payload.get("type") or event_name or "").strip().lower()
+        if payload_type not in {"snapshot", "batch"}:
+            return
+
+        events = payload.get("events") or []
+        if not isinstance(events, list):
+            return
+
+        self._apply_events(payload_type, events)
+
+    def _apply_events(self, payload_type: str, events: list[Any]) -> None:
+        pending_updates: dict[tuple[str, ...], tuple[DataUpdateCoordinator, dict[str, Any]]] = {}
+        for raw_event in events:
+            if isinstance(raw_event, dict):
+                self._handle_message(payload_type, raw_event, pending_updates)
+
+        for coordinator, state in pending_updates.values():
+            coordinator.async_set_updated_data(dict(state))
+
+    def _handle_message(
+        self,
+        payload_type: str,
+        payload: dict[str, Any],
+        pending_updates: dict[tuple[str, ...], tuple[DataUpdateCoordinator, dict[str, Any]]],
+    ) -> None:
         did = str(payload.get("subjectId") or "")
         if not did:
             return
@@ -219,17 +280,19 @@ class AqaraBridgePushManager:
             return
 
         if did in self._cameras:
-            await self._handle_g3_message(did, resource_id, payload.get("value"))
+            self._handle_g3_message(payload_type, did, resource_id, payload.get("value"), pending_updates)
             return
 
         if did in self._hubs_m3:
-            await self._handle_shared_device_message(
+            self._handle_shared_device_message(
+                payload_type,
                 did,
                 resource_id,
                 payload.get("value"),
                 self._m3_coordinators,
                 self._m3_state,
                 M3_RESOURCE_SPEC_MAP,
+                pending_updates,
                 apply_scale=True,
             )
             return
@@ -239,42 +302,101 @@ class AqaraBridgePushManager:
             return
         model = str(device.get("model") or "")
         if model == FP2_MODEL:
-            await self._handle_grouped_presence_message(did, resource_id, payload.get("value"), FP2_GROUP_SPEC_MAPS)
+            self._handle_grouped_presence_message(
+                payload_type,
+                did,
+                resource_id,
+                payload.get("value"),
+                FP2_GROUP_SPEC_MAPS,
+                pending_updates,
+            )
         elif model == FP300_MODEL:
-            await self._handle_grouped_presence_message(did, resource_id, payload.get("value"), FP300_GROUP_SPEC_MAPS)
+            self._handle_grouped_presence_message(
+                payload_type,
+                did,
+                resource_id,
+                payload.get("value"),
+                FP300_GROUP_SPEC_MAPS,
+                pending_updates,
+            )
 
-    async def _handle_g3_message(self, did: str, resource_id: str, value: Any) -> None:
+    def _queue_state_update(
+        self,
+        flush_key: tuple[str, ...],
+        coordinator: DataUpdateCoordinator,
+        state: dict[str, Any],
+        pending_updates: dict[tuple[str, ...], tuple[DataUpdateCoordinator, dict[str, Any]]],
+    ) -> None:
+        pending_updates[flush_key] = (coordinator, state)
+
+    def _base_state(
+        self,
+        payload_type: str,
+        flush_key: tuple[str, ...],
+        cached_state: dict[str, Any] | None,
+        coordinator: DataUpdateCoordinator,
+        pending_updates: dict[tuple[str, ...], tuple[DataUpdateCoordinator, dict[str, Any]]],
+    ) -> dict[str, Any]:
+        pending = pending_updates.get(flush_key)
+        if pending is not None:
+            _, pending_state = pending
+            return dict(pending_state)
+        if payload_type == "snapshot":
+            return {}
+        return dict(cached_state or coordinator.data or {})
+
+    def _handle_g3_message(
+        self,
+        payload_type: str,
+        did: str,
+        resource_id: str,
+        value: Any,
+        pending_updates: dict[tuple[str, ...], tuple[DataUpdateCoordinator, dict[str, Any]]],
+    ) -> None:
         if resource_id == GESTURE_RESOURCE_ID:
+            if payload_type == "snapshot":
+                return
             gesture_key = G3_GESTURE_VALUE_MAP.get(str(value))
             if gesture_key is None:
                 return
             coordinator = self._camera_coordinators.get(did)
             if coordinator is None:
                 return
-            state = dict(self._camera_state.get(did) or coordinator.data or {})
+            flush_key = ("device", did, coordinator.name)
+            state = self._base_state(
+                payload_type,
+                flush_key,
+                self._camera_state.get(did),
+                coordinator,
+                pending_updates,
+            )
             state[gesture_key] = time.time()
             self._camera_state[did] = state
-            coordinator.async_set_updated_data(state)
+            self._queue_state_update(flush_key, coordinator, state, pending_updates)
             return
 
-        await self._handle_shared_device_message(
+        self._handle_shared_device_message(
+            payload_type,
             did,
             resource_id,
             value,
             self._camera_coordinators,
             self._camera_state,
             G3_RESOURCE_SPEC_MAP,
+            pending_updates,
             apply_scale=True,
         )
 
-    async def _handle_shared_device_message(
+    def _handle_shared_device_message(
         self,
+        payload_type: str,
         did: str,
         resource_id: str,
         value: Any,
         coordinators: dict[str, DataUpdateCoordinator],
         cache: dict[str, dict[str, Any]],
         resource_specs: dict[str, dict[str, Any]],
+        pending_updates: dict[tuple[str, ...], tuple[DataUpdateCoordinator, dict[str, Any]]],
         *,
         apply_scale: bool,
     ) -> None:
@@ -290,17 +412,29 @@ class AqaraBridgePushManager:
         if coordinator is None:
             return
 
-        state = dict(cache.get(did) or coordinator.data or {})
-        state[key] = coerce_spec_value(spec, value, apply_scale=apply_scale)
+        flush_key = ("device", did, coordinator.name)
+        state = self._base_state(
+            payload_type,
+            flush_key,
+            cache.get(did),
+            coordinator,
+            pending_updates,
+        )
+        new_value = coerce_spec_value(spec, value, apply_scale=apply_scale)
+        if key in state and state[key] == new_value:
+            return
+        state[key] = new_value
         cache[did] = state
-        coordinator.async_set_updated_data(state)
+        self._queue_state_update(flush_key, coordinator, state, pending_updates)
 
-    async def _handle_grouped_presence_message(
+    def _handle_grouped_presence_message(
         self,
+        payload_type: str,
         did: str,
         resource_id: str,
         value: Any,
         group_spec_maps: dict[str, dict[str, dict[str, Any]]],
+        pending_updates: dict[tuple[str, ...], tuple[DataUpdateCoordinator, dict[str, Any]]],
     ) -> None:
         for group, resource_specs in group_spec_maps.items():
             spec = resource_specs.get(resource_id)
@@ -315,10 +449,20 @@ class AqaraBridgePushManager:
             if coordinator is None:
                 return
 
+            flush_key = ("presence", did, group)
             group_state_cache = self._presence_state.setdefault(did, {}).setdefault(group, {})
             coordinator_state = coordinator.data if isinstance(coordinator.data, dict) and coordinator.data else None
-            state = dict(coordinator_state or group_state_cache or {})
-            state[key] = coerce_spec_value(spec, value, apply_scale=False)
+            state = self._base_state(
+                payload_type,
+                flush_key,
+                group_state_cache or coordinator_state,
+                coordinator,
+                pending_updates,
+            )
+            new_value = coerce_spec_value(spec, value, apply_scale=False)
+            if key in state and state[key] == new_value:
+                return
+            state[key] = new_value
             self._presence_state[did][group] = state
-            coordinator.async_set_updated_data(state)
+            self._queue_state_update(flush_key, coordinator, state, pending_updates)
             return

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from functools import lru_cache
 import hashlib
 import json
 import logging
@@ -10,10 +11,11 @@ from typing import Any, Dict, Iterable
 
 from aiohttp import ClientSession
 
-from .binary_sensors import ALL_BINARY_SENSORS_DEF
-from .bridge_specs import FP2_GROUP_SPEC_MAPS, FP300_GROUP_SPEC_MAPS, coerce_spec_value, spec_state_key
 from .const import (
     AREAS,
+    CONF_APP_ID,
+    CONF_APP_KEY,
+    CONF_KEY_ID,
     DEFAULT_ACCESS_TOKEN_VALIDITY,
     FP2_MODEL,
     FP2_RESOURCE_IDS,
@@ -23,25 +25,44 @@ from .const import (
     OPEN_API_PATH,
     TOKEN_REFRESH_REQUEST_MARGIN_SECONDS,
 )
-from .numbers import ALL_NUMBERS_DEF
-from .switches import ALL_SWITCHES_DEF
-
-ALL_DEF = ALL_BINARY_SENSORS_DEF + ALL_SWITCHES_DEF + ALL_NUMBERS_DEF
 _LOGGER = logging.getLogger(__name__)
 
-FP2_FAST_RESOURCE_IDS = list(FP2_GROUP_SPEC_MAPS["fast"])
-FP2_PRESENCE_RESOURCE_IDS = list(FP2_GROUP_SPEC_MAPS["presence"])
-FP2_MEDIUM_RESOURCE_IDS = list(FP2_GROUP_SPEC_MAPS["medium"])
-FP2_SLOW_RESOURCE_IDS = list(FP2_GROUP_SPEC_MAPS["slow"])
-FP2_STATUS_RESOURCE_IDS = [
-    *FP2_FAST_RESOURCE_IDS,
-    *FP2_MEDIUM_RESOURCE_IDS,
-    *FP2_SLOW_RESOURCE_IDS,
-]
 
-FP300_FAST_RESOURCE_IDS = list(FP300_GROUP_SPEC_MAPS["fast"])
-FP300_MEDIUM_RESOURCE_IDS = list(FP300_GROUP_SPEC_MAPS["medium"])
-FP300_SLOW_RESOURCE_IDS = list(FP300_GROUP_SPEC_MAPS["slow"])
+@lru_cache(maxsize=1)
+def _all_device_defs() -> tuple[dict[str, Any], ...]:
+    from .binary_sensors import ALL_BINARY_SENSORS_DEF
+    from .numbers import ALL_NUMBERS_DEF
+    from .switches import ALL_SWITCHES_DEF
+
+    return tuple(ALL_BINARY_SENSORS_DEF + ALL_SWITCHES_DEF + ALL_NUMBERS_DEF)
+
+
+@lru_cache(maxsize=1)
+def _bridge_runtime() -> dict[str, Any]:
+    from .bridge_specs import FP2_GROUP_SPEC_MAPS, FP300_GROUP_SPEC_MAPS, coerce_spec_value, spec_state_key
+
+    fp2_fast = list(FP2_GROUP_SPEC_MAPS["fast"])
+    fp2_presence = list(FP2_GROUP_SPEC_MAPS["presence"])
+    fp2_medium = list(FP2_GROUP_SPEC_MAPS["medium"])
+    fp2_slow = list(FP2_GROUP_SPEC_MAPS["slow"])
+    fp300_fast = list(FP300_GROUP_SPEC_MAPS["fast"])
+    fp300_medium = list(FP300_GROUP_SPEC_MAPS["medium"])
+    fp300_slow = list(FP300_GROUP_SPEC_MAPS["slow"])
+
+    return {
+        "FP2_GROUP_SPEC_MAPS": FP2_GROUP_SPEC_MAPS,
+        "FP300_GROUP_SPEC_MAPS": FP300_GROUP_SPEC_MAPS,
+        "coerce_spec_value": coerce_spec_value,
+        "spec_state_key": spec_state_key,
+        "FP2_FAST_RESOURCE_IDS": fp2_fast,
+        "FP2_PRESENCE_RESOURCE_IDS": fp2_presence,
+        "FP2_MEDIUM_RESOURCE_IDS": fp2_medium,
+        "FP2_SLOW_RESOURCE_IDS": fp2_slow,
+        "FP2_STATUS_RESOURCE_IDS": [*fp2_fast, *fp2_medium, *fp2_slow],
+        "FP300_FAST_RESOURCE_IDS": fp300_fast,
+        "FP300_MEDIUM_RESOURCE_IDS": fp300_medium,
+        "FP300_SLOW_RESOURCE_IDS": fp300_slow,
+    }
 
 
 class AqaraAuthError(RuntimeError):
@@ -56,6 +77,9 @@ class AqaraApi:
         area: str,
         session: ClientSession,
         *,
+        app_id: str,
+        app_key: str,
+        key_id: str,
         access_token: str | None = None,
         refresh_token: str | None = None,
         open_id: str | None = None,
@@ -65,11 +89,15 @@ class AqaraApi:
         if area not in AREAS:
             area = "OTHER"
         region = AREAS[area]
+        if not str(app_id or "").strip() or not str(app_key or "").strip() or not str(key_id or "").strip():
+            raise AqaraAuthError(
+                f"Aqara developer credentials missing. Configure {CONF_APP_ID}, {CONF_APP_KEY}, and {CONF_KEY_ID}."
+            )
         self._area = area
         self._server = region["server"]
-        self._appid = region["appid"]
-        self._appkey = region["appkey"]
-        self._keyid = region["keyid"]
+        self._appid = str(app_id).strip()
+        self._appkey = str(app_key).strip()
+        self._keyid = str(key_id).strip()
         self._session = session
         self._access_token = access_token
         self._refresh_token = refresh_token
@@ -461,8 +489,10 @@ class AqaraApi:
     async def get_device_states(
         self,
         did: str,
-        switch_defs: Iterable[Dict[str, Any]] = ALL_DEF,
+        switch_defs: Iterable[Dict[str, Any]] | None = None,
     ) -> Dict[str, Any]:
+        if switch_defs is None:
+            switch_defs = _all_device_defs()
         standard_defs = [spec for spec in switch_defs if spec.get("api")]
         history_defs = [spec for spec in switch_defs if spec.get("history_resource")]
         result_map: Dict[str, Any] = {spec["inApp"]: spec.get("default", 0) for spec in switch_defs}
@@ -492,7 +522,7 @@ class AqaraApi:
                 val = self._attr_value_from_item(item)
                 spec = api_to_spec.get(key)
                 if spec:
-                    result_map[spec["inApp"]] = coerce_spec_value(spec, val, apply_scale=True)
+                    result_map[spec["inApp"]] = _bridge_runtime()["coerce_spec_value"](spec, val, apply_scale=True)
 
         if history_defs:
             result_map.update(await self._history_states(did, history_defs))
@@ -639,64 +669,86 @@ class AqaraApi:
         *,
         apply_scale: bool,
     ) -> dict[str, Any]:
+        runtime = _bridge_runtime()
         status: dict[str, Any] = {}
         for item in self._flatten_result_items(data):
             resource_id = str(item.get("resourceId") or item.get("attr") or "")
             spec = resource_specs.get(resource_id)
             if not spec:
                 continue
-            key = spec_state_key(spec)
+            key = runtime["spec_state_key"](spec)
             if not key:
                 continue
-            status[key] = coerce_spec_value(spec, self._attr_value_from_item(item), apply_scale=apply_scale)
+            status[key] = runtime["coerce_spec_value"](spec, self._attr_value_from_item(item), apply_scale=apply_scale)
         return status
 
     async def get_presence_core_state(self, did: str, model: str) -> dict[str, Any]:
+        runtime = _bridge_runtime()
         if model == FP2_MODEL:
             return await self.get_fp2_full_state(did)
         if model == FP300_MODEL:
             return await self._query_presence_status_attrs(
                 did,
-                [*FP300_FAST_RESOURCE_IDS, *FP300_MEDIUM_RESOURCE_IDS, *FP300_SLOW_RESOURCE_IDS],
+                [
+                    *runtime["FP300_FAST_RESOURCE_IDS"],
+                    *runtime["FP300_MEDIUM_RESOURCE_IDS"],
+                    *runtime["FP300_SLOW_RESOURCE_IDS"],
+                ],
                 {
-                    **FP300_GROUP_SPEC_MAPS["fast"],
-                    **FP300_GROUP_SPEC_MAPS["medium"],
-                    **FP300_GROUP_SPEC_MAPS["slow"],
+                    **runtime["FP300_GROUP_SPEC_MAPS"]["fast"],
+                    **runtime["FP300_GROUP_SPEC_MAPS"]["medium"],
+                    **runtime["FP300_GROUP_SPEC_MAPS"]["slow"],
                 },
             )
         raise RuntimeError(f"Unsupported presence model: {model}")
 
     async def get_presence_fast_state(self, did: str, model: str) -> dict[str, Any]:
+        runtime = _bridge_runtime()
         if model == FP2_MODEL:
-            return await self.get_fp2_status(did, FP2_FAST_RESOURCE_IDS)
+            return await self.get_fp2_status(did, runtime["FP2_FAST_RESOURCE_IDS"])
         if model == FP300_MODEL:
-            return await self._query_presence_status_attrs(did, FP300_FAST_RESOURCE_IDS, FP300_GROUP_SPEC_MAPS["fast"])
+            return await self._query_presence_status_attrs(
+                did,
+                runtime["FP300_FAST_RESOURCE_IDS"],
+                runtime["FP300_GROUP_SPEC_MAPS"]["fast"],
+            )
         raise RuntimeError(f"Unsupported presence model: {model}")
 
     async def get_presence_medium_state(self, did: str, model: str) -> dict[str, Any]:
+        runtime = _bridge_runtime()
         if model == FP2_MODEL:
-            return await self.get_fp2_status(did, FP2_MEDIUM_RESOURCE_IDS)
+            return await self.get_fp2_status(did, runtime["FP2_MEDIUM_RESOURCE_IDS"])
         if model == FP300_MODEL:
-            return await self._query_presence_status_attrs(did, FP300_MEDIUM_RESOURCE_IDS, FP300_GROUP_SPEC_MAPS["medium"])
+            return await self._query_presence_status_attrs(
+                did,
+                runtime["FP300_MEDIUM_RESOURCE_IDS"],
+                runtime["FP300_GROUP_SPEC_MAPS"]["medium"],
+            )
         raise RuntimeError(f"Unsupported presence model: {model}")
 
     async def get_presence_slow_state(self, did: str, model: str) -> dict[str, Any]:
+        runtime = _bridge_runtime()
         if model == FP2_MODEL:
             status, settings = await asyncio.gather(
-                self.get_fp2_status(did, FP2_SLOW_RESOURCE_IDS),
+                self.get_fp2_status(did, runtime["FP2_SLOW_RESOURCE_IDS"]),
                 self.get_fp2_settings(did),
             )
             return self._merge_states(status, settings)
         if model == FP300_MODEL:
-            return await self._query_presence_status_attrs(did, FP300_SLOW_RESOURCE_IDS, FP300_GROUP_SPEC_MAPS["slow"])
+            return await self._query_presence_status_attrs(
+                did,
+                runtime["FP300_SLOW_RESOURCE_IDS"],
+                runtime["FP300_GROUP_SPEC_MAPS"]["slow"],
+            )
         raise RuntimeError(f"Unsupported presence model: {model}")
 
     async def get_fp2_status(self, did: str, attrs: Iterable[str] | None = None) -> dict[str, Any]:
-        options = list(dict.fromkeys(attrs or FP2_STATUS_RESOURCE_IDS))
+        runtime = _bridge_runtime()
+        options = list(dict.fromkeys(attrs or runtime["FP2_STATUS_RESOURCE_IDS"]))
         resource_specs = {
-            **FP2_GROUP_SPEC_MAPS["fast"],
-            **FP2_GROUP_SPEC_MAPS["medium"],
-            **FP2_GROUP_SPEC_MAPS["slow"],
+            **runtime["FP2_GROUP_SPEC_MAPS"]["fast"],
+            **runtime["FP2_GROUP_SPEC_MAPS"]["medium"],
+            **runtime["FP2_GROUP_SPEC_MAPS"]["slow"],
         }
         return await self._query_presence_status_attrs(did, options, resource_specs)
 
@@ -721,7 +773,12 @@ class AqaraApi:
         return settings
 
     async def get_fp2_presence(self, did: str) -> dict[str, Any]:
-        return await self._query_presence_status_attrs(did, FP2_PRESENCE_RESOURCE_IDS, FP2_GROUP_SPEC_MAPS["presence"])
+        runtime = _bridge_runtime()
+        return await self._query_presence_status_attrs(
+            did,
+            runtime["FP2_PRESENCE_RESOURCE_IDS"],
+            runtime["FP2_GROUP_SPEC_MAPS"]["presence"],
+        )
 
     async def get_fp2_full_state(self, did: str) -> dict[str, Any]:
         status, settings, presence = await asyncio.gather(

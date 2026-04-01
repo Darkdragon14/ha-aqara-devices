@@ -2,24 +2,24 @@ from __future__ import annotations
 
 from datetime import timedelta
 from functools import partial
-from importlib import import_module
 import logging
 from typing import Any, Awaitable, Callable
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import aiohttp_client, config_validation as cv, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.helpers.typing import ConfigType
 
-from .api import AqaraApi, AqaraAuthError
-from .bridge_specs import G3_STATE_SPECS, M3_STATE_SPECS
 from .const import (
     BRIDGE_SANITY_INTERVAL_SECONDS,
     BRIDGE_UNAVAILABLE_AFTER_FAILURES,
+    CONF_APP_ID,
+    CONF_APP_KEY,
     CONF_BRIDGE_TOKEN,
     CONF_BRIDGE_URL,
+    CONF_KEY_ID,
     DOMAIN,
     DEFAULT_BRIDGE_URL,
     FP2_MODEL,
@@ -30,11 +30,6 @@ from .const import (
     PRESENCE_MODELS,
     TOKEN_REFRESH_STARTUP_MARGIN_SECONDS,
 )
-from .push import AqaraBridgePushManager
-
-# Preload platform modules so Home Assistant doesn't import them inside the event loop
-for _platform in PLATFORMS:
-    import_module(f".{_platform}", __package__)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +46,8 @@ def _build_resilient_update(
     label: str,
     unavailable_after_failures: int,
 ) -> Callable[[], Awaitable[dict[str, Any]]]:
+    from .api import AqaraAuthError
+
     state: dict[str, Any] = {"failures": 0, "last_data": None}
 
     async def _async_update() -> dict[str, Any]:
@@ -62,7 +59,7 @@ def _build_resilient_update(
             state["failures"] += 1
             if state["last_data"] is not None and state["failures"] < unavailable_after_failures:
                 _LOGGER.warning(
-                    "Presence %s update failed for %s (%s/%s), keeping last known state: %s",
+                    "Aqara %s update failed for %s (%s/%s), keeping last known state: %s",
                     label,
                     did,
                     state["failures"],
@@ -105,7 +102,7 @@ def _create_resilient_coordinator(
 
 def _setup_device_state_coordinators(
     hass: HomeAssistant,
-    api: AqaraApi,
+    api,
     devices: list[dict[str, Any]],
     label: str,
     state_defs: list[dict[str, Any]],
@@ -126,7 +123,7 @@ def _setup_device_state_coordinators(
 
 def _setup_presence_coordinators(
     hass: HomeAssistant,
-    api: AqaraApi,
+    api,
     presence_devices: list[dict[str, Any]],
 ) -> dict[str, dict[str, DataUpdateCoordinator]]:
     coordinators: dict[str, dict[str, DataUpdateCoordinator]] = {}
@@ -208,13 +205,29 @@ def _entry_bridge_value(entry: ConfigEntry, key: str, default: str = "") -> str:
     return str(entry.options.get(key) or entry.data.get(key) or default).strip()
 
 
+def _enabled_unique_ids_for_entry(hass: HomeAssistant, entry: ConfigEntry) -> set[str]:
+    entity_registry = er.async_get(hass)
+    return {
+        str(registry_entry.unique_id)
+        for registry_entry in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+        if registry_entry.unique_id and registry_entry.disabled_by is None
+    }
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
+
+    from .api import AqaraApi, AqaraAuthError
+    from .bridge_specs import G3_STATE_SPECS, M3_STATE_SPECS, build_active_subscriptions
+    from .push import AqaraBridgePushManager
 
     session = aiohttp_client.async_get_clientsession(hass)
     api = AqaraApi(
         entry.data["area"],
         session,
+        app_id=entry.data.get(CONF_APP_ID, ""),
+        app_key=entry.data.get(CONF_APP_KEY, ""),
+        key_id=entry.data.get(CONF_KEY_ID, ""),
         access_token=entry.data.get("access_token"),
         refresh_token=entry.data.get("refresh_token"),
         open_id=entry.data.get("open_id"),
@@ -222,6 +235,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     try:
+        if not entry.data.get(CONF_APP_ID) or not entry.data.get(CONF_APP_KEY) or not entry.data.get(CONF_KEY_ID):
+            raise ConfigEntryAuthFailed(
+                "Aqara developer credentials are missing. Reconfigure the integration with app_id, app_key, and key_id."
+            )
         if not entry.data.get("access_token") or not entry.data.get("refresh_token"):
             raise ConfigEntryAuthFailed(
                 "Aqara Open API tokens missing. Reconfigure the integration with the new authorization-code flow."
@@ -261,6 +278,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not bridge_url or not bridge_token:
         raise ConfigEntryNotReady("Aqara bridge configuration missing. Update the integration options.")
 
+    entry_data = {
+        "api": api,
+        "cameras": cameras,
+        "hubs_m3": hubs_m3,
+        "presence_devices": presence_devices,
+        "camera_coordinators": camera_coordinators,
+        "m3_coordinators": m3_coordinators,
+        "presence_coordinators": presence_coordinators,
+        "bridge_manager": None,
+        "active_subscriptions": [],
+    }
+    hass.data[DOMAIN][entry.entry_id] = entry_data
+
+    try:
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    except Exception:
+        await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+        hass.data[DOMAIN].pop(entry.entry_id, None)
+        raise
+
+    enabled_unique_ids = _enabled_unique_ids_for_entry(hass, entry)
+    active_subscriptions = build_active_subscriptions(enabled_unique_ids, cameras, hubs_m3, presence_devices)
+    entry_data["active_subscriptions"] = active_subscriptions
+
     bridge_manager = AqaraBridgePushManager(
         hass,
         session,
@@ -273,37 +314,64 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         camera_coordinators,
         m3_coordinators,
         presence_coordinators,
+        active_subscriptions,
     )
 
     try:
         await bridge_manager.async_start()
     except AqaraAuthError as e:
+        await bridge_manager.async_stop()
+        await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+        hass.data[DOMAIN].pop(entry.entry_id, None)
         raise ConfigEntryAuthFailed(str(e)) from e
     except Exception as e:
+        await bridge_manager.async_stop()
+        await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+        hass.data[DOMAIN].pop(entry.entry_id, None)
         raise ConfigEntryNotReady(f"Aqara bridge setup not ready: {e}") from e
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        "api": api,
-        "cameras": cameras,
-        "hubs_m3": hubs_m3,
-        "presence_devices": presence_devices,
-        "camera_coordinators": camera_coordinators,
-        "m3_coordinators": m3_coordinators,
-        "presence_coordinators": presence_coordinators,
-        "bridge_manager": bridge_manager,
-    }
+    entry_data["bridge_manager"] = bridge_manager
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    total_resources = sum(len(subscription["resourceIds"]) for subscription in active_subscriptions)
+    _LOGGER.info(
+        "Aqara bridge subscriptions built for %s device(s), %s active resource(s)",
+        len(active_subscriptions),
+        total_resources,
+    )
+
+    @callback
+    def _handle_entity_registry_update(event) -> None:
+        if event.data.get("action") != "update":
+            return
+
+        changes = event.data.get("changes") or {}
+        if "disabled_by" not in changes:
+            return
+
+        entity_id = event.data.get("entity_id")
+        if not entity_id:
+            return
+
+        registry_entry = er.async_get(hass).async_get(entity_id)
+        if registry_entry is None or registry_entry.config_entry_id != entry.entry_id:
+            return
+
+        change_label = "enabled" if changes["disabled_by"] is None else "disabled"
+        _LOGGER.info("Aqara entity %s was %s; scheduling integration reload", entity_id, change_label)
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+
+    entry.async_on_unload(hass.bus.async_listen(er.EVENT_ENTITY_REGISTRY_UPDATED, _handle_entity_registry_update))
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    entry_data = hass.data[DOMAIN].get(entry.entry_id)
+    domain_data = hass.data.get(DOMAIN, {})
+    entry_data = domain_data.get(entry.entry_id)
     bridge_manager = None if entry_data is None else entry_data.get("bridge_manager")
     if bridge_manager is not None:
         await bridge_manager.async_stop()
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id, None)
+        domain_data.pop(entry.entry_id, None)
     return unload_ok

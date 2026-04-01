@@ -8,7 +8,10 @@
                     "account": "Compte Aqara (email ou telephone)",
                     "area": "Region",
                     "bridge_url": "URL du bridge",
-                    "bridge_token": "Jeton du bridge"
+                    "bridge_token": "Jeton du bridge",
+                    "app_id": "App ID",
+                    "key_id": "Key ID",
+                    "app_key": "App key"
                 }
             },
             "auth_code": {
@@ -36,7 +39,10 @@
                     "account": "Compte Aqara (email ou telephone)",
                     "area": "Region",
                     "bridge_url": "URL du bridge",
-                    "bridge_token": "Jeton du bridge"
+                    "bridge_token": "Jeton du bridge",
+                    "app_id": "App ID",
+                    "key_id": "Key ID",
+                    "app_key": "App key"
                 }
             },
             "auth_code": {

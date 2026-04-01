@@ -8,7 +8,10 @@
                     "account": "Aqara-Konto (E-Mail oder Telefon)",
                     "area": "Region",
                     "bridge_url": "Bridge-URL",
-                    "bridge_token": "Bridge-Token"
+                    "bridge_token": "Bridge-Token",
+                    "app_id": "App-ID",
+                    "key_id": "Key ID",
+                    "app_key": "App-Key"
                 }
             },
             "auth_code": {

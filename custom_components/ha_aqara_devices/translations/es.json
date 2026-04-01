@@ -8,7 +8,10 @@
                     "account": "Cuenta de Aqara (correo o telefono)",
                     "area": "Region",
                     "bridge_url": "URL del bridge",
-                    "bridge_token": "Token del bridge"
+                    "bridge_token": "Token del bridge",
+                    "app_id": "App ID",
+                    "key_id": "Key ID",
+                    "app_key": "App key"
                 }
             },
             "auth_code": {

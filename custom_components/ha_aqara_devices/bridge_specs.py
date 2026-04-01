@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Iterable
 
 from .binary_sensors import ALL_BINARY_SENSORS_DEF, GESTURE_RESOURCE_ID, GESTURE_SENSORS, M3_BINARY_SENSORS_DEF
+from .const import FP2_MODEL, FP300_MODEL
 from .fp2 import FP2_BINARY_SENSORS_DEF, FP2_SENSOR_SPECS
 from .fp300 import FP300_BINARY_SENSORS_DEF, FP300_SENSOR_SPECS
 from .numbers import ALL_NUMBERS_DEF, M3_NUMBERS_DEF
@@ -132,3 +133,97 @@ FP300_GROUP_SPEC_MAPS = {
     for group, specs in FP300_GROUP_SPECS.items()
 }
 FP300_SUBSCRIPTION_RESOURCE_IDS = unique_api_resource_ids(FP300_STATE_SPECS)
+
+
+def _spec_resource_id(spec: dict[str, Any]) -> str | None:
+    resource_id = spec.get("api") or spec.get("history_resource")
+    if not resource_id:
+        return None
+    return str(resource_id)
+
+
+def _append_resource_if_enabled(
+    resource_ids: dict[str, None],
+    enabled_unique_ids: set[str],
+    unique_id: str,
+    spec: dict[str, Any],
+) -> None:
+    if unique_id not in enabled_unique_ids:
+        return
+    resource_id = _spec_resource_id(spec)
+    if resource_id:
+        resource_ids[resource_id] = None
+
+
+def _collect_g3_resources(enabled_unique_ids: set[str], did: str) -> list[str]:
+    resource_ids: dict[str, None] = {}
+    for spec in G3_STATE_SPECS:
+        _append_resource_if_enabled(resource_ids, enabled_unique_ids, f"{did}_{spec['inApp']}", spec)
+    return list(resource_ids)
+
+
+def _collect_m3_resources(enabled_unique_ids: set[str], did: str) -> list[str]:
+    resource_ids: dict[str, None] = {}
+    for spec in M3_STATE_SPECS:
+        _append_resource_if_enabled(resource_ids, enabled_unique_ids, f"{did}_{spec['inApp']}", spec)
+    return list(resource_ids)
+
+
+def _collect_presence_resources(
+    enabled_unique_ids: set[str],
+    did: str,
+    binary_specs: Iterable[dict[str, Any]],
+    sensor_specs: Iterable[dict[str, Any]],
+) -> list[str]:
+    resource_ids: dict[str, None] = {}
+    for spec in binary_specs:
+        _append_resource_if_enabled(resource_ids, enabled_unique_ids, f"{did}_fp2_{spec['key']}", spec)
+    for spec in sensor_specs:
+        _append_resource_if_enabled(resource_ids, enabled_unique_ids, f"{did}_fp2_sensor_{spec['key']}", spec)
+    return list(resource_ids)
+
+
+def build_active_subscriptions(
+    enabled_unique_ids: set[str],
+    cameras: list[dict[str, Any]],
+    hubs_m3: list[dict[str, Any]],
+    presence_devices: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    subscriptions: list[dict[str, Any]] = []
+
+    for camera in cameras:
+        did = str(camera["did"])
+        resource_ids = _collect_g3_resources(enabled_unique_ids, did)
+        if resource_ids:
+            subscriptions.append({"subjectId": did, "resourceIds": resource_ids})
+
+    for hub in hubs_m3:
+        did = str(hub["did"])
+        resource_ids = _collect_m3_resources(enabled_unique_ids, did)
+        if resource_ids:
+            subscriptions.append({"subjectId": did, "resourceIds": resource_ids})
+
+    for presence in presence_devices:
+        did = str(presence["did"])
+        model = str(presence.get("model") or "")
+        if model == FP2_MODEL:
+            resource_ids = _collect_presence_resources(
+                enabled_unique_ids,
+                did,
+                FP2_BINARY_SENSORS_DEF,
+                FP2_SENSOR_SPECS,
+            )
+        elif model == FP300_MODEL:
+            resource_ids = _collect_presence_resources(
+                enabled_unique_ids,
+                did,
+                FP300_BINARY_SENSORS_DEF,
+                FP300_SENSOR_SPECS,
+            )
+        else:
+            continue
+
+        if resource_ids:
+            subscriptions.append({"subjectId": did, "resourceIds": resource_ids})
+
+    return subscriptions

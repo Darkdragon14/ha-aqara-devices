@@ -8,7 +8,10 @@
                     "account": "Аккаунт Aqara (эл. почта или телефон)",
                     "area": "Регион",
                     "bridge_url": "URL моста",
-                    "bridge_token": "Токен моста"
+                    "bridge_token": "Токен моста",
+                    "app_id": "App ID",
+                    "key_id": "Key ID",
+                    "app_key": "App key"
                 }
             },
             "auth_code": {

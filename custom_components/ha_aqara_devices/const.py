@@ -3,22 +3,33 @@ from __future__ import annotations
 DOMAIN = "ha_aqara_devices"
 PLATFORMS: list[str] = ["switch", "button", "binary_sensor", "number", "sensor", "select"]  # only services for this MVP
 
-# Endpoint used for attribute write/query
-REQUEST_PATH = "/app/v1.0/lumi/res/write"  # per AqaraPOST examples
-QUERY_PATH = "/app/v1.0/lumi/res/query"
-HISTORY_PATH = "/app/v1.0/lumi/res/history/log"
-DEVICES_PATH = "/app/v1.0/lumi/app/position/device/query"
-OPERATE_PATH = "/app/v1.0/lumi/devex/camera/operate"
-RESOURCE_QUERY_PATH = "/app/v1.0/lumi/res/query/by/resourceId"
+CONF_BRIDGE_URL = "bridge_url"
+CONF_BRIDGE_TOKEN = "bridge_token"
+CONF_APP_ID = "app_id"
+CONF_APP_KEY = "app_key"
+CONF_KEY_ID = "key_id"
+DEFAULT_BRIDGE_URL = "http://aqara-rocketmq-bridge:8080"
+BRIDGE_SANITY_INTERVAL_SECONDS = 300
+BRIDGE_UNAVAILABLE_AFTER_FAILURES = 3
 
-# Minimal area map (extend later as needed)
+OPEN_API_PATH = "/v3.0/open/api"
+AQARA_MQ_SERVER = "3rd-subscription.aqara.cn:9876"
+DEFAULT_ACCESS_TOKEN_VALIDITY = "7d"
+TOKEN_REFRESH_STARTUP_MARGIN_SECONDS = 600
+TOKEN_REFRESH_REQUEST_MARGIN_SECONDS = 300
+
+# Aqara Open API servers by region
 AREAS = {
-    "EU": {"server": "https://rpc-ger.aqara.com", "appid": "444c476ef7135e53330f46e7", "appkey": "NULL"},
-    "US": {"server": "https://aiot-rpc-usa.aqara.com", "appid": "444c476ef7135e53330f46e7", "appkey": "NULL"},
-    "CN": {"server": "https://aiot-rpc.aqara.cn", "appid": "444c476ef7135e53330f46e7", "appkey": "NULL"},
-    "RU": {"server": "https://rpc-ru.aqara.com", "appid": "444c476ef7135e53330f46e7", "appkey": "NULL"},
-    "OTHER": {"server": "https://aiot-rpc-usa.aqara.com", "appid": "444c476ef7135e53330f46e7", "appkey": "NULL"},
+    "EU": {"server": "https://open-ger.aqara.com"},
+    "US": {"server": "https://open-usa.aqara.com"},
+    "CN": {"server": "https://open-cn.aqara.com"},
+    "RU": {"server": "https://open-ru.aqara.com"},
+    "KR": {"server": "https://open-kr.aqara.com"},
+    "SG": {"server": "https://open-sg.aqara.com"},
+    "OTHER": {"server": "https://open-usa.aqara.com"},
 }
+
+AREA_OPTIONS = list(AREAS.keys())
 
 G3_MODEL = "lumi.camera.gwpgl1"
 FP2_MODEL = "lumi.motion.agl001"
@@ -43,17 +54,17 @@ FP2_PRESENCE_UNAVAILABLE_AFTER_FAILURES = 8
 FP300_FAST_UNAVAILABLE_AFTER_FAILURES = 5
 
 FP300_FAST_STATUS_ATTRS: list[str] = [
-    "report_status01",
+    "3.51.85",
 ]
 
 FP300_MEDIUM_STATUS_ATTRS: list[str] = [
-    "environment_temperature",
-    "environment_humidity",
-    "lux",
+    "0.1.85",
+    "0.2.85",
+    "0.3.85",
 ]
 
 FP300_SLOW_STATUS_ATTRS: list[str] = [
-    "battery_percentage",
+    "8.0.2001",
 ]
 
 FP300_CORE_STATUS_ATTRS: list[str] = [
@@ -63,51 +74,59 @@ FP300_CORE_STATUS_ATTRS: list[str] = [
 ]
 
 FP2_FAST_STATUS_BASE_ATTRS: list[str] = [
-    "body_movement_value",
-    "device_offline_status",
+    "8.0.2045",
+    "13.11.85",
 ]
 
 FP2_MEDIUM_STATUS_BASE_ATTRS: list[str] = [
-    "heartrate_value",
-    "respiration_rate_value",
-    "sleep_state",
-    "lux",
+    "0.8.85",
+    "0.9.85",
+    "13.106.85",
+    "0.4.85",
 ]
 
 FP2_SLOW_STATUS_ATTRS: list[str] = [
-    "installation_angle",
-    "set_device_mode4",
-    "view_zoom",
-    "mounting_position",
-    "attitude_status",
+    "13.35.85",
+    "14.49.85",
+    "14.57.85",
+    "13.70.85",
 ]
 
 FP2_ZONE_COUNT = 30
 FP2_MINUTE_ZONE_COUNT = 7
 
 FP2_GLOBAL_COUNT_ATTRS: list[str] = [
-    "all_zone_statistics",
-    "people_counting",
-    "people_counting_by_mins",
+    "13.120.85",
+    "0.60.85",
+    "0.61.85",
 ]
 
 FP2_ZONE_STATISTICS_ATTRS: list[str] = [
-    f"zone{index}_statistics" for index in range(1, FP2_ZONE_COUNT + 1)
+    f"13.{120 + index}.85" for index in range(1, FP2_ZONE_COUNT + 1)
 ]
 
 FP2_ZONE_MINUTE_COUNT_ATTRS: list[str] = [
-    f"zone{index}_people_counting_by_mins"
+    f"0.{120 + index}.85"
     for index in range(1, FP2_MINUTE_ZONE_COUNT + 1)
 ]
 
 FP2_ZONE_PRESENCE_ATTRS: list[str] = [
-    f"detection_area{index}" for index in range(1, FP2_ZONE_COUNT + 1)
+    f"3.{index}.85" for index in range(1, FP2_ZONE_COUNT + 1)
 ]
 
 FP2_FAST_STATUS_ATTRS: list[str] = [
     *FP2_FAST_STATUS_BASE_ATTRS,
     *FP2_ZONE_PRESENCE_ATTRS,
 ]
+
+FP2_FAST_RESOURCE_KEY_MAP = {
+    "8.0.2045": "device_offline_status",
+    "13.11.85": "body_movement_value",
+    **{
+        f"3.{index}.85": f"detection_area{index}"
+        for index in range(1, FP2_ZONE_COUNT + 1)
+    },
+}
 
 FP2_MEDIUM_STATUS_ATTRS: list[str] = [
     *FP2_MEDIUM_STATUS_BASE_ATTRS,
@@ -182,12 +201,3 @@ FP2_SETTING_VALUE_MAPS = {
     "ai_person_det": {"0": "disable", "1": "enable"},
     "detection_dir": {"0": "default", "1": "left_right"},
 }
-
-# Public key used to encrypt MD5(password) (same as token generator script)
-AQARA_RSA_PUBKEY = """-----BEGIN PUBLIC KEY-----
-MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCG46slB57013JJs4Vvj5cVyMpR
-9b+B2F+YJU6qhBEYbiEmIdWpFPpOuBikDs2FcPS19MiWq1IrmxJtkICGurqImRUt
-4lP688IWlEmqHfSxSRf2+aH0cH8VWZ2OaZn5DWSIHIPBF2kxM71q8stmoYiV0oZs
-rZzBHsMuBwA4LQdxBwIDAQAB
------END PUBLIC KEY-----
-"""

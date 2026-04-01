@@ -8,7 +8,10 @@
                     "account": "Aqara-account (e-mail of telefoon)",
                     "area": "Regio",
                     "bridge_url": "Bridge-URL",
-                    "bridge_token": "Bridge-token"
+                    "bridge_token": "Bridge-token",
+                    "app_id": "App ID",
+                    "key_id": "Key ID",
+                    "app_key": "App key"
                 }
             },
             "auth_code": {
