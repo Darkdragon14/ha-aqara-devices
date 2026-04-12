@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
+from datetime import timedelta
 import json
 import logging
 import time
@@ -9,6 +10,8 @@ from typing import Any
 
 from aiohttp import ClientSession, ClientTimeout
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .const import BRIDGE_SANITY_INTERVAL_SECONDS
 
 from .api import AqaraApi, AqaraAuthError
 from .bridge_specs import (
@@ -86,6 +89,25 @@ class AqaraBridgePushManager:
 
     def _subscription_resource_count(self) -> int:
         return sum(len(subscription["resourceIds"]) for subscription in self._subscriptions)
+
+    def _all_coordinators(self):
+        """Yield every coordinator managed by this push manager."""
+        yield from self._camera_coordinators.values()
+        yield from self._m3_coordinators.values()
+        for groups in self._presence_coordinators.values():
+            yield from groups.values()
+
+    def _set_polling_enabled(self, enabled: bool) -> None:
+        """Toggle coordinator polling based on bridge SSE health.
+
+        When the bridge SSE stream is connected, polling is disabled because
+        push delivers all resource updates in real time.  When SSE drops,
+        polling is re-enabled as an automatic fallback.
+        """
+        interval = timedelta(seconds=BRIDGE_SANITY_INTERVAL_SECONDS) if enabled else None
+        for coordinator in self._all_coordinators():
+            coordinator.update_interval = interval
+        _LOGGER.debug("Coordinator polling %s", "enabled" if enabled else "disabled")
 
     async def async_start(self) -> None:
         if self._started:
@@ -190,6 +212,9 @@ class AqaraBridgePushManager:
                     break
                 _LOGGER.warning("Aqara bridge SSE connection failed: %s", err)
 
+            # SSE disconnected - re-enable polling as fallback
+            self._set_polling_enabled(True)
+
             if self._stop_event.is_set():
                 break
             await asyncio.sleep(reconnect_delay)
@@ -208,6 +233,7 @@ class AqaraBridgePushManager:
                 raise RuntimeError(f"Aqara bridge events connection failed ({response.status}): {body}")
 
             self._connected_event.set()
+            self._set_polling_enabled(False)
             _LOGGER.info("Connected to Aqara bridge SSE stream at %s", url)
 
             event_name: str | None = None
