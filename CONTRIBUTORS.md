@@ -7,6 +7,7 @@ We recognize contributions of all kinds, including but not limited to:
 | Contributor                                       | Contributions |
 |---------------------------------------------------|---------------|
 | [@Darkdragon](https://github.com/Darkdragon14)    | 💻 Code, 🧪 Tests |
+| [@DarkByteZero](https://github.com/DarkByteZero)  | 💻 Code,🧪 Tests |
 | [@GVG](https://github.com/Betacart)      | 🌍 Translation (Czech) |
 ---
 
