@@ -171,6 +171,7 @@ FP2_STATUS_SENSORS_DEF = [
         "api": "14.49.85",
         "poll_group": "slow",
         "icon": "mdi:cog",
+        "value_type": "str",
         "value_map": FP2_MODE_LABELS,
     },
     {
@@ -178,6 +179,7 @@ FP2_STATUS_SENSORS_DEF = [
         "key": "view_zoom",
         "poll_group": "slow",
         "icon": "mdi:magnify-scan",
+        "value_type": "str",
         "value_map": FP2_VIEW_MODES,
     },
     {
@@ -186,6 +188,7 @@ FP2_STATUS_SENSORS_DEF = [
         "api": "14.57.85",
         "poll_group": "slow",
         "icon": "mdi:wall",
+        "value_type": "str",
         "value_map": FP2_MOUNTING_POSITIONS,
     },
     {
@@ -194,6 +197,7 @@ FP2_STATUS_SENSORS_DEF = [
         "api": "13.35.85",
         "poll_group": "slow",
         "icon": "mdi:rotate-3d-variant",
+        "value_type": "str",
         "value_map": FP2_INSTALLATION_ANGLES,
     },
     {
@@ -202,6 +206,7 @@ FP2_STATUS_SENSORS_DEF = [
         "api": "13.70.85",
         "poll_group": "slow",
         "icon": "mdi:axis-arrow",
+        "value_type": "str",
     },
 ]
 
@@ -212,6 +217,7 @@ FP2_SETTINGS_SENSORS_DEF = [
         "api": "14.1.85",
         "poll_group": "slow",
         "icon": "mdi:account-eye",
+        "value_type": "str",
         "value_map": FP2_SETTING_VALUE_MAPS["presence_detection_sens"],
     },
     {
@@ -220,6 +226,7 @@ FP2_SETTINGS_SENSORS_DEF = [
         "api": "14.47.85",
         "poll_group": "slow",
         "icon": "mdi:signal-distance-variant",
+        "value_type": "str",
         "value_map": FP2_SETTING_VALUE_MAPS["proximity_sensing_dist"],
     },
     {
@@ -228,6 +235,7 @@ FP2_SETTINGS_SENSORS_DEF = [
         "api": "14.30.85",
         "poll_group": "slow",
         "icon": "mdi:human-female-fall",
+        "value_type": "str",
         "value_map": FP2_SETTING_VALUE_MAPS["fall_detection_sens"],
     },
     {
@@ -236,6 +244,7 @@ FP2_SETTINGS_SENSORS_DEF = [
         "api": "14.51.85",
         "poll_group": "slow",
         "icon": "mdi:axes-arrow",
+        "value_type": "str",
         "value_map": FP2_SETTING_VALUE_MAPS["reverse_coordinate_dir"],
     },
     {
@@ -244,6 +253,7 @@ FP2_SETTINGS_SENSORS_DEF = [
         "api": "14.55.85",
         "poll_group": "slow",
         "icon": "mdi:axis-z-arrow",
+        "value_type": "str",
         "value_map": FP2_SETTING_VALUE_MAPS["detection_dir"],
     },
     {
@@ -252,6 +262,7 @@ FP2_SETTINGS_SENSORS_DEF = [
         "api": "4.72.85",
         "poll_group": "slow",
         "icon": "mdi:account-search",
+        "value_type": "str",
         "value_map": FP2_SETTING_VALUE_MAPS["ai_person_det"],
     },
     {
@@ -260,6 +271,7 @@ FP2_SETTINGS_SENSORS_DEF = [
         "api": "4.23.85",
         "poll_group": "slow",
         "icon": "mdi:white-balance-sunny",
+        "value_type": "str",
         "value_map": FP2_SETTING_VALUE_MAPS["anti_light_poll"],
     },
 ]
