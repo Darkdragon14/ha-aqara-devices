@@ -3,20 +3,31 @@
         "step": {
             "user": {
                 "title": "Aqara FP2",
-                "description": "Richten Sie Ihre Aqara FP2-Integration ein.",
+                "description": "Richten Sie Ihre Aqara Open API-Integration ein und fordern Sie einen Autorisierungscode an.",
                 "data": {
-                    "email": "E-Mail",
-                    "password": "Passwort",
-                    "region": "Region"
+                    "account": "Aqara-Konto (E-Mail oder Telefon)",
+                    "area": "Region",
+                    "bridge_url": "Bridge-URL",
+                    "bridge_token": "Bridge-Token",
+                    "app_id": "App-ID",
+                    "key_id": "Key ID",
+                    "app_key": "App-Key"
+                }
+            },
+            "auth_code": {
+                "title": "Autorisierungscode",
+                "description": "Geben Sie den Bestatigungscode ein, den Aqara an Ihre E-Mail-Adresse oder Telefonnummer gesendet hat.",
+                "data": {
+                    "auth_code": "Autorisierungscode"
                 }
             }
         },
         "error": {
-            "auth": "Authentifizierung fehlgeschlagen, bitte überprüfen Sie Ihre Zugangsdaten.",
-            "no_devices_found": "Es wurden keine FP2-Geräte gefunden."
+            "auth": "Authentifizierung fehlgeschlagen. Bitte prufen Sie Konto, Region und Autorisierungscode.",
+            "no_devices_found": "Es wurden keine FP2-Gerate gefunden."
         },
         "abort": {
-            "already_configured": "Dieses Gerät ist bereits konfiguriert."
+            "already_configured": "Dieses Gerat ist bereits konfiguriert."
         }
     },
     "entity": {

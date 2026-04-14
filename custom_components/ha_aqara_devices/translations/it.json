@@ -3,20 +3,31 @@
         "step": {
             "user": {
                 "title": "Aqara FP2",
-                "description": "Configura la tua integrazione Aqara FP2.",
+                "description": "Configura la tua integrazione Aqara Open API e richiedi un codice di autorizzazione.",
                 "data": {
-                    "email": "E-mail",
-                    "password": "Password",
-                    "region": "Regione"
+                    "account": "Account Aqara (email o telefono)",
+                    "area": "Regione",
+                    "bridge_url": "URL bridge",
+                    "bridge_token": "Token bridge",
+                    "app_id": "App ID",
+                    "key_id": "Key ID",
+                    "app_key": "App key"
+                }
+            },
+            "auth_code": {
+                "title": "Codice di autorizzazione",
+                "description": "Inserisci il codice di verifica inviato da Aqara alla tua email o al tuo telefono.",
+                "data": {
+                    "auth_code": "Codice di autorizzazione"
                 }
             }
         },
         "error": {
-            "auth": "Autenticazione non riuscita, verifica le tue credenziali.",
+            "auth": "Autenticazione non riuscita. Verifica account, regione e codice di autorizzazione.",
             "no_devices_found": "Nessun dispositivo FP2 trovato."
         },
         "abort": {
-            "already_configured": "Questo dispositivo è già configurato."
+            "already_configured": "Questo dispositivo e gia configurato."
         }
     },
     "entity": {

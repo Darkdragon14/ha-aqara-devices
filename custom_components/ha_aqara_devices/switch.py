@@ -1,5 +1,4 @@
 from __future__ import annotations
-from datetime import timedelta
 from copy import deepcopy
 from typing import Dict, Any
 import logging
@@ -9,7 +8,6 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
-    UpdateFailed,
 )
 from homeassistant.config_entries import ConfigEntry
 
@@ -24,6 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     data = hass.data[DOMAIN][entry.entry_id]
     api: AqaraApi = data["api"]
     cameras: list[dict] = data["cameras"]
+    camera_coordinators: dict[str, DataUpdateCoordinator] = data.get("camera_coordinators", {})
 
     entities = []
 
@@ -31,20 +30,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         did = cam["did"]
         name = cam["deviceName"]
         model = cam.get("model") or G3_MODEL
-
-        async def _async_update_video_data(did_local=did):
-            try:
-                return await api.get_device_states(did_local, ALL_SWITCHES_DEF)
-            except Exception as e:
-                raise UpdateFailed(str(e)) from e
-
-        coordinator = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name=f"{DOMAIN}-camera-active-{did}",
-            update_method=_async_update_video_data,
-            update_interval=timedelta(seconds=1),
-        )
+        coordinator = camera_coordinators.get(did)
+        if coordinator is None:
+            continue
 
 
         for switch_def in ALL_SWITCHES_DEF:

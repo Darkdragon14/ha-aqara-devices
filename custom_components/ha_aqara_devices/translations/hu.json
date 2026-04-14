@@ -3,30 +3,41 @@
         "step": {
             "user": {
                 "title": "Aqara FP2",
-                "description": "Állítsd be az Aqara FP2 integrációdat.",
+                "description": "Allitsd be az Aqara Open API integraciodat, es kerj egy hitelesitesi kodot.",
                 "data": {
-                    "email": "E-mail",
-                    "password": "Jelszó",
-                    "region": "Régió"
+                    "account": "Aqara-fiok (e-mail vagy telefon)",
+                    "area": "Regio",
+                    "bridge_url": "Bridge URL",
+                    "bridge_token": "Bridge token",
+                    "app_id": "App ID",
+                    "key_id": "Key ID",
+                    "app_key": "App key"
+                }
+            },
+            "auth_code": {
+                "title": "Hitelesitesi kod",
+                "description": "Add meg az Aqara altal az e-mail-cimedre vagy telefonodra kuldott ellenorzokodot.",
+                "data": {
+                    "auth_code": "Hitelesitesi kod"
                 }
             }
         },
         "error": {
-            "auth": "A hitelesítés sikertelen, ellenőrizd a hitelesítő adataidat.",
-            "no_devices_found": "Nem található FP2 eszköz."
+            "auth": "A hitelesites sikertelen. Ellenorizd a fiokot, a regiot es a hitelesitesi kodot.",
+            "no_devices_found": "Nem talalhato FP2 eszkoz."
         },
         "abort": {
-            "already_configured": "Ez az eszköz már konfigurálva van."
+            "already_configured": "Ez az eszkoz mar konfiguralva van."
         }
     },
     "entity": {
         "binary_sensor": {
-            "night_vision": { "name": "Éjjellátás" },
-            "gesture_v_sign": { "name": "V jel kézmozdulat" },
-            "gesture_four": { "name": "Négyes kézmozdulat" },
-            "gesture_high_five": { "name": "Pacsi kézmozdulat" },
-            "gesture_finger_gun": { "name": "Pisztoly kézmozdulat" },
-            "gesture_ok": { "name": "OK kézmozdulat" }
+            "night_vision": { "name": "Ejjellatas" },
+            "gesture_v_sign": { "name": "V jel kezmozdulat" },
+            "gesture_four": { "name": "Negyes kezmozdulat" },
+            "gesture_high_five": { "name": "Pacsi kezmozdulat" },
+            "gesture_finger_gun": { "name": "Pisztoly kezmozdulat" },
+            "gesture_ok": { "name": "OK kezmozdulat" }
         }
     }
 }

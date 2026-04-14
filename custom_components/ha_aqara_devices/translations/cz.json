@@ -1,0 +1,70 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Aqara FP2",
+                "description": "Nastaví integraci Aqara Open API a vyžádá ověřovací kód.",
+                "data": {
+                    "account": "Účet Aqara (e-mail nebo telefon)",
+                    "area": "Region",
+                    "bridge_url": "Bridge URL",
+                    "bridge_token": "Bridge token",
+                    "app_id": "ID aplikace",
+                    "key_id": "ID klíče",
+                    "app_key": "Klíč aplikace"
+                }
+            },
+            "auth_code": {
+                "title": "Ověřovací kód",
+                "description": "Zadejte ověřovací kód odeslaný Aqarou na Váš e-mail nebo telefon.",
+                "data": {
+                    "auth_code": "Ověřovací kód"
+                }
+            }
+        },
+        "error": {
+            "auth": "Ověření selhalo. Zkontrolujte účet, region a/nebo ověřovací kód.",
+            "no_devices_found": "Nebyla nalezena žádná zařízení FP2."
+        },
+        "abort": {
+            "already_configured": "Toto zařízení je již nastaveno."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Aqara FP2",
+                "description": "Aktualizuje detaily účtu Aqara Open API nebo nastavení bridge připojení.",
+                "data": {
+                    "account": "Účet Aqara (e-mail nebo telefon)",
+                    "area": "Region",
+                    "bridge_url": "Bridge URL",
+                    "bridge_token": "Bridge token",
+                    "app_id": "ID aplikace",
+                    "key_id": "ID klíče",
+                    "app_key": "Klíč aplikace"
+                }
+            },
+            "auth_code": {
+                "title": "Ověřovací kód",
+                "description": "Zadejte ověřovací kód odeslaný Aqarou na Váš e-mail nebo telefon.",
+                "data": {
+                    "auth_code": "Ověřovací kód"
+                }
+            }
+        },
+        "error": {
+            "auth": "Ověření selhalo. Zkontrolujte účet, region a/nebo ověřovací kód."
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "night_vision": { "name": "Noční vidění" },
+            "gesture_v_sign": { "name": "Gesto znaku V" },
+            "gesture_four": { "name": "Gesto čtyři" },
+            "gesture_high_five": { "name": "Gesto High Five" },
+            "gesture_finger_gun": { "name": "Gesto pistole" },
+            "gesture_ok": { "name": "Gesto OK" }
+        }
+    }
+}

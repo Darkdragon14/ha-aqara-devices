@@ -3,11 +3,11 @@ NIGHT_VISION = {
     "translation_key": "night_vision",
     "icon": "mdi:shield-moon",
     "inApp": "night_vision",
-    "api": "device_night_tip_light",
+    "api": "8.0.2032",
 }
 
 GESTURE_RESOURCE_ID = "13.96.85"
-GESTURE_HOLD_SECONDS = 10
+GESTURE_HOLD_SECONDS = 5
 
 
 def _gesture_sensor(name: str, translation_key: str, in_app: str, value: str) -> dict:
@@ -42,7 +42,7 @@ M3_ALARM_STATUS = {
     "name": "Alarm Status",
     "icon": "mdi:alarm-bell",
     "inApp": "alarm_status",
-    "api": "alarm_status",
+    "api": "14.1.111",
     "device_class": "safety",
     "value_type": "bool",
 }
@@ -51,16 +51,7 @@ M3_DEVICE_ONLINE_STATUS = {
     "name": "Device Online",
     "icon": "mdi:lan-connect",
     "inApp": "device_online_status",
-    "api": "device_offline_status",
-    "device_class": "connectivity",
-    "value_type": "bool",
-}
-
-M3_CENTER_HUB_CONNECTED = {
-    "name": "Center Hub Connected",
-    "icon": "mdi:lan-connect",
-    "inApp": "connect_center_hub_state",
-    "api": "connect_center_hub_state",
+    "api": "8.0.2045",
     "device_class": "connectivity",
     "value_type": "bool",
 }
@@ -68,5 +59,4 @@ M3_CENTER_HUB_CONNECTED = {
 M3_BINARY_SENSORS_DEF = [
     M3_ALARM_STATUS,
     M3_DEVICE_ONLINE_STATUS,
-    M3_CENTER_HUB_CONNECTED,
 ]
