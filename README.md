@@ -32,7 +32,9 @@ For the complete step-by-step setup, follow the published guide linked above.
 
 ### HACS
 
-1. Add `https://github.com/Darkdragon14/ha-aqara-devices` as a custom repository in HACS with category `Integration`.
+[![Open your Home Assistant instance and open a repository inside HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Darkdragon14&repository=ha-aqara-devices)
+
+1. Click the button above, or add `https://github.com/Darkdragon14/ha-aqara-devices` manually as a custom repository in HACS with category `Integration`.
 2. Search for `Aqara Devices` and install it.
 3. Restart Home Assistant.
 4. Go to `Settings -> Devices & Services -> Add Integration`.
