@@ -68,6 +68,10 @@ Use one of these supported paths:
 | Home Assistant Container | Docker or Compose | `http://aqara-rocketmq-bridge:8080` |
 | Home Assistant OS | `Aqara RocketMQ Bridge` add-on | `http://HOME_ASSISTANT_IP:8080` or your reverse-proxy URL |
 
+For Home Assistant OS, add the bridge add-on repository automatically:
+
+[![Open your Home Assistant instance and add this add-on repository.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FDarkdragon14%2Faqara-rocketmq-bridge)
+
 Bridge setup details, add-on instructions, and Compose examples are in the published guide:
 
 - [Aqara RocketMQ Bridge setup guide](https://darkdragon14.github.io/aqara-rocketmq-bridge/)
