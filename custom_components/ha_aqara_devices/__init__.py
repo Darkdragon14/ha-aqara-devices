@@ -36,7 +36,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 BRIDGE_START_RETRY_INITIAL_SECONDS = 5
-BRIDGE_START_RETRY_MAX_SECONDS = 300
+BRIDGE_START_RETRY_MAX_SECONDS = 600
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
