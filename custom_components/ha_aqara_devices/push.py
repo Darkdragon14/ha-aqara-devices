@@ -122,7 +122,10 @@ class AqaraBridgePushManager:
         await self._check_health()
 
         self._stop_event.clear()
-        self._listen_task = self._hass.async_create_task(self._listen_loop())
+        self._listen_task = self._hass.async_create_background_task(
+            self._listen_loop(),
+            "Aqara bridge SSE listener",
+        )
         try:
             await asyncio.wait_for(self._connected_event.wait(), timeout=15)
         except TimeoutError as err:

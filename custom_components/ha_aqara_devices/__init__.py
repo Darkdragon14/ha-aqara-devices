@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+from contextlib import suppress
 from datetime import timedelta
 from functools import partial
 import logging
@@ -32,6 +34,9 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+BRIDGE_START_RETRY_INITIAL_SECONDS = 5
+BRIDGE_START_RETRY_MAX_SECONDS = 600
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -214,6 +219,34 @@ def _enabled_unique_ids_for_entry(hass: HomeAssistant, entry: ConfigEntry) -> se
     }
 
 
+async def _async_start_bridge_with_retry(entry: ConfigEntry, bridge_manager) -> None:
+    from .api import AqaraAuthError
+
+    delay = BRIDGE_START_RETRY_INITIAL_SECONDS
+    while True:
+        try:
+            await bridge_manager.async_start()
+        except asyncio.CancelledError:
+            raise
+        except AqaraAuthError as err:
+            _LOGGER.error("Aqara bridge startup stopped because authentication failed: %s", err)
+            return
+        except Exception as err:
+            await bridge_manager.async_stop()
+            _LOGGER.warning(
+                "Aqara bridge is not ready for %s; retrying in %s seconds: %s",
+                entry.title,
+                delay,
+                err,
+            )
+            await asyncio.sleep(delay)
+            delay = min(delay * 2, BRIDGE_START_RETRY_MAX_SECONDS)
+            continue
+
+        _LOGGER.info("Aqara bridge started for %s", entry.title)
+        return
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
@@ -287,6 +320,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "m3_coordinators": m3_coordinators,
         "presence_coordinators": presence_coordinators,
         "bridge_manager": None,
+        "bridge_task": None,
         "active_subscriptions": [],
     }
     hass.data[DOMAIN][entry.entry_id] = entry_data
@@ -317,20 +351,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         active_subscriptions,
     )
 
-    try:
-        await bridge_manager.async_start()
-    except AqaraAuthError as e:
-        await bridge_manager.async_stop()
-        await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-        hass.data[DOMAIN].pop(entry.entry_id, None)
-        raise ConfigEntryAuthFailed(str(e)) from e
-    except Exception as e:
-        await bridge_manager.async_stop()
-        await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-        hass.data[DOMAIN].pop(entry.entry_id, None)
-        raise ConfigEntryNotReady(f"Aqara bridge setup not ready: {e}") from e
-
     entry_data["bridge_manager"] = bridge_manager
+    entry_data["bridge_task"] = hass.async_create_background_task(
+        _async_start_bridge_with_retry(entry, bridge_manager),
+        f"{DOMAIN} bridge startup",
+    )
 
     total_resources = sum(len(subscription["resourceIds"]) for subscription in active_subscriptions)
     _LOGGER.info(
@@ -367,6 +392,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     domain_data = hass.data.get(DOMAIN, {})
     entry_data = domain_data.get(entry.entry_id)
+    bridge_task = None if entry_data is None else entry_data.get("bridge_task")
+    if bridge_task is not None:
+        bridge_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await bridge_task
+
     bridge_manager = None if entry_data is None else entry_data.get("bridge_manager")
     if bridge_manager is not None:
         await bridge_manager.async_stop()
