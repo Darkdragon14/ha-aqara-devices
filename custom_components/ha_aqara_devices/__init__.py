@@ -352,8 +352,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     entry_data["bridge_manager"] = bridge_manager
-    entry_data["bridge_task"] = hass.async_create_task(
-        _async_start_bridge_with_retry(entry, bridge_manager)
+    entry_data["bridge_task"] = hass.async_create_background_task(
+        _async_start_bridge_with_retry(entry, bridge_manager),
+        f"{DOMAIN} bridge startup",
     )
 
     total_resources = sum(len(subscription["resourceIds"]) for subscription in active_subscriptions)
