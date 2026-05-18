@@ -2,14 +2,21 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 
-from .binary_sensors import ALL_BINARY_SENSORS_DEF, GESTURE_RESOURCE_ID, GESTURE_SENSORS, M3_BINARY_SENSORS_DEF
+from .binary_sensors import (
+    ALL_BINARY_SENSORS_DEF,
+    G410_BINARY_SENSORS_DEF,
+    GESTURE_RESOURCE_ID,
+    GESTURE_SENSORS,
+    M100_BINARY_SENSORS_DEF,
+    M3_BINARY_SENSORS_DEF,
+)
 from .const import FP2_MODEL, FP300_MODEL
 from .fp2 import FP2_BINARY_SENSORS_DEF, FP2_SENSOR_SPECS
 from .fp300 import FP300_BINARY_SENSORS_DEF, FP300_SENSOR_SPECS
-from .numbers import ALL_NUMBERS_DEF, M3_NUMBERS_DEF
-from .selects import M3_SELECTS_DEF
-from .sensors import M3_SENSORS_DEF
-from .switches import ALL_SWITCHES_DEF
+from .numbers import ALL_NUMBERS_DEF, G2H_PRO_NUMBERS_DEF, G410_NUMBERS_DEF, M100_NUMBERS_DEF, M3_NUMBERS_DEF
+from .selects import G410_SELECTS_DEF, M100_SELECTS_DEF, M3_SELECTS_DEF
+from .sensors import G410_SENSORS_DEF, M100_SENSORS_DEF, M3_SENSORS_DEF
+from .switches import ALL_SWITCHES_DEF, G2H_PRO_SWITCHES_DEF, G410_SWITCHES_DEF, M100_SWITCHES_DEF
 
 
 def spec_state_key(spec: dict[str, Any]) -> str:
@@ -84,6 +91,25 @@ G3_GESTURE_VALUE_MAP = {
 }
 
 
+G2H_PRO_STATE_SPECS = [
+    *G2H_PRO_SWITCHES_DEF,
+    *G2H_PRO_NUMBERS_DEF,
+]
+G2H_PRO_RESOURCE_SPEC_MAP = build_api_spec_map(G2H_PRO_STATE_SPECS)
+G2H_PRO_SUBSCRIPTION_RESOURCE_IDS = unique_api_resource_ids(G2H_PRO_STATE_SPECS)
+
+
+G410_STATE_SPECS = [
+    *G410_BINARY_SENSORS_DEF,
+    *G410_SENSORS_DEF,
+    *G410_SWITCHES_DEF,
+    *G410_NUMBERS_DEF,
+    *G410_SELECTS_DEF,
+]
+G410_RESOURCE_SPEC_MAP = build_api_spec_map(G410_STATE_SPECS)
+G410_SUBSCRIPTION_RESOURCE_IDS = unique_api_resource_ids(G410_STATE_SPECS)
+
+
 M3_STATE_SPECS = [
     *M3_BINARY_SENSORS_DEF,
     *M3_SENSORS_DEF,
@@ -92,6 +118,17 @@ M3_STATE_SPECS = [
 ]
 M3_RESOURCE_SPEC_MAP = build_api_spec_map(M3_STATE_SPECS)
 M3_SUBSCRIPTION_RESOURCE_IDS = unique_api_resource_ids(M3_STATE_SPECS)
+
+
+M100_STATE_SPECS = [
+    *M100_BINARY_SENSORS_DEF,
+    *M100_SENSORS_DEF,
+    *M100_NUMBERS_DEF,
+    *M100_SELECTS_DEF,
+    *M100_SWITCHES_DEF,
+]
+M100_RESOURCE_SPEC_MAP = build_api_spec_map(M100_STATE_SPECS)
+M100_SUBSCRIPTION_RESOURCE_IDS = unique_api_resource_ids(M100_STATE_SPECS)
 
 
 FP2_STATE_SPECS = [
@@ -162,9 +199,30 @@ def _collect_g3_resources(enabled_unique_ids: set[str], did: str) -> list[str]:
     return list(resource_ids)
 
 
+def _collect_g2h_pro_resources(enabled_unique_ids: set[str], did: str) -> list[str]:
+    resource_ids: dict[str, None] = {}
+    for spec in G2H_PRO_STATE_SPECS:
+        _append_resource_if_enabled(resource_ids, enabled_unique_ids, f"{did}_{spec['inApp']}", spec)
+    return list(resource_ids)
+
+
+def _collect_g410_resources(enabled_unique_ids: set[str], did: str) -> list[str]:
+    resource_ids: dict[str, None] = {}
+    for spec in G410_STATE_SPECS:
+        _append_resource_if_enabled(resource_ids, enabled_unique_ids, f"{did}_{spec['inApp']}", spec)
+    return list(resource_ids)
+
+
 def _collect_m3_resources(enabled_unique_ids: set[str], did: str) -> list[str]:
     resource_ids: dict[str, None] = {}
     for spec in M3_STATE_SPECS:
+        _append_resource_if_enabled(resource_ids, enabled_unique_ids, f"{did}_{spec['inApp']}", spec)
+    return list(resource_ids)
+
+
+def _collect_m100_resources(enabled_unique_ids: set[str], did: str) -> list[str]:
+    resource_ids: dict[str, None] = {}
+    for spec in M100_STATE_SPECS:
         _append_resource_if_enabled(resource_ids, enabled_unique_ids, f"{did}_{spec['inApp']}", spec)
     return list(resource_ids)
 
@@ -186,7 +244,10 @@ def _collect_presence_resources(
 def build_active_subscriptions(
     enabled_unique_ids: set[str],
     cameras: list[dict[str, Any]],
+    g2h_pro_cameras: list[dict[str, Any]],
+    g410_doorbells: list[dict[str, Any]],
     hubs_m3: list[dict[str, Any]],
+    hubs_m100: list[dict[str, Any]],
     presence_devices: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
     subscriptions: list[dict[str, Any]] = []
@@ -197,9 +258,27 @@ def build_active_subscriptions(
         if resource_ids:
             subscriptions.append({"subjectId": did, "resourceIds": resource_ids})
 
+    for camera in g2h_pro_cameras:
+        did = str(camera["did"])
+        resource_ids = _collect_g2h_pro_resources(enabled_unique_ids, did)
+        if resource_ids:
+            subscriptions.append({"subjectId": did, "resourceIds": resource_ids})
+
+    for doorbell in g410_doorbells:
+        did = str(doorbell["did"])
+        resource_ids = _collect_g410_resources(enabled_unique_ids, did)
+        if resource_ids:
+            subscriptions.append({"subjectId": did, "resourceIds": resource_ids})
+
     for hub in hubs_m3:
         did = str(hub["did"])
         resource_ids = _collect_m3_resources(enabled_unique_ids, did)
+        if resource_ids:
+            subscriptions.append({"subjectId": did, "resourceIds": resource_ids})
+
+    for hub in hubs_m100:
+        did = str(hub["did"])
+        resource_ids = _collect_m100_resources(enabled_unique_ids, did)
         if resource_ids:
             subscriptions.append({"subjectId": did, "resourceIds": resource_ids})
 

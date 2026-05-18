@@ -11,9 +11,9 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .api import AqaraApi
-from .const import DOMAIN, M3_DEVICE_LABEL
+from .const import DOMAIN, G410_DEVICE_LABEL, M100_DEVICE_LABEL, M3_DEVICE_LABEL
 from .device_info import build_device_info
-from .selects import M3_SELECTS_DEF
+from .selects import G410_SELECTS_DEF, M100_SELECTS_DEF, M3_SELECTS_DEF
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,10 +21,34 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     data = hass.data[DOMAIN][entry.entry_id]
     api: AqaraApi = data["api"]
+    g410_doorbells: list[dict] = data.get("g410_doorbells", [])
     hubs_m3: list[dict] = data.get("hubs_m3", [])
+    hubs_m100: list[dict] = data.get("hubs_m100", [])
+    g410_coordinators: dict[str, DataUpdateCoordinator] = data.get("g410_coordinators", {})
     m3_coordinators: dict[str, DataUpdateCoordinator] = data.get("m3_coordinators", {})
+    m100_coordinators: dict[str, DataUpdateCoordinator] = data.get("m100_coordinators", {})
 
     entities: list[SelectEntity] = []
+
+    for doorbell in g410_doorbells:
+        did = doorbell["did"]
+        name = doorbell["deviceName"]
+        model = doorbell["model"]
+        coordinator = g410_coordinators.get(did)
+        if coordinator is None:
+            continue
+
+        for select_def in G410_SELECTS_DEF:
+            select = AqaraSelect(
+                coordinator,
+                api,
+                did,
+                name,
+                select_def,
+                model,
+                G410_DEVICE_LABEL,
+            )
+            entities.append(select)
 
     for hub in hubs_m3:
         did = hub["did"]
@@ -43,6 +67,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                 select_def,
                 model,
                 M3_DEVICE_LABEL,
+            )
+            entities.append(select)
+
+    for hub in hubs_m100:
+        did = hub["did"]
+        name = hub["deviceName"]
+        model = hub["model"]
+        coordinator = m100_coordinators.get(did)
+        if coordinator is None:
+            continue
+
+        for select_def in M100_SELECTS_DEF:
+            select = AqaraSelect(
+                coordinator,
+                api,
+                did,
+                name,
+                select_def,
+                model,
+                M100_DEVICE_LABEL,
             )
             entities.append(select)
 

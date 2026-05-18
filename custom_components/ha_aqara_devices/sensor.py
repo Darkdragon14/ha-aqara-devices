@@ -17,24 +17,50 @@ from .const import (
     FP2_MODEL,
     FP300_DEVICE_LABEL,
     FP300_MODEL,
+    G410_DEVICE_LABEL,
+    M100_DEVICE_LABEL,
     M3_DEVICE_LABEL,
 )
 from .device_info import build_device_info
 from .fp300 import FP300_SENSOR_SPECS
 from .fp2 import FP2_SENSOR_SPECS
-from .sensors import M3_SENSORS_DEF
+from .sensors import G410_SENSORS_DEF, M100_SENSORS_DEF, M3_SENSORS_DEF
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     data = hass.data[DOMAIN][entry.entry_id]
+    g410_doorbells: list[dict] = data.get("g410_doorbells", [])
     hubs_m3: list[dict] = data.get("hubs_m3", [])
+    hubs_m100: list[dict] = data.get("hubs_m100", [])
     presence_devices: list[dict] = data.get("presence_devices", [])
+    g410_coordinators: dict[str, DataUpdateCoordinator] = data.get("g410_coordinators", {})
     m3_coordinators: dict[str, DataUpdateCoordinator] = data.get("m3_coordinators", {})
+    m100_coordinators: dict[str, DataUpdateCoordinator] = data.get("m100_coordinators", {})
     presence_coordinators: dict[str, dict[str, DataUpdateCoordinator]] = data.get("presence_coordinators", {})
 
     entities: list[SensorEntity] = []
+
+    for doorbell in g410_doorbells:
+        did = doorbell["did"]
+        name = doorbell["deviceName"]
+        model = doorbell["model"]
+        coordinator = g410_coordinators.get(did)
+        if coordinator is None:
+            continue
+
+        for sensor_def in G410_SENSORS_DEF:
+            entities.append(
+                AqaraSensor(
+                    coordinator,
+                    did,
+                    name,
+                    sensor_def,
+                    model,
+                    G410_DEVICE_LABEL,
+                )
+            )
 
     for hub in hubs_m3:
         did = hub["did"]
@@ -53,6 +79,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                     sensor_def,
                     model,
                     M3_DEVICE_LABEL,
+                )
+            )
+
+    for hub in hubs_m100:
+        did = hub["did"]
+        name = hub["deviceName"]
+        model = hub["model"]
+        coordinator = m100_coordinators.get(did)
+        if coordinator is None:
+            continue
+
+        for sensor_def in M100_SENSORS_DEF:
+            entities.append(
+                AqaraSensor(
+                    coordinator,
+                    did,
+                    name,
+                    sensor_def,
+                    model,
+                    M100_DEVICE_LABEL,
                 )
             )
 

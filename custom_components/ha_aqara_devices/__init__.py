@@ -26,7 +26,10 @@ from .const import (
     DEFAULT_BRIDGE_URL,
     FP2_MODEL,
     FP300_MODEL,
+    G2H_PRO_MODELS,
+    G410_MODELS,
     G3_MODELS,
+    M100_MODELS,
     M3_MODELS,
     PLATFORMS,
     PRESENCE_MODELS,
@@ -251,7 +254,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     from .api import AqaraApi, AqaraAuthError
-    from .bridge_specs import G3_STATE_SPECS, M3_STATE_SPECS, build_active_subscriptions
+    from .bridge_specs import (
+        G2H_PRO_STATE_SPECS,
+        G410_STATE_SPECS,
+        G3_STATE_SPECS,
+        M100_STATE_SPECS,
+        M3_STATE_SPECS,
+        build_active_subscriptions,
+    )
     from .push import AqaraBridgePushManager
 
     session = aiohttp_client.async_get_clientsession(hass)
@@ -287,11 +297,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         devices = await api.get_devices()
 
         cameras = [device for device in devices if device.get("model") in G3_MODELS]
+        g2h_pro_cameras = [device for device in devices if device.get("model") in G2H_PRO_MODELS]
+        g410_doorbells = [device for device in devices if device.get("model") in G410_MODELS]
         hubs_m3 = [device for device in devices if device.get("model") in M3_MODELS]
+        hubs_m100 = [device for device in devices if device.get("model") in M100_MODELS]
         presence_devices = [device for device in devices if device.get("model") in PRESENCE_MODELS]
 
-        if not cameras and not hubs_m3 and not presence_devices:
-            raise ConfigEntryNotReady("No Aqara G3, M3, FP2, or FP300 devices found")
+        if not cameras and not g2h_pro_cameras and not g410_doorbells and not hubs_m3 and not hubs_m100 and not presence_devices:
+            raise ConfigEntryNotReady("No Aqara G2H Pro, G3, G410, M3, M100, FP2, or FP300 devices found")
 
     except (ConfigEntryAuthFailed, AqaraAuthError) as err:
         if isinstance(err, AqaraAuthError):
@@ -303,7 +316,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Aqara setup not ready: {e}") from e
 
     camera_coordinators = _setup_device_state_coordinators(hass, api, cameras, "camera-state", G3_STATE_SPECS)
+    g2h_pro_coordinators = _setup_device_state_coordinators(
+        hass,
+        api,
+        g2h_pro_cameras,
+        "g2h-pro-state",
+        G2H_PRO_STATE_SPECS,
+    )
+    g410_coordinators = _setup_device_state_coordinators(
+        hass,
+        api,
+        g410_doorbells,
+        "g410-state",
+        G410_STATE_SPECS,
+    )
     m3_coordinators = _setup_device_state_coordinators(hass, api, hubs_m3, "hub-m3-state", M3_STATE_SPECS)
+    m100_coordinators = _setup_device_state_coordinators(hass, api, hubs_m100, "hub-m100-state", M100_STATE_SPECS)
     presence_coordinators = _setup_presence_coordinators(hass, api, presence_devices)
 
     bridge_url = _entry_bridge_value(entry, CONF_BRIDGE_URL, DEFAULT_BRIDGE_URL)
@@ -314,10 +342,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry_data = {
         "api": api,
         "cameras": cameras,
+        "g2h_pro_cameras": g2h_pro_cameras,
+        "g410_doorbells": g410_doorbells,
         "hubs_m3": hubs_m3,
+        "hubs_m100": hubs_m100,
         "presence_devices": presence_devices,
         "camera_coordinators": camera_coordinators,
+        "g2h_pro_coordinators": g2h_pro_coordinators,
+        "g410_coordinators": g410_coordinators,
         "m3_coordinators": m3_coordinators,
+        "m100_coordinators": m100_coordinators,
         "presence_coordinators": presence_coordinators,
         "bridge_manager": None,
         "bridge_task": None,
@@ -333,7 +367,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise
 
     enabled_unique_ids = _enabled_unique_ids_for_entry(hass, entry)
-    active_subscriptions = build_active_subscriptions(enabled_unique_ids, cameras, hubs_m3, presence_devices)
+    active_subscriptions = build_active_subscriptions(
+        enabled_unique_ids,
+        cameras,
+        g2h_pro_cameras,
+        g410_doorbells,
+        hubs_m3,
+        hubs_m100,
+        presence_devices,
+    )
     entry_data["active_subscriptions"] = active_subscriptions
 
     bridge_manager = AqaraBridgePushManager(
@@ -343,10 +385,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         bridge_url,
         bridge_token,
         cameras,
+        g2h_pro_cameras,
+        g410_doorbells,
         hubs_m3,
+        hubs_m100,
         presence_devices,
         camera_coordinators,
+        g2h_pro_coordinators,
+        g410_coordinators,
         m3_coordinators,
+        m100_coordinators,
         presence_coordinators,
         active_subscriptions,
     )
