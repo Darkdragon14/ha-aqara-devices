@@ -37,7 +37,13 @@
             "gesture_four": { "name": "Gebaar vier" },
             "gesture_high_five": { "name": "Gebaar high five" },
             "gesture_finger_gun": { "name": "Gebaar vingerpistool" },
-            "gesture_ok": { "name": "Gebaar OK" }
+            "gesture_ok": { "name": "Gebaar OK" },
+            "gesture_v_sign_both_hands": { "name": "Gebaar V-teken met beide handen" },
+            "gesture_four_both_hands": { "name": "Gebaar vier met beide handen" },
+            "gesture_high_five_both_hands": { "name": "Gebaar high five met beide handen" },
+            "gesture_finger_gun_both_hands": { "name": "Gebaar vingerpistool met beide handen" },
+            "gesture_ok_both_hands": { "name": "Gebaar OK met beide handen" },
+            "motion_event": { "name": "Bewegingsgebeurtenis" }
         }
     }
 }

@@ -493,7 +493,7 @@ class AqaraApi:
     ) -> Dict[str, Any]:
         if switch_defs is None:
             switch_defs = _all_device_defs()
-        standard_defs = [spec for spec in switch_defs if spec.get("api")]
+        standard_defs = [spec for spec in switch_defs if spec.get("api") and spec.get("queryable", True)]
         history_defs = [spec for spec in switch_defs if spec.get("history_resource")]
         result_map: Dict[str, Any] = {spec["inApp"]: spec.get("default", 0) for spec in switch_defs}
 

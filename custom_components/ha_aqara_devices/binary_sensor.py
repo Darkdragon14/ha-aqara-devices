@@ -13,15 +13,17 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .binary_sensors import ALL_BINARY_SENSORS_DEF, M3_BINARY_SENSORS_DEF
+from .binary_sensors import ALL_BINARY_SENSORS_DEF, G410_BINARY_SENSORS_DEF, M100_BINARY_SENSORS_DEF, M3_BINARY_SENSORS_DEF
 from .const import (
     DOMAIN,
     FP2_DEVICE_LABEL,
     FP2_MODEL,
     FP300_DEVICE_LABEL,
     FP300_MODEL,
+    G410_DEVICE_LABEL,
     G3_DEVICE_LABEL,
     G3_MODEL,
+    M100_DEVICE_LABEL,
     M3_DEVICE_LABEL,
 )
 from .device_info import build_device_info
@@ -35,10 +37,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     data = hass.data[DOMAIN][entry.entry_id]
     api = data["api"]
     cameras: list[dict] = data["cameras"]
+    g410_doorbells: list[dict] = data.get("g410_doorbells", [])
     hubs_m3: list[dict] = data.get("hubs_m3", [])
+    hubs_m100: list[dict] = data.get("hubs_m100", [])
     presence_devices: list[dict] = data.get("presence_devices", [])
     camera_coordinators: dict[str, DataUpdateCoordinator] = data.get("camera_coordinators", {})
+    g410_coordinators: dict[str, DataUpdateCoordinator] = data.get("g410_coordinators", {})
     m3_coordinators: dict[str, DataUpdateCoordinator] = data.get("m3_coordinators", {})
+    m100_coordinators: dict[str, DataUpdateCoordinator] = data.get("m100_coordinators", {})
     presence_coordinators: dict[str, dict[str, DataUpdateCoordinator]] = data.get("presence_coordinators", {})
 
     entities = []
@@ -64,6 +70,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                 )
             )
 
+    for doorbell in g410_doorbells:
+        did = doorbell["did"]
+        name = doorbell["deviceName"]
+        model = doorbell["model"]
+        coordinator = g410_coordinators.get(did)
+        if coordinator is None:
+            continue
+
+        for binary_sensor_def in G410_BINARY_SENSORS_DEF:
+            entities.append(
+                AqaraBinarySensor(
+                    coordinator,
+                    did,
+                    name,
+                    api,
+                    binary_sensor_def,
+                    model,
+                    G410_DEVICE_LABEL,
+                )
+            )
+
     for hub in hubs_m3:
         did = hub["did"]
         name = hub["deviceName"]
@@ -82,6 +109,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                     binary_sensor_def,
                     model,
                     M3_DEVICE_LABEL,
+                )
+            )
+
+    for hub in hubs_m100:
+        did = hub["did"]
+        name = hub["deviceName"]
+        model = hub["model"]
+        coordinator = m100_coordinators.get(did)
+        if coordinator is None:
+            continue
+
+        for binary_sensor_def in M100_BINARY_SENSORS_DEF:
+            entities.append(
+                AqaraBinarySensor(
+                    coordinator,
+                    did,
+                    name,
+                    api,
+                    binary_sensor_def,
+                    model,
+                    M100_DEVICE_LABEL,
                 )
             )
 
@@ -149,6 +197,7 @@ class AqaraBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._hold_seconds = spec.get("hold_seconds", 5)
         self._clear_listener: Callable[[], None] | None = None
         self._last_timestamp: float | None = None
+        self._event_active_until: float | None = None
 
         device_class = spec.get("device_class")
         if isinstance(device_class, BinarySensorDeviceClass):
@@ -169,6 +218,8 @@ class AqaraBinarySensor(CoordinatorEntity, BinarySensorEntity):
         await super().async_added_to_hass()
         if self._value_type == "timestamp":
             self._schedule_auto_clear(self.coordinator.data or {})
+        elif self._value_type == "event" and self._truthy((self.coordinator.data or {}).get(self._spec["inApp"])):
+            self._schedule_event_clear()
 
     async def async_will_remove_from_hass(self) -> None:
         self._cancel_auto_clear()
@@ -226,6 +277,18 @@ class AqaraBinarySensor(CoordinatorEntity, BinarySensorEntity):
 
         self._clear_listener = async_call_later(self.hass, delay, _clear_state)
 
+    def _schedule_event_clear(self) -> None:
+        self._cancel_auto_clear()
+        self._event_active_until = time.time() + max(self._hold_seconds, 1)
+
+        @callback
+        def _clear_state(_now) -> None:
+            self._clear_listener = None
+            self._event_active_until = None
+            self.async_write_ha_state()
+
+        self._clear_listener = async_call_later(self.hass, max(self._hold_seconds, 1), _clear_state)
+
     @callback
     def _handle_coordinator_update(self) -> None:
         if self._value_type == "timestamp":
@@ -235,6 +298,10 @@ class AqaraBinarySensor(CoordinatorEntity, BinarySensorEntity):
                 self._schedule_auto_clear(data)
             elif ts is not None and self._clear_listener is None and self.is_on:
                 self._schedule_auto_clear(data)
+        elif self._value_type == "event":
+            data = self.coordinator.data or {}
+            if self._truthy(data.get(self._spec["inApp"])):
+                self._schedule_event_clear()
         super()._handle_coordinator_update()
 
     @property
@@ -254,6 +321,8 @@ class AqaraBinarySensor(CoordinatorEntity, BinarySensorEntity):
             if ts <= 0 or ts > now + 5:
                 return False
             return (now - ts) <= max(self._hold_seconds, 1)
+        if self._value_type == "event":
+            return self._event_active_until is not None and time.time() <= self._event_active_until
         return self._truthy(raw)
 
 

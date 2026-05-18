@@ -37,7 +37,13 @@
             "gesture_four": { "name": "Geste Vier" },
             "gesture_high_five": { "name": "Geste High Five" },
             "gesture_finger_gun": { "name": "Geste Fingerpistole" },
-            "gesture_ok": { "name": "Geste OK" }
+            "gesture_ok": { "name": "Geste OK" },
+            "gesture_v_sign_both_hands": { "name": "Geste V-Zeichen mit beiden Haenden" },
+            "gesture_four_both_hands": { "name": "Geste Vier mit beiden Haenden" },
+            "gesture_high_five_both_hands": { "name": "Geste High Five mit beiden Haenden" },
+            "gesture_finger_gun_both_hands": { "name": "Geste Fingerpistole mit beiden Haenden" },
+            "gesture_ok_both_hands": { "name": "Geste OK mit beiden Haenden" },
+            "motion_event": { "name": "Bewegungsereignis" }
         }
     }
 }
