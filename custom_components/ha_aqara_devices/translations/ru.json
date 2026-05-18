@@ -38,11 +38,12 @@
             "gesture_high_five": { "name": "Жест: Дай пять" },
             "gesture_finger_gun": { "name": "Жест: Пистолет" },
             "gesture_ok": { "name": "Жест: OK" },
-            "gesture_v_sign_both_hands": { "name": "Gesture V sign both hands" },
-            "gesture_four_both_hands": { "name": "Gesture Four both hands" },
-            "gesture_high_five_both_hands": { "name": "Gesture High Five both hands" },
-            "gesture_finger_gun_both_hands": { "name": "Gesture Finger Gun both hands" },
-            "gesture_ok_both_hands": { "name": "Gesture OK both hands" }
+            "gesture_v_sign_both_hands": { "name": "Жест: V двумя руками" },
+            "gesture_four_both_hands": { "name": "Жест: Четыре двумя руками" },
+            "gesture_high_five_both_hands": { "name": "Жест: Дай пять двумя руками" },
+            "gesture_finger_gun_both_hands": { "name": "Жест: Пистолет двумя руками" },
+            "gesture_ok_both_hands": { "name": "Жест: OK двумя руками" },
+            "motion_event": { "name": "Событие движения" }
         }
     }
 }

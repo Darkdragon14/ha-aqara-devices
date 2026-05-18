@@ -39,6 +39,7 @@ GESTURE_SENSORS = [
 
 G3_MOTION_EVENT = {
     "name": "Motion Event",
+    "translation_key": "motion_event",
     "icon": "mdi:motion-sensor",
     "inApp": "mdtrigger",
     "api": "3.21.85",

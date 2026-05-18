@@ -65,11 +65,12 @@
             "gesture_high_five": { "name": "Gesto High Five" },
             "gesture_finger_gun": { "name": "Gesto pistole" },
             "gesture_ok": { "name": "Gesto OK" },
-            "gesture_v_sign_both_hands": { "name": "Gesture V sign both hands" },
-            "gesture_four_both_hands": { "name": "Gesture Four both hands" },
-            "gesture_high_five_both_hands": { "name": "Gesture High Five both hands" },
-            "gesture_finger_gun_both_hands": { "name": "Gesture Finger Gun both hands" },
-            "gesture_ok_both_hands": { "name": "Gesture OK both hands" }
+            "gesture_v_sign_both_hands": { "name": "Gesto znaku V obema rukama" },
+            "gesture_four_both_hands": { "name": "Gesto ctyri obema rukama" },
+            "gesture_high_five_both_hands": { "name": "Gesto High Five obema rukama" },
+            "gesture_finger_gun_both_hands": { "name": "Gesto pistole obema rukama" },
+            "gesture_ok_both_hands": { "name": "Gesto OK obema rukama" },
+            "motion_event": { "name": "Udalost pohybu" }
         }
     }
 }

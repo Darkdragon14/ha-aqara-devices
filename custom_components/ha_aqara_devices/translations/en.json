@@ -69,7 +69,8 @@
             "gesture_four_both_hands": { "name": "Gesture Four both hands" },
             "gesture_high_five_both_hands": { "name": "Gesture High Five both hands" },
             "gesture_finger_gun_both_hands": { "name": "Gesture Finger Gun both hands" },
-            "gesture_ok_both_hands": { "name": "Gesture OK both hands" }
+            "gesture_ok_both_hands": { "name": "Gesture OK both hands" },
+            "motion_event": { "name": "Motion Event" }
         }
     }
 }

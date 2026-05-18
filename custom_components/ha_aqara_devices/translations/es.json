@@ -38,11 +38,12 @@
             "gesture_high_five": { "name": "Gesto choca esos cinco" },
             "gesture_finger_gun": { "name": "Gesto pistola con los dedos" },
             "gesture_ok": { "name": "Gesto OK" },
-            "gesture_v_sign_both_hands": { "name": "Gesture V sign both hands" },
-            "gesture_four_both_hands": { "name": "Gesture Four both hands" },
-            "gesture_high_five_both_hands": { "name": "Gesture High Five both hands" },
-            "gesture_finger_gun_both_hands": { "name": "Gesture Finger Gun both hands" },
-            "gesture_ok_both_hands": { "name": "Gesture OK both hands" }
+            "gesture_v_sign_both_hands": { "name": "Gesto signo V con ambas manos" },
+            "gesture_four_both_hands": { "name": "Gesto cuatro con ambas manos" },
+            "gesture_high_five_both_hands": { "name": "Gesto choca esos cinco con ambas manos" },
+            "gesture_finger_gun_both_hands": { "name": "Gesto pistola con ambas manos" },
+            "gesture_ok_both_hands": { "name": "Gesto OK con ambas manos" },
+            "motion_event": { "name": "Evento de movimiento" }
         }
     }
 }

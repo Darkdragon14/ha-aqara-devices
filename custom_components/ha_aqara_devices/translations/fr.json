@@ -69,7 +69,8 @@
             "gesture_four_both_hands": { "name": "Geste quatre deux mains" },
             "gesture_high_five_both_hands": { "name": "Geste tape m'en cinq deux mains" },
             "gesture_finger_gun_both_hands": { "name": "Geste pistolet avec les doigts deux mains" },
-            "gesture_ok_both_hands": { "name": "Geste OK deux mains" }
+            "gesture_ok_both_hands": { "name": "Geste OK deux mains" },
+            "motion_event": { "name": "Evenement de mouvement" }
         }
     }
 }

@@ -38,11 +38,12 @@
             "gesture_high_five": { "name": "Pacsi kezmozdulat" },
             "gesture_finger_gun": { "name": "Pisztoly kezmozdulat" },
             "gesture_ok": { "name": "OK kezmozdulat" },
-            "gesture_v_sign_both_hands": { "name": "Gesture V sign both hands" },
-            "gesture_four_both_hands": { "name": "Gesture Four both hands" },
-            "gesture_high_five_both_hands": { "name": "Gesture High Five both hands" },
-            "gesture_finger_gun_both_hands": { "name": "Gesture Finger Gun both hands" },
-            "gesture_ok_both_hands": { "name": "Gesture OK both hands" }
+            "gesture_v_sign_both_hands": { "name": "V jel kezmozdulat ket kezzel" },
+            "gesture_four_both_hands": { "name": "Negyes kezmozdulat ket kezzel" },
+            "gesture_high_five_both_hands": { "name": "Pacsi kezmozdulat ket kezzel" },
+            "gesture_finger_gun_both_hands": { "name": "Pisztoly kezmozdulat ket kezzel" },
+            "gesture_ok_both_hands": { "name": "OK kezmozdulat ket kezzel" },
+            "motion_event": { "name": "Mozgasesemeny" }
         }
     }
 }
