@@ -32,6 +32,10 @@ from .const import FP2_MODEL, FP300_MODEL
 _LOGGER = logging.getLogger(__name__)
 
 
+class AqaraBridgeNotReady(RuntimeError):
+    """Raised when the bridge HTTP API is reachable but not ready for push updates."""
+
+
 class AqaraBridgePushManager:
     def __init__(
         self,
@@ -139,8 +143,10 @@ class AqaraBridgePushManager:
             self._started = True
             return
 
+        self._set_polling_enabled(True)
         await self._api.ensure_valid_access_token()
         await self._check_health()
+        await self._subscribe_all_resources()
 
         self._stop_event.clear()
         self._listen_task = self._hass.async_create_background_task(
@@ -153,7 +159,6 @@ class AqaraBridgePushManager:
             await self.async_stop()
             raise RuntimeError("Timed out connecting to Aqara bridge SSE stream") from err
 
-        await self._subscribe_all_resources()
         self._started = True
 
     async def async_stop(self) -> None:
@@ -173,6 +178,7 @@ class AqaraBridgePushManager:
         task = self._listen_task
         self._listen_task = None
         self._started = False
+        self._set_polling_enabled(True)
         if task is not None:
             task.cancel()
             with suppress(asyncio.CancelledError):
@@ -187,12 +193,22 @@ class AqaraBridgePushManager:
                 raise RuntimeError(f"Aqara bridge health check failed ({response.status}): {body}")
 
             payload = await response.json()
+            status = str(payload.get("status") or "").strip().lower()
+            rocketmq_started_value = payload.get("rocketmqStarted")
+            rocketmq_started = rocketmq_started_value is True or str(rocketmq_started_value).lower() == "true"
             _LOGGER.info(
-                "Aqara bridge reachable: status=%s rocketmq_started=%s nameserver=%s",
+                "Aqara bridge health: status=%s rocketmq_started=%s nameserver=%s last_error=%s",
                 payload.get("status"),
-                payload.get("rocketmqStarted"),
+                rocketmq_started,
                 payload.get("nameserver"),
+                payload.get("lastError"),
             )
+            if status != "up" or not rocketmq_started:
+                raise AqaraBridgeNotReady(
+                    "Aqara bridge RocketMQ consumer is not ready "
+                    f"(status={payload.get('status')}, rocketmqStarted={payload.get('rocketmqStarted')}, "
+                    f"lastError={payload.get('lastError')})"
+                )
 
     async def _subscribe_all_resources(self) -> None:
         if not self._subscriptions:
