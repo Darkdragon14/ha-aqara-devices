@@ -4,7 +4,7 @@
 [![HACS Action](https://github.com/Darkdragon14/ha-aqara-devices/actions/workflows/hacs_action.yml/badge.svg)](https://github.com/Darkdragon14/ha-aqara-devices/actions/workflows/hacs_action.yml)
 [![release](https://img.shields.io/github/v/release/Darkdragon14/ha-aqara-devices.svg)](https://github.com/Darkdragon14/ha-aqara-devices/releases)
 
-`Aqara Devices (Hub G3, Hub M3, FP2 and FP300)` connects Aqara Hub G3, Hub M3, Presence Sensor FP2, and Presence Multi-Sensor FP300 to Home Assistant with Aqara Open API v3 and `aqara-rocketmq-bridge`.
+`Aqara Devices (Hub G3, Hub M3, FP2, FP300 and U200)` connects Aqara Hub G3, Hub M3, Presence Sensor FP2, Presence Multi-Sensor FP300, and Smart Lock U200 to Home Assistant with Aqara Open API v3 and `aqara-rocketmq-bridge`.
 
 Instead of relying only on periodic polling, the integration now uses Aqara Message Push -> RocketMQ -> bridge -> Server-Sent Events (SSE) so Home Assistant receives live updates while the integration keeps Aqara authentication, token refresh, and resource subscriptions in sync.
 
@@ -134,7 +134,17 @@ After the first step, Aqara sends a verification code to your email address or p
 | `binary_sensor` | Presence |
 | `sensor` | Temperature, Humidity, Illuminance, Battery |
 
-Each discovered G3, M3, FP2, or FP300 device in your Aqara account gets its own entities and device metadata inside Home Assistant.
+### Smart Lock U200
+
+| Platform | Entities |
+| --- | --- |
+| `lock` | Lock |
+| `binary_sensor` | Reachable, Battery Replacement Needed |
+| `sensor` | Battery, Battery Voltage |
+
+The U200 is exposed by Aqara as Matter model `aqara.matter.4447_10242`, so this integration reads it through the Aqara trait API instead of the older resource API.
+
+Each discovered G3, M3, FP2, FP300, or U200 device in your Aqara account gets its own entities and device metadata inside Home Assistant.
 
 ## Need Help?
 

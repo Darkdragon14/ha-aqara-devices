@@ -25,10 +25,12 @@ from .const import (
     G3_MODEL,
     M100_DEVICE_LABEL,
     M3_DEVICE_LABEL,
+    U200_DEVICE_LABEL,
 )
 from .device_info import build_device_info
 from .fp300 import FP300_BINARY_SENSORS_DEF
 from .fp2 import FP2_BINARY_SENSORS_DEF
+from .u200 import U200_BINARY_SENSORS_DEF
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,11 +43,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     hubs_m3: list[dict] = data.get("hubs_m3", [])
     hubs_m100: list[dict] = data.get("hubs_m100", [])
     presence_devices: list[dict] = data.get("presence_devices", [])
+    u200_locks: list[dict] = data.get("u200_locks", [])
     camera_coordinators: dict[str, DataUpdateCoordinator] = data.get("camera_coordinators", {})
     g410_coordinators: dict[str, DataUpdateCoordinator] = data.get("g410_coordinators", {})
     m3_coordinators: dict[str, DataUpdateCoordinator] = data.get("m3_coordinators", {})
     m100_coordinators: dict[str, DataUpdateCoordinator] = data.get("m100_coordinators", {})
     presence_coordinators: dict[str, dict[str, DataUpdateCoordinator]] = data.get("presence_coordinators", {})
+    u200_coordinators: dict[str, DataUpdateCoordinator] = data.get("u200_coordinators", {})
 
     entities = []
 
@@ -162,6 +166,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                     spec,
                     model,
                     device_label,
+                )
+            )
+
+    for lock in u200_locks:
+        did = lock["did"]
+        name = lock["deviceName"]
+        model = lock["model"]
+        coordinator = u200_coordinators.get(did)
+        if coordinator is None:
+            continue
+
+        for binary_sensor_def in U200_BINARY_SENSORS_DEF:
+            entities.append(
+                AqaraBinarySensor(
+                    coordinator,
+                    did,
+                    name,
+                    api,
+                    binary_sensor_def,
+                    model,
+                    U200_DEVICE_LABEL,
                 )
             )
 

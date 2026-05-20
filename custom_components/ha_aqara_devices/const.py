@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 DOMAIN = "ha_aqara_devices"
-PLATFORMS: list[str] = ["switch", "button", "binary_sensor", "number", "sensor", "select"]  # only services for this MVP
+PLATFORMS: list[str] = ["switch", "button", "binary_sensor", "number", "sensor", "select", "lock"]
 
 CONF_BRIDGE_URL = "bridge_url"
 CONF_BRIDGE_TOKEN = "bridge_token"
@@ -34,12 +34,14 @@ AREA_OPTIONS = list(AREAS.keys())
 G3_MODEL = "lumi.camera.gwpgl1"
 FP2_MODEL = "lumi.motion.agl001"
 FP300_MODEL = "lumi.sensor_occupy.agl8"
+U200_MODEL = "aqara.matter.4447_10242"
 G3_MODELS = {"lumi.camera.gwpgl1", "lumi.camera.gwpagl01"}
 G2H_PRO_MODELS = {"lumi.camera.agl001", "lumi.camera.acn003"}
 G410_MODELS = {"lumi.camera.acn017", "lumi.camera.agl006"}
 M3_MODELS = {"lumi.gateway.acn012", "lumi.gateway.agl004"}
 M100_MODELS = {"lumi.gateway.agl008", "lumi.gateway.agl010"}
 PRESENCE_MODELS = {FP2_MODEL, FP300_MODEL}
+U200_MODELS = {U200_MODEL}
 
 G3_DEVICE_LABEL = "Aqara G3"
 G2H_PRO_DEVICE_LABEL = "Aqara Camera Hub G2H Pro"
@@ -48,10 +50,12 @@ M3_DEVICE_LABEL = "Aqara Hub M3"
 M100_DEVICE_LABEL = "Aqara Hub M100"
 FP2_DEVICE_LABEL = "Aqara FP2"
 FP300_DEVICE_LABEL = "Presence Multi-Sensor FP300"
+U200_DEVICE_LABEL = "Aqara Smart Lock U200"
 
 FP2_FAST_INTERVAL_SECONDS = 2
 FP2_PRESENCE_INTERVAL_SECONDS = 5
 FP300_FAST_INTERVAL_SECONDS = 5
+U200_INTERVAL_SECONDS = 30
 PRESENCE_MEDIUM_INTERVAL_SECONDS = 30
 PRESENCE_SLOW_INTERVAL_SECONDS = 300
 PRESENCE_UNAVAILABLE_AFTER_FAILURES = 3
