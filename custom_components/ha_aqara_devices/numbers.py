@@ -151,6 +151,45 @@ M100_NUMBERS_DEF = [
     M100_ARMING_DELAY_TIME,
 ]
 
+M200_ALERT_VOLUME = {
+    "name": "Alert Volume",
+    "icon": "mdi:bell-ring",
+    "inApp": "alarm_bell_volume",
+    "api": "14.1.1000",
+    "min": 0,
+    "max": 100,
+    "step": 1,
+    "type": "integer",
+}
+
+M200_SYSTEM_VOLUME = {
+    "name": "System Volume",
+    "icon": "mdi:volume-high",
+    "inApp": "system_volume",
+    "api": "14.11.85",
+    "min": 0,
+    "max": 100,
+    "step": 1,
+    "type": "integer",
+}
+
+M200_ALERT_DURATION = {
+    "name": "Alert Duration",
+    "icon": "mdi:timer",
+    "inApp": "alarm_time_length",
+    "api": "14.1.113",
+    "min": -1,
+    "max": 255,
+    "step": 1,
+    "type": "integer",
+}
+
+M200_NUMBERS_DEF = [
+    M200_ALERT_VOLUME,
+    M200_SYSTEM_VOLUME,
+    M200_ALERT_DURATION,
+]
+
 G2H_PRO_MUSIC_VOLUME = {
     "name": "Music Volume",
     "icon": "mdi:music-note",

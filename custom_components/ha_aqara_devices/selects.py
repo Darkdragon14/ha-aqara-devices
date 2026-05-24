@@ -102,6 +102,51 @@ M100_SELECTS_DEF = [
     M100_DOORBELL_BELL_INDEX,
 ]
 
+M200_GATEWAY_LANGUAGE = {
+    "name": "Gateway Language",
+    "icon": "mdi:translate",
+    "inApp": "gateway_language",
+    "api": "14.10.85",
+    "options": [
+        (1, "Chinese"),
+        (2, "English"),
+    ],
+    "value_type": "int",
+    "default": None,
+}
+
+M200_ALERT_RINGTONE = {
+    "name": "Alert Ringtone",
+    "icon": "mdi:bell",
+    "inApp": "alarm_bell_index",
+    "api": "14.1.85",
+    "options": ALARM_BELL_INDEX_OPTIONS,
+    "value_type": "int",
+    "default": None,
+}
+
+M200_AC_MODE = {
+    "name": "AC Mode",
+    "icon": "mdi:air-conditioner",
+    "inApp": "ac_mode",
+    "api": "14.25.85",
+    "options": [
+        (0, "Unconfigured Mode"),
+        (1, "Air Conditioner Plugged into Socket Mode"),
+        (2, "Air Conditioner Not Plugged into Socket Mode"),
+        (3, "Infrared Water Heater Mode"),
+        (4, "16A Socket Mode"),
+    ],
+    "value_type": "int",
+    "default": None,
+}
+
+M200_SELECTS_DEF = [
+    M200_GATEWAY_LANGUAGE,
+    M200_ALERT_RINGTONE,
+    M200_AC_MODE,
+]
+
 G410_ALARM_BELL_INDEX = {
     "name": "Alarm Ringtone",
     "icon": "mdi:bell",

@@ -8,13 +8,14 @@ from .binary_sensors import (
     GESTURE_RESOURCE_ID,
     GESTURE_SENSORS,
     M100_BINARY_SENSORS_DEF,
+    M200_BINARY_SENSORS_DEF,
     M3_BINARY_SENSORS_DEF,
 )
 from .const import FP2_MODEL, FP300_MODEL
 from .fp2 import FP2_BINARY_SENSORS_DEF, FP2_SENSOR_SPECS
 from .fp300 import FP300_BINARY_SENSORS_DEF, FP300_SENSOR_SPECS
-from .numbers import ALL_NUMBERS_DEF, G2H_PRO_NUMBERS_DEF, G410_NUMBERS_DEF, M100_NUMBERS_DEF, M3_NUMBERS_DEF
-from .selects import G410_SELECTS_DEF, M100_SELECTS_DEF, M3_SELECTS_DEF
+from .numbers import ALL_NUMBERS_DEF, G2H_PRO_NUMBERS_DEF, G410_NUMBERS_DEF, M100_NUMBERS_DEF, M200_NUMBERS_DEF, M3_NUMBERS_DEF
+from .selects import G410_SELECTS_DEF, M100_SELECTS_DEF, M200_SELECTS_DEF, M3_SELECTS_DEF
 from .sensors import G410_SENSORS_DEF, M100_SENSORS_DEF, M3_SENSORS_DEF
 from .switches import ALL_SWITCHES_DEF, G2H_PRO_SWITCHES_DEF, G410_SWITCHES_DEF, M100_SWITCHES_DEF
 
@@ -131,6 +132,15 @@ M100_RESOURCE_SPEC_MAP = build_api_spec_map(M100_STATE_SPECS)
 M100_SUBSCRIPTION_RESOURCE_IDS = unique_api_resource_ids(M100_STATE_SPECS)
 
 
+M200_STATE_SPECS = [
+    *M200_BINARY_SENSORS_DEF,
+    *M200_NUMBERS_DEF,
+    *M200_SELECTS_DEF,
+]
+M200_RESOURCE_SPEC_MAP = build_api_spec_map(M200_STATE_SPECS)
+M200_SUBSCRIPTION_RESOURCE_IDS = unique_api_resource_ids(M200_STATE_SPECS)
+
+
 FP2_STATE_SPECS = [
     *FP2_BINARY_SENSORS_DEF,
     *FP2_SENSOR_SPECS,
@@ -227,6 +237,13 @@ def _collect_m100_resources(enabled_unique_ids: set[str], did: str) -> list[str]
     return list(resource_ids)
 
 
+def _collect_m200_resources(enabled_unique_ids: set[str], did: str) -> list[str]:
+    resource_ids: dict[str, None] = {}
+    for spec in M200_STATE_SPECS:
+        _append_resource_if_enabled(resource_ids, enabled_unique_ids, f"{did}_{spec['inApp']}", spec)
+    return list(resource_ids)
+
+
 def _collect_presence_resources(
     enabled_unique_ids: set[str],
     did: str,
@@ -248,6 +265,7 @@ def build_active_subscriptions(
     g410_doorbells: list[dict[str, Any]],
     hubs_m3: list[dict[str, Any]],
     hubs_m100: list[dict[str, Any]],
+    hubs_m200: list[dict[str, Any]],
     presence_devices: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
     subscriptions: list[dict[str, Any]] = []
@@ -279,6 +297,12 @@ def build_active_subscriptions(
     for hub in hubs_m100:
         did = str(hub["did"])
         resource_ids = _collect_m100_resources(enabled_unique_ids, did)
+        if resource_ids:
+            subscriptions.append({"subjectId": did, "resourceIds": resource_ids})
+
+    for hub in hubs_m200:
+        did = str(hub["did"])
+        resource_ids = _collect_m200_resources(enabled_unique_ids, did)
         if resource_ids:
             subscriptions.append({"subjectId": did, "resourceIds": resource_ids})
 

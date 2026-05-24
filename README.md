@@ -4,7 +4,7 @@
 [![HACS Action](https://github.com/Darkdragon14/ha-aqara-devices/actions/workflows/hacs_action.yml/badge.svg)](https://github.com/Darkdragon14/ha-aqara-devices/actions/workflows/hacs_action.yml)
 [![release](https://img.shields.io/github/v/release/Darkdragon14/ha-aqara-devices.svg)](https://github.com/Darkdragon14/ha-aqara-devices/releases)
 
-`Aqara Devices (Hub G3, Hub M3, FP2 and FP300)` connects Aqara Hub G3, Hub M3, Presence Sensor FP2, and Presence Multi-Sensor FP300 to Home Assistant with Aqara Open API v3 and `aqara-rocketmq-bridge`.
+`Aqara Devices` connects Aqara Hub G3, Hub M3, Hub M200, Presence Sensor FP2, and Presence Multi-Sensor FP300 to Home Assistant with Aqara Open API v3 and `aqara-rocketmq-bridge`.
 
 Instead of relying only on periodic polling, the integration now uses Aqara Message Push -> RocketMQ -> bridge -> Server-Sent Events (SSE) so Home Assistant receives live updates while the integration keeps Aqara authentication, token refresh, and resource subscriptions in sync.
 
@@ -120,6 +120,14 @@ After the first step, Aqara sends a verification code to your email address or p
 | `sensor` | Temperature, Humidity |
 | `select` | Gateway Language, Alarm Ringtone, Doorbell Ringtone |
 
+### Hub M200
+
+| Platform | Entities |
+| --- | --- |
+| `binary_sensor` | AC On/Off Status |
+| `number` | Alert Volume, System Volume, Alert Duration |
+| `select` | Gateway Language, Alert Ringtone, AC Mode |
+
 ### Presence Sensor FP2
 
 | Platform | Entities |
@@ -134,7 +142,7 @@ After the first step, Aqara sends a verification code to your email address or p
 | `binary_sensor` | Presence |
 | `sensor` | Temperature, Humidity, Illuminance, Battery |
 
-Each discovered G3, M3, FP2, or FP300 device in your Aqara account gets its own entities and device metadata inside Home Assistant.
+Each discovered G3, M3, M200, FP2, or FP300 device in your Aqara account gets its own entities and device metadata inside Home Assistant.
 
 ## Need Help?
 

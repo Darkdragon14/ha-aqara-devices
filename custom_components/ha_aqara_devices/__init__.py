@@ -30,6 +30,7 @@ from .const import (
     G410_MODELS,
     G3_MODELS,
     M100_MODELS,
+    M200_MODELS,
     M3_MODELS,
     PLATFORMS,
     PRESENCE_MODELS,
@@ -259,6 +260,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         G410_STATE_SPECS,
         G3_STATE_SPECS,
         M100_STATE_SPECS,
+        M200_STATE_SPECS,
         M3_STATE_SPECS,
         build_active_subscriptions,
     )
@@ -301,10 +303,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         g410_doorbells = [device for device in devices if device.get("model") in G410_MODELS]
         hubs_m3 = [device for device in devices if device.get("model") in M3_MODELS]
         hubs_m100 = [device for device in devices if device.get("model") in M100_MODELS]
+        hubs_m200 = [device for device in devices if device.get("model") in M200_MODELS]
         presence_devices = [device for device in devices if device.get("model") in PRESENCE_MODELS]
 
-        if not cameras and not g2h_pro_cameras and not g410_doorbells and not hubs_m3 and not hubs_m100 and not presence_devices:
-            raise ConfigEntryNotReady("No Aqara G2H Pro, G3, G410, M3, M100, FP2, or FP300 devices found")
+        if not cameras and not g2h_pro_cameras and not g410_doorbells and not hubs_m3 and not hubs_m100 and not hubs_m200 and not presence_devices:
+            raise ConfigEntryNotReady("No Aqara G2H Pro, G3, G410, M3, M100, M200, FP2, or FP300 devices found")
 
     except (ConfigEntryAuthFailed, AqaraAuthError) as err:
         if isinstance(err, AqaraAuthError):
@@ -332,6 +335,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     m3_coordinators = _setup_device_state_coordinators(hass, api, hubs_m3, "hub-m3-state", M3_STATE_SPECS)
     m100_coordinators = _setup_device_state_coordinators(hass, api, hubs_m100, "hub-m100-state", M100_STATE_SPECS)
+    m200_coordinators = _setup_device_state_coordinators(hass, api, hubs_m200, "hub-m200-state", M200_STATE_SPECS)
     presence_coordinators = _setup_presence_coordinators(hass, api, presence_devices)
 
     bridge_url = _entry_bridge_value(entry, CONF_BRIDGE_URL, DEFAULT_BRIDGE_URL)
@@ -346,12 +350,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "g410_doorbells": g410_doorbells,
         "hubs_m3": hubs_m3,
         "hubs_m100": hubs_m100,
+        "hubs_m200": hubs_m200,
         "presence_devices": presence_devices,
         "camera_coordinators": camera_coordinators,
         "g2h_pro_coordinators": g2h_pro_coordinators,
         "g410_coordinators": g410_coordinators,
         "m3_coordinators": m3_coordinators,
         "m100_coordinators": m100_coordinators,
+        "m200_coordinators": m200_coordinators,
         "presence_coordinators": presence_coordinators,
         "bridge_manager": None,
         "bridge_task": None,
@@ -374,6 +380,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         g410_doorbells,
         hubs_m3,
         hubs_m100,
+        hubs_m200,
         presence_devices,
     )
     entry_data["active_subscriptions"] = active_subscriptions
@@ -389,12 +396,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         g410_doorbells,
         hubs_m3,
         hubs_m100,
+        hubs_m200,
         presence_devices,
         camera_coordinators,
         g2h_pro_coordinators,
         g410_coordinators,
         m3_coordinators,
         m100_coordinators,
+        m200_coordinators,
         presence_coordinators,
         active_subscriptions,
     )

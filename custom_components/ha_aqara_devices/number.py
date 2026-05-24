@@ -11,8 +11,8 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.number import NumberEntity
 
-from .const import DOMAIN, G2H_PRO_DEVICE_LABEL, G410_DEVICE_LABEL, G3_MODEL, G3_DEVICE_LABEL, M100_DEVICE_LABEL, M3_DEVICE_LABEL
-from .numbers import ALL_NUMBERS_DEF, G2H_PRO_NUMBERS_DEF, G410_NUMBERS_DEF, M100_NUMBERS_DEF, M3_NUMBERS_DEF
+from .const import DOMAIN, G2H_PRO_DEVICE_LABEL, G410_DEVICE_LABEL, G3_MODEL, G3_DEVICE_LABEL, M100_DEVICE_LABEL, M200_DEVICE_LABEL, M3_DEVICE_LABEL
+from .numbers import ALL_NUMBERS_DEF, G2H_PRO_NUMBERS_DEF, G410_NUMBERS_DEF, M100_NUMBERS_DEF, M200_NUMBERS_DEF, M3_NUMBERS_DEF
 from .api import AqaraApi
 from .device_info import build_device_info
 
@@ -26,11 +26,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     g410_doorbells: list[dict] = data.get("g410_doorbells", [])
     hubs_m3: list[dict] = data.get("hubs_m3", [])
     hubs_m100: list[dict] = data.get("hubs_m100", [])
+    hubs_m200: list[dict] = data.get("hubs_m200", [])
     camera_coordinators: dict[str, DataUpdateCoordinator] = data.get("camera_coordinators", {})
     g2h_pro_coordinators: dict[str, DataUpdateCoordinator] = data.get("g2h_pro_coordinators", {})
     g410_coordinators: dict[str, DataUpdateCoordinator] = data.get("g410_coordinators", {})
     m3_coordinators: dict[str, DataUpdateCoordinator] = data.get("m3_coordinators", {})
     m100_coordinators: dict[str, DataUpdateCoordinator] = data.get("m100_coordinators", {})
+    m200_coordinators: dict[str, DataUpdateCoordinator] = data.get("m200_coordinators", {})
 
     entities = []
 
@@ -93,7 +95,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         for number_def in M100_NUMBERS_DEF:
             number = AqaraNumber(coordinator, api, did, name, number_def, model, M100_DEVICE_LABEL)
             entities.append(number)
-         
+
+    for hub in hubs_m200:
+        did = hub["did"]
+        name = hub["deviceName"]
+        model = hub["model"]
+        coordinator = m200_coordinators.get(did)
+        if coordinator is None:
+            continue
+
+        for number_def in M200_NUMBERS_DEF:
+            number = AqaraNumber(coordinator, api, did, name, number_def, model, M200_DEVICE_LABEL)
+            entities.append(number)
+
     async_add_entities(entities)
 
 class AqaraNumber(CoordinatorEntity, NumberEntity):
