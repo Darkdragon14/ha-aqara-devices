@@ -131,8 +131,9 @@ After the first step, Aqara sends a verification code to your email address or p
 
 | Platform | Entities |
 | --- | --- |
-| `binary_sensor` | Presence |
-| `sensor` | Temperature, Humidity, Illuminance, Battery |
+| `binary_sensor` | Presence, Motion |
+| `sensor` | Activity Status, Temperature, Humidity, Illuminance, Battery |
+| `select` | Work Mode |
 
 Each discovered G3, M3, FP2, or FP300 device in your Aqara account gets its own entities and device metadata inside Home Assistant.
 
