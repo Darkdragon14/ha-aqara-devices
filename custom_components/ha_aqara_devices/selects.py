@@ -146,3 +146,22 @@ G410_SELECTS_DEF = [
     G410_IMAGE_FLIP,
     G410_CAMERA_MODE,
 ]
+
+FP300_WORK_MODE = {
+    "name": "Work Mode",
+    "icon": "mdi:radar",
+    "inApp": "work_mode",
+    "api": "14.59.85",
+    "poll_group": "slow",
+    "options": [
+        (0, "Radar + Infrared"),
+        (1, "Radar only"),
+        (2, "Infrared only"),
+    ],
+    "value_type": "int",
+    "default": None,
+}
+
+FP300_SELECTS_DEF = [
+    FP300_WORK_MODE,
+]
