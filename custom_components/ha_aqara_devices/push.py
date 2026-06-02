@@ -90,6 +90,7 @@ class AqaraBridgePushManager:
         self._connected_event = asyncio.Event()
         self._subscribed = False
         self._started = False
+        self._polling_enabled: bool | None = None
 
     @staticmethod
     def _normalize_subscriptions(subscriptions: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -129,10 +130,17 @@ class AqaraBridgePushManager:
         push delivers all resource updates in real time.  When SSE drops,
         polling is re-enabled as an automatic fallback.
         """
+        if self._polling_enabled == enabled:
+            return
+
         interval = timedelta(seconds=BRIDGE_SANITY_INTERVAL_SECONDS) if enabled else None
         for coordinator in self._all_coordinators():
             coordinator.update_interval = interval
-        _LOGGER.debug("Coordinator polling %s", "enabled" if enabled else "disabled")
+        self._polling_enabled = enabled
+        _LOGGER.info(
+            "Aqara bridge polling fallback %s",
+            "enabled" if enabled else "disabled",
+        )
 
     async def async_start(self) -> None:
         if self._started:
@@ -149,16 +157,15 @@ class AqaraBridgePushManager:
         await self._subscribe_all_resources()
 
         self._stop_event.clear()
-        self._listen_task = self._hass.async_create_background_task(
-            self._listen_loop(),
-            "Aqara bridge SSE listener",
+        self._connected_event.clear()
+        if self._listen_task is None or self._listen_task.done():
+            self._listen_task = self._hass.async_create_background_task(
+                self._listen_loop(),
+                "Aqara bridge SSE listener",
+            )
+        _LOGGER.info(
+            "Aqara bridge SSE listener started; polling fallback remains active until connected"
         )
-        try:
-            await asyncio.wait_for(self._connected_event.wait(), timeout=15)
-        except TimeoutError as err:
-            await self.async_stop()
-            raise RuntimeError("Timed out connecting to Aqara bridge SSE stream") from err
-
         self._started = True
 
     async def async_stop(self) -> None:
@@ -196,19 +203,19 @@ class AqaraBridgePushManager:
             status = str(payload.get("status") or "").strip().lower()
             rocketmq_started_value = payload.get("rocketmqStarted")
             rocketmq_started = rocketmq_started_value is True or str(rocketmq_started_value).lower() == "true"
-            _LOGGER.info(
-                "Aqara bridge health: status=%s rocketmq_started=%s nameserver=%s last_error=%s",
-                payload.get("status"),
-                rocketmq_started,
-                payload.get("nameserver"),
-                payload.get("lastError"),
-            )
             if status != "up" or not rocketmq_started:
                 raise AqaraBridgeNotReady(
                     "Aqara bridge RocketMQ consumer is not ready "
                     f"(status={payload.get('status')}, rocketmqStarted={payload.get('rocketmqStarted')}, "
                     f"lastError={payload.get('lastError')})"
                 )
+            _LOGGER.info(
+                "Aqara bridge health OK: status=%s rocketmq_started=%s nameserver=%s last_error=%s",
+                payload.get("status"),
+                rocketmq_started,
+                payload.get("nameserver"),
+                payload.get("lastError"),
+            )
 
     async def _subscribe_all_resources(self) -> None:
         if not self._subscriptions:
@@ -243,16 +250,27 @@ class AqaraBridgePushManager:
             self._connected_event.clear()
             try:
                 await self._stream_events()
+                was_connected = self._connected_event.is_set()
+                if was_connected:
+                    reconnect_delay = 1.0
                 if not self._stop_event.is_set():
-                    _LOGGER.warning("Aqara bridge SSE stream closed, reconnecting")
+                    _LOGGER.warning(
+                        "Aqara bridge SSE stream closed; retrying in %.0f seconds",
+                        reconnect_delay,
+                    )
             except asyncio.CancelledError:
                 raise
             except Exception as err:
                 if self._stop_event.is_set():
                     break
-                _LOGGER.warning("Aqara bridge SSE connection failed: %s", err)
+                _LOGGER.warning(
+                    "Aqara bridge SSE connection failed; retrying in %.0f seconds: %s",
+                    reconnect_delay,
+                    err,
+                )
 
             # SSE disconnected - re-enable polling as fallback
+            self._connected_event.clear()
             self._set_polling_enabled(True)
 
             if self._stop_event.is_set():
