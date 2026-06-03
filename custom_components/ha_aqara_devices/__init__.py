@@ -40,7 +40,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 BRIDGE_START_RETRY_INITIAL_SECONDS = 5
-BRIDGE_START_RETRY_MAX_SECONDS = 600
+BRIDGE_START_RETRY_MAX_SECONDS = 30
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -227,8 +227,10 @@ async def _async_start_bridge_with_retry(entry: ConfigEntry, bridge_manager) -> 
     from .api import AqaraAuthError
 
     delay = BRIDGE_START_RETRY_INITIAL_SECONDS
+    attempt = 1
     while True:
         try:
+            _LOGGER.info("Aqara bridge startup attempt %s for %s", attempt, entry.title)
             await bridge_manager.async_start()
         except asyncio.CancelledError:
             raise
@@ -245,6 +247,7 @@ async def _async_start_bridge_with_retry(entry: ConfigEntry, bridge_manager) -> 
             )
             await asyncio.sleep(delay)
             delay = min(delay * 2, BRIDGE_START_RETRY_MAX_SECONDS)
+            attempt += 1
             continue
 
         _LOGGER.info("Aqara bridge started for %s", entry.title)

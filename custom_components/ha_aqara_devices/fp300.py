@@ -14,10 +14,36 @@ FP300_BINARY_SENSORS_DEF = [
         "icon": "mdi:motion-sensor",
         "on_values": {"1"},
     },
+    {
+        "name": "Motion",
+        "key": "people_active_status",
+        "api": "13.1.85",
+        "poll_group": "fast",
+        "device_class": BinarySensorDeviceClass.MOTION,
+        "icon": "mdi:motion-sensor",
+        "on_values": {"3"},
+        "value_type": "int",
+    },
 ]
 
 
+FP300_ACTIVITY_STATUS_MAP = {
+    "2": "unoccupied",
+    "3": "moving",
+    "4": "stationary",
+}
+
+
 FP300_SENSOR_SPECS = [
+    {
+        "name": "Activity Status",
+        "key": "people_active_status",
+        "api": "13.1.85",
+        "poll_group": "fast",
+        "icon": "mdi:motion-sensor",
+        "value_type": "int",
+        "value_map": FP300_ACTIVITY_STATUS_MAP,
+    },
     {
         "name": "Temperature",
         "key": "environment_temperature",

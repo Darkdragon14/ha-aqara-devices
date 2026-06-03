@@ -15,7 +15,7 @@ from .const import FP2_MODEL, FP300_MODEL
 from .fp2 import FP2_BINARY_SENSORS_DEF, FP2_SENSOR_SPECS
 from .fp300 import FP300_BINARY_SENSORS_DEF, FP300_SENSOR_SPECS
 from .numbers import ALL_NUMBERS_DEF, G2H_PRO_NUMBERS_DEF, G410_NUMBERS_DEF, M100_NUMBERS_DEF, M200_NUMBERS_DEF, M3_NUMBERS_DEF
-from .selects import G410_SELECTS_DEF, M100_SELECTS_DEF, M200_SELECTS_DEF, M3_SELECTS_DEF
+from .selects import FP300_SELECTS_DEF, G410_SELECTS_DEF, M100_SELECTS_DEF, M200_SELECTS_DEF, M3_SELECTS_DEF
 from .sensors import G410_SENSORS_DEF, M100_SENSORS_DEF, M3_SENSORS_DEF
 from .switches import ALL_SWITCHES_DEF, G2H_PRO_SWITCHES_DEF, G410_SWITCHES_DEF, M100_SWITCHES_DEF
 
@@ -170,6 +170,7 @@ FP2_SUBSCRIPTION_RESOURCE_IDS = unique_api_resource_ids(
 FP300_STATE_SPECS = [
     *FP300_BINARY_SENSORS_DEF,
     *FP300_SENSOR_SPECS,
+    *FP300_SELECTS_DEF,
 ]
 FP300_GROUP_SPECS = {
     group: [spec for spec in FP300_STATE_SPECS if spec.get("poll_group") == group and spec.get("api")]
@@ -249,12 +250,15 @@ def _collect_presence_resources(
     did: str,
     binary_specs: Iterable[dict[str, Any]],
     sensor_specs: Iterable[dict[str, Any]],
+    select_specs: Iterable[dict[str, Any]] = (),
 ) -> list[str]:
     resource_ids: dict[str, None] = {}
     for spec in binary_specs:
         _append_resource_if_enabled(resource_ids, enabled_unique_ids, f"{did}_fp2_{spec['key']}", spec)
     for spec in sensor_specs:
         _append_resource_if_enabled(resource_ids, enabled_unique_ids, f"{did}_fp2_sensor_{spec['key']}", spec)
+    for spec in select_specs:
+        _append_resource_if_enabled(resource_ids, enabled_unique_ids, f"{did}_{spec['inApp']}", spec)
     return list(resource_ids)
 
 
@@ -322,6 +326,7 @@ def build_active_subscriptions(
                 did,
                 FP300_BINARY_SENSORS_DEF,
                 FP300_SENSOR_SPECS,
+                FP300_SELECTS_DEF,
             )
         else:
             continue
