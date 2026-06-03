@@ -88,3 +88,119 @@ G410_SENSORS_DEF = [
     G410_FACE_RECOGNITION_EVENT,
     G410_STRANGER_FACE_EVENT,
 ]
+
+A100_PRO_DOOR_EVENT = {
+    "name": "Door Event",
+    "icon": "mdi:door",
+    "inApp": "door_event",
+    "api": "13.17.85",
+    "value_type": "uint8_t",
+    "value_map": {
+        "0": "Door opened",
+        "1": "Door closed",
+        "2": "Timeout without closing",
+        "3": "Knock on the door",
+        "4": "Attempted break-in",
+        "5": "Door ajar",
+    },
+    "default": None,
+}
+
+A100_PRO_LOCK_STATE = {
+    "name": "Door Lock Status",
+    "icon": "mdi:lock",
+    "inApp": "lock_state",
+    "api": "13.88.85",
+    "value_type": "uint8_t",
+    "value_map": {
+        "1": "Door can't be closed",
+        "2": "Door is open",
+        "3": "Door is closed but front handle is not lifted",
+        "4": "Door is locked",
+        "5": "Door is locked by night latch knob",
+        "6": "Door is unlocked",
+        "7": "Door is locked by front handle and night latch knob",
+        "8": "Door is almost closed",
+    },
+    "default": None,
+}
+
+A100_PRO_OPEN_DOOR_METHOD = {
+    "name": "Open Door Method",
+    "icon": "mdi:key-chain",
+    "inApp": "open_door_method_id",
+    "api": "13.18.85",
+    "value_type": "uint32_t",
+    "value_map": {
+        "0": "Fingerprint unlock",
+        "1": "Permanent password unlock",
+        "2": "NFC unlock",
+        "3": "Bluetooth unlock",
+        "4": "Temporary password unlock",
+        "5": "Mechanical key unlock",
+        "6": "Dual authentication unlock",
+        "7": "Duress fingerprint unlock",
+        "8": "HomeKit unlock",
+        "9": "Face unlock",
+        "10": "AIoT remote unlock",
+        "11": "Google password unlock",
+        "15": "Outdoor unlock",
+    },
+    "default": None,
+}
+
+A100_PRO_USER_ID_FINGERPRINT = {
+    "name": "Fingerprint User ID",
+    "icon": "mdi:fingerprint",
+    "inApp": "user_id_fingerprint",
+    "api": "13.42.85",
+    "value_type": "uint32_t",
+    "default": None,
+}
+
+A100_PRO_USER_ID_PASSWORD = {
+    "name": "Password User ID",
+    "icon": "mdi:form-textbox-password",
+    "inApp": "user_id_password",
+    "api": "13.43.85",
+    "value_type": "uint32_t",
+    "default": None,
+}
+
+A100_PRO_USER_ID_NFC = {
+    "name": "NFC User ID",
+    "icon": "mdi:nfc",
+    "inApp": "user_id_nfc",
+    "api": "13.44.85",
+    "value_type": "uint32_t",
+    "default": None,
+}
+
+A100_PRO_USER_ID_BLE_HOMEKIT = {
+    "name": "HomeKit Bluetooth User ID",
+    "icon": "mdi:bluetooth",
+    "inApp": "user_id_ble_homekit",
+    "api": "13.45.85",
+    "value_type": "uint32_t",
+    "default": None,
+}
+
+A100_PRO_USER_ID_TEMPORARY_PASSWORD = {
+    "name": "Temporary Password User ID",
+    "icon": "mdi:lock-clock",
+    "inApp": "user_id_temporary_password",
+    "api": "13.46.85",
+    "value_type": "uint32_t",
+    "default": None,
+}
+
+A100_PRO_SENSORS_DEF = [
+    A100_PRO_DOOR_EVENT,
+    A100_PRO_LOCK_STATE,
+    A100_PRO_OPEN_DOOR_METHOD,
+    A100_PRO_USER_ID_FINGERPRINT,
+    A100_PRO_USER_ID_PASSWORD,
+    A100_PRO_USER_ID_NFC,
+    A100_PRO_USER_ID_BLE_HOMEKIT,
+    A100_PRO_USER_ID_TEMPORARY_PASSWORD,
+]

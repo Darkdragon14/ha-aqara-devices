@@ -4,7 +4,7 @@
 [![HACS Action](https://github.com/Darkdragon14/ha-aqara-devices/actions/workflows/hacs_action.yml/badge.svg)](https://github.com/Darkdragon14/ha-aqara-devices/actions/workflows/hacs_action.yml)
 [![release](https://img.shields.io/github/v/release/Darkdragon14/ha-aqara-devices.svg)](https://github.com/Darkdragon14/ha-aqara-devices/releases)
 
-`Aqara Devices (Hub G3, Hub M3, FP2 and FP300)` connects Aqara Hub G3, Hub M3, Presence Sensor FP2, and Presence Multi-Sensor FP300 to Home Assistant with Aqara Open API v3 and `aqara-rocketmq-bridge`.
+`Aqara Devices (Hub G3, Hub M3, FP2, FP300 and A100 Pro)` connects Aqara Hub G3, Hub M3, Presence Sensor FP2, Presence Multi-Sensor FP300, and Door Lock A100 Pro to Home Assistant with Aqara Open API v3 and `aqara-rocketmq-bridge`.
 
 Instead of relying only on periodic polling, the integration now uses Aqara Message Push -> RocketMQ -> bridge -> Server-Sent Events (SSE) so Home Assistant receives live updates while the integration keeps Aqara authentication, token refresh, and resource subscriptions in sync.
 
@@ -135,7 +135,13 @@ After the first step, Aqara sends a verification code to your email address or p
 | `sensor` | Activity Status, Temperature, Humidity, Illuminance, Battery |
 | `select` | Work Mode |
 
-Each discovered G3, M3, FP2, or FP300 device in your Aqara account gets its own entities and device metadata inside Home Assistant.
+### Door Lock A100 Pro
+
+| Platform | Entities |
+| --- | --- |
+| `sensor` | Door Event, Door Lock Status, Open Door Method, Fingerprint User ID, Password User ID, NFC User ID, HomeKit Bluetooth User ID, Temporary Password User ID |
+
+Each discovered G3, M3, FP2, FP300, or A100 Pro device in your Aqara account gets its own entities and device metadata inside Home Assistant.
 
 ## Need Help?
 
