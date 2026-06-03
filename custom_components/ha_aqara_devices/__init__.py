@@ -29,6 +29,7 @@ from .const import (
     FP300_MODEL,
     G2H_PRO_MODELS,
     G410_MODELS,
+    G4_MODELS,
     G3_MODELS,
     M100_MODELS,
     M3_MODELS,
@@ -262,6 +263,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         A100_PRO_STATE_SPECS,
         G2H_PRO_STATE_SPECS,
         G410_STATE_SPECS,
+        G4_STATE_SPECS,
         G3_STATE_SPECS,
         M100_STATE_SPECS,
         M3_STATE_SPECS,
@@ -304,6 +306,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         cameras = [device for device in devices if device.get("model") in G3_MODELS]
         g2h_pro_cameras = [device for device in devices if device.get("model") in G2H_PRO_MODELS]
         g410_doorbells = [device for device in devices if device.get("model") in G410_MODELS]
+        g4_doorbells = [device for device in devices if device.get("model") in G4_MODELS]
         hubs_m3 = [device for device in devices if device.get("model") in M3_MODELS]
         hubs_m100 = [device for device in devices if device.get("model") in M100_MODELS]
         a100_pro_locks = [device for device in devices if device.get("model") in A100_PRO_MODELS]
@@ -313,12 +316,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             not cameras
             and not g2h_pro_cameras
             and not g410_doorbells
+            and not g4_doorbells
             and not hubs_m3
             and not hubs_m100
             and not a100_pro_locks
             and not presence_devices
         ):
-            raise ConfigEntryNotReady("No Aqara G2H Pro, G3, G410, M3, M100, A100 Pro, FP2, or FP300 devices found")
+            raise ConfigEntryNotReady("No Aqara G2H Pro, G3, G410, G4, M3, M100, A100 Pro, FP2, or FP300 devices found")
 
     except (ConfigEntryAuthFailed, AqaraAuthError) as err:
         if isinstance(err, AqaraAuthError):
@@ -344,6 +348,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "g410-state",
         G410_STATE_SPECS,
     )
+    g4_coordinators = _setup_device_state_coordinators(
+        hass,
+        api,
+        g4_doorbells,
+        "g4-state",
+        G4_STATE_SPECS,
+    )
     m3_coordinators = _setup_device_state_coordinators(hass, api, hubs_m3, "hub-m3-state", M3_STATE_SPECS)
     m100_coordinators = _setup_device_state_coordinators(hass, api, hubs_m100, "hub-m100-state", M100_STATE_SPECS)
     a100_pro_coordinators = _setup_device_state_coordinators(
@@ -365,6 +376,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "cameras": cameras,
         "g2h_pro_cameras": g2h_pro_cameras,
         "g410_doorbells": g410_doorbells,
+        "g4_doorbells": g4_doorbells,
         "hubs_m3": hubs_m3,
         "hubs_m100": hubs_m100,
         "a100_pro_locks": a100_pro_locks,
@@ -372,6 +384,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "camera_coordinators": camera_coordinators,
         "g2h_pro_coordinators": g2h_pro_coordinators,
         "g410_coordinators": g410_coordinators,
+        "g4_coordinators": g4_coordinators,
         "m3_coordinators": m3_coordinators,
         "m100_coordinators": m100_coordinators,
         "a100_pro_coordinators": a100_pro_coordinators,
@@ -395,6 +408,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         cameras,
         g2h_pro_cameras,
         g410_doorbells,
+        g4_doorbells,
         hubs_m3,
         hubs_m100,
         a100_pro_locks,
@@ -411,6 +425,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         cameras,
         g2h_pro_cameras,
         g410_doorbells,
+        g4_doorbells,
         hubs_m3,
         hubs_m100,
         a100_pro_locks,
@@ -418,6 +433,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         camera_coordinators,
         g2h_pro_coordinators,
         g410_coordinators,
+        g4_coordinators,
         m3_coordinators,
         m100_coordinators,
         a100_pro_coordinators,

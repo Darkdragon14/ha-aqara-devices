@@ -147,6 +147,10 @@ G410_SELECTS_DEF = [
     G410_CAMERA_MODE,
 ]
 
+G4_SELECTS_DEF = [
+    G410_IMAGE_FLIP,
+]
+
 FP300_WORK_MODE = {
     "name": "Work Mode",
     "icon": "mdi:radar",

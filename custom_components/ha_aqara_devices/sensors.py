@@ -89,6 +89,11 @@ G410_SENSORS_DEF = [
     G410_STRANGER_FACE_EVENT,
 ]
 
+G4_SENSORS_DEF = [
+    G410_FACE_RECOGNITION_EVENT,
+    G410_STRANGER_FACE_EVENT,
+]
+
 A100_PRO_DOOR_EVENT = {
     "name": "Door Event",
     "icon": "mdi:door",

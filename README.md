@@ -4,7 +4,7 @@
 [![HACS Action](https://github.com/Darkdragon14/ha-aqara-devices/actions/workflows/hacs_action.yml/badge.svg)](https://github.com/Darkdragon14/ha-aqara-devices/actions/workflows/hacs_action.yml)
 [![release](https://img.shields.io/github/v/release/Darkdragon14/ha-aqara-devices.svg)](https://github.com/Darkdragon14/ha-aqara-devices/releases)
 
-`Aqara Devices (Hub G3, Hub M3, FP2, FP300 and A100 Pro)` connects Aqara Hub G3, Hub M3, Presence Sensor FP2, Presence Multi-Sensor FP300, and Door Lock A100 Pro to Home Assistant with Aqara Open API v3 and `aqara-rocketmq-bridge`.
+`Aqara Devices (Hub G3, Hub M3, FP2, FP300, A100 Pro and G4)` connects Aqara Hub G3, Hub M3, Presence Sensor FP2, Presence Multi-Sensor FP300, Door Lock A100 Pro, and G4 to Home Assistant with Aqara Open API v3 and `aqara-rocketmq-bridge`.
 
 Instead of relying only on periodic polling, the integration now uses Aqara Message Push -> RocketMQ -> bridge -> Server-Sent Events (SSE) so Home Assistant receives live updates while the integration keeps Aqara authentication, token refresh, and resource subscriptions in sync.
 
@@ -141,7 +141,18 @@ After the first step, Aqara sends a verification code to your email address or p
 | --- | --- |
 | `sensor` | Door Event, Door Lock Status, Open Door Method, Fingerprint User ID, Password User ID, NFC User ID, HomeKit Bluetooth User ID, Temporary Password User ID |
 
-Each discovered G3, M3, FP2, FP300, or A100 Pro device in your Aqara account gets its own entities and device metadata inside Home Assistant.
+### G4
+
+| Platform | Entities |
+| --- | --- |
+| `binary_sensor` | Doorbell Ring |
+| `button` | Restart Device, Restart Coordinator |
+| `number` | Face Recognition Interval, Camera Volume |
+| `select` | Screen Flip |
+| `sensor` | Face Recognition Event, Stranger Face Event |
+| `switch` | High Temperature Alarm, Face Recognition Push, Scheduled Sleep, Anti-Tamper Alarm, Face Recording, Doorbell Notification, Low Temperature Alarm, Doorbell Recording |
+
+Each discovered G3, M3, FP2, FP300, A100 Pro, or G4 device in your Aqara account gets its own entities and device metadata inside Home Assistant.
 
 ## Need Help?
 
