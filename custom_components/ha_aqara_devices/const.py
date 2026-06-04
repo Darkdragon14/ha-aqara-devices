@@ -42,7 +42,7 @@ G410_MODELS = {"lumi.camera.acn017", "lumi.camera.agl006"}
 M3_MODELS = {"lumi.gateway.acn012", "lumi.gateway.agl004"}
 M100_MODELS = {"lumi.gateway.agl008", "lumi.gateway.agl010"}
 A100_PRO_MODELS = {A100_PRO_MODEL}
-G4_MODELS = {G4_MODEL}
+G4_MODELS = {G4_MODEL, "lumi.camera.acn005"}
 PRESENCE_MODELS = {FP2_MODEL, FP300_MODEL}
 
 G3_DEVICE_LABEL = "Aqara G3"
