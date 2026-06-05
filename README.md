@@ -102,15 +102,17 @@ After the first step, Aqara sends a verification code to your email address or p
 
 ## Supported Devices
 
-- `Hub G3` -> `lumi.camera.gwpgl1`, `lumi.camera.gwpagl01`
-- `Camera Hub G2H Pro` -> `lumi.camera.agl001`, `lumi.camera.acn003`
-- `Doorbell G410` -> `lumi.camera.acn017`, `lumi.camera.agl006`
-- `Doorbell G4` -> `aqara.lock.agl002`, `lumi.camera.acn005`
-- `Hub M3` -> `lumi.gateway.acn012`, `lumi.gateway.agl004`
-- `Hub M100` -> `lumi.gateway.agl008`, `lumi.gateway.agl010`
-- `Presence Sensor FP2` -> `lumi.motion.agl001`
-- `Presence Multi-Sensor FP300` -> `lumi.sensor_occupy.agl8`
-- `Door Lock A100 Pro` -> `aqara.lock.acn001`
+| Device | Models |
+| --- | --- |
+| `Hub G3` | `lumi.camera.gwpgl1`, `lumi.camera.gwpagl01` |
+| `Camera Hub G2H Pro` | `lumi.camera.agl001`, `lumi.camera.acn003` |
+| `Doorbell G410` | `lumi.camera.acn017`, `lumi.camera.agl006` |
+| `Doorbell G4` | `aqara.lock.agl002`, `lumi.camera.acn005` |
+| `Hub M3` | `lumi.gateway.acn012`, `lumi.gateway.agl004` |
+| `Hub M100` | `lumi.gateway.agl008`, `lumi.gateway.agl010` |
+| `Presence Sensor FP2` | `lumi.motion.agl001` |
+| `Presence Multi-Sensor FP300` | `lumi.sensor_occupy.agl8` |
+| `Door Lock A100 Pro` | `aqara.lock.acn001` |
 
 Each discovered supported device in your Aqara account gets its own entities and device metadata inside Home Assistant.
 
