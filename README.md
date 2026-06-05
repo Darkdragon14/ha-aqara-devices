@@ -4,7 +4,7 @@
 [![HACS Action](https://github.com/Darkdragon14/ha-aqara-devices/actions/workflows/hacs_action.yml/badge.svg)](https://github.com/Darkdragon14/ha-aqara-devices/actions/workflows/hacs_action.yml)
 [![release](https://img.shields.io/github/v/release/Darkdragon14/ha-aqara-devices.svg)](https://github.com/Darkdragon14/ha-aqara-devices/releases)
 
-`Aqara Devices (Hub G3, Hub M3, FP2, FP300, A100 Pro and G4)` connects Aqara Hub G3, Hub M3, Presence Sensor FP2, Presence Multi-Sensor FP300, Door Lock A100 Pro, and G4 to Home Assistant with Aqara Open API v3 and `aqara-rocketmq-bridge`.
+`Aqara Devices (G3, G2H Pro, G410, G4, M3, M100, FP2, FP300, and A100 Pro)` connects supported Aqara cameras, doorbells, hubs, presence sensors, and locks to Home Assistant with Aqara Open API v3 and `aqara-rocketmq-bridge`.
 
 Instead of relying only on periodic polling, the integration now uses Aqara Message Push -> RocketMQ -> bridge -> Server-Sent Events (SSE) so Home Assistant receives live updates while the integration keeps Aqara authentication, token refresh, and resource subscriptions in sync.
 
@@ -100,59 +100,23 @@ After the first step, Aqara sends a verification code to your email address or p
 - `ha_aqara_devices` validates the bridge, connects to the SSE stream with `Authorization: Bearer <bridge token>`, and manages Aqara Open API authentication;
 - the integration subscribes only to the Aqara resources it needs and creates entities for supported devices.
 
-## Supported Devices and Entities
+## Supported Devices
 
-### Hub G3
+- `Hub G3` -> `lumi.camera.gwpgl1`, `lumi.camera.gwpagl01`
+- `Camera Hub G2H Pro` -> `lumi.camera.agl001`, `lumi.camera.acn003`
+- `Doorbell G410` -> `lumi.camera.acn017`, `lumi.camera.agl006`
+- `Doorbell G4` -> `aqara.lock.agl002`, `lumi.camera.acn005`
+- `Hub M3` -> `lumi.gateway.acn012`, `lumi.gateway.agl004`
+- `Hub M100` -> `lumi.gateway.agl008`, `lumi.gateway.agl010`
+- `Presence Sensor FP2` -> `lumi.motion.agl001`
+- `Presence Multi-Sensor FP300` -> `lumi.sensor_occupy.agl8`
+- `Door Lock A100 Pro` -> `aqara.lock.acn001`
 
-| Platform | Entities |
-| --- | --- |
-| `switch` | Video, Detect Human, Detect Pet, Detect Gesture, Detect Face |
-| `button` | Ring Alarm Bell |
-| `binary_sensor` | Night Vision, Gesture V sign, Gesture Four, Gesture High Five, Gesture Finger Gun, Gesture OK |
-| `number` | Volume |
+Each discovered supported device in your Aqara account gets its own entities and device metadata inside Home Assistant.
 
-### Hub M3
+For the full per-device entity details, see the published bridge documentation:
 
-| Platform | Entities |
-| --- | --- |
-| `number` | System Volume, Alarm Volume, Doorbell Volume, Alarm Duration, Doorbell Duration |
-| `binary_sensor` | Alarm Status, Device Online |
-| `sensor` | Temperature, Humidity |
-| `select` | Gateway Language, Alarm Ringtone, Doorbell Ringtone |
-
-### Presence Sensor FP2
-
-| Platform | Entities |
-| --- | --- |
-| `binary_sensor` | Presence, Connectivity, Detection Area 1-30 |
-| `sensor` | People Counting, People Counting (per minute), Whole Area People Count (10s), Zone 1-30 People Count (10s), Zone 1-7 People Count (per minute), Illuminance, Heart Rate, Respiration Rate, Body Movement, Sleep State, Operating Mode, View Zoom, Mounting Position, Installation Angle, Attitude Status, Presence Sensitivity, Proximity Distance, Fall Detection Sensitivity, Reverse Coordinate Direction, Detection Direction, AI Person Detection, Anti-light Pollution Mode |
-
-### Presence Multi-Sensor FP300
-
-| Platform | Entities |
-| --- | --- |
-| `binary_sensor` | Presence, Motion |
-| `sensor` | Activity Status, Temperature, Humidity, Illuminance, Battery |
-| `select` | Work Mode |
-
-### Door Lock A100 Pro
-
-| Platform | Entities |
-| --- | --- |
-| `sensor` | Door Event, Door Lock Status, Open Door Method, Fingerprint User ID, Password User ID, NFC User ID, HomeKit Bluetooth User ID, Temporary Password User ID |
-
-### G4
-
-| Platform | Entities |
-| --- | --- |
-| `binary_sensor` | Doorbell Ring |
-| `button` | Restart Device, Restart Coordinator |
-| `number` | Face Recognition Interval, Camera Volume |
-| `select` | Screen Flip |
-| `sensor` | Face Recognition Event, Stranger Face Event |
-| `switch` | High Temperature Alarm, Face Recognition Push, Scheduled Sleep, Anti-Tamper Alarm, Face Recording, Doorbell Notification, Low Temperature Alarm, Doorbell Recording |
-
-Each discovered G3, M3, FP2, FP300, A100 Pro, or G4 device in your Aqara account gets its own entities and device metadata inside Home Assistant.
+- [Supported devices reference](https://darkdragon14.github.io/aqara-rocketmq-bridge/DEVICES/)
 
 ## Need Help?
 
