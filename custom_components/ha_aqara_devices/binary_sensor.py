@@ -13,7 +13,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .binary_sensors import ALL_BINARY_SENSORS_DEF, G410_BINARY_SENSORS_DEF, M100_BINARY_SENSORS_DEF, M3_BINARY_SENSORS_DEF
+from .binary_sensors import ALL_BINARY_SENSORS_DEF, G410_BINARY_SENSORS_DEF, G4_BINARY_SENSORS_DEF, M100_BINARY_SENSORS_DEF, M3_BINARY_SENSORS_DEF
 from .const import (
     DOMAIN,
     FP2_DEVICE_LABEL,
@@ -21,6 +21,7 @@ from .const import (
     FP300_DEVICE_LABEL,
     FP300_MODEL,
     G410_DEVICE_LABEL,
+    G4_DEVICE_LABEL,
     G3_DEVICE_LABEL,
     G3_MODEL,
     M100_DEVICE_LABEL,
@@ -38,11 +39,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     api = data["api"]
     cameras: list[dict] = data["cameras"]
     g410_doorbells: list[dict] = data.get("g410_doorbells", [])
+    g4_doorbells: list[dict] = data.get("g4_doorbells", [])
     hubs_m3: list[dict] = data.get("hubs_m3", [])
     hubs_m100: list[dict] = data.get("hubs_m100", [])
     presence_devices: list[dict] = data.get("presence_devices", [])
     camera_coordinators: dict[str, DataUpdateCoordinator] = data.get("camera_coordinators", {})
     g410_coordinators: dict[str, DataUpdateCoordinator] = data.get("g410_coordinators", {})
+    g4_coordinators: dict[str, DataUpdateCoordinator] = data.get("g4_coordinators", {})
     m3_coordinators: dict[str, DataUpdateCoordinator] = data.get("m3_coordinators", {})
     m100_coordinators: dict[str, DataUpdateCoordinator] = data.get("m100_coordinators", {})
     presence_coordinators: dict[str, dict[str, DataUpdateCoordinator]] = data.get("presence_coordinators", {})
@@ -88,6 +91,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                     binary_sensor_def,
                     model,
                     G410_DEVICE_LABEL,
+                )
+            )
+
+    for doorbell in g4_doorbells:
+        did = doorbell["did"]
+        name = doorbell["deviceName"]
+        model = doorbell["model"]
+        coordinator = g4_coordinators.get(did)
+        if coordinator is None:
+            continue
+
+        for binary_sensor_def in G4_BINARY_SENSORS_DEF:
+            entities.append(
+                AqaraBinarySensor(
+                    coordinator,
+                    did,
+                    name,
+                    api,
+                    binary_sensor_def,
+                    model,
+                    G4_DEVICE_LABEL,
                 )
             )
 

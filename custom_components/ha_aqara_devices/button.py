@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 
 from .api import AqaraApi
-from .const import DOMAIN, G2H_PRO_DEVICE_LABEL, G410_DEVICE_LABEL, G3_MODEL, G3_DEVICE_LABEL
+from .const import DOMAIN, G2H_PRO_DEVICE_LABEL, G410_DEVICE_LABEL, G4_DEVICE_LABEL, G3_MODEL, G3_DEVICE_LABEL
 from .device_info import build_device_info
 
 PTZ_ACTIONS: dict[str, str] = {
@@ -33,6 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     cameras: list[dict] = data["cameras"]
     g2h_pro_cameras: list[dict] = data.get("g2h_pro_cameras", [])
     g410_doorbells: list[dict] = data.get("g410_doorbells", [])
+    g4_doorbells: list[dict] = data.get("g4_doorbells", [])
 
     entities: list[ButtonEntity] = []
     for cam in cameras:
@@ -98,6 +99,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                 name,
                 model,
                 G410_DEVICE_LABEL,
+                "Restart Coordinator",
+                "restart_coordinator",
+                "8.0.2108",
+                1,
+            )
+        )
+
+    for doorbell in g4_doorbells:
+        did = doorbell["did"]
+        name = doorbell["deviceName"]
+        model = doorbell["model"]
+        entities.append(
+            AqaraResourceButton(
+                api,
+                did,
+                name,
+                model,
+                G4_DEVICE_LABEL,
+                "Restart Device",
+                "restart_device",
+                "8.0.2108",
+                0,
+            )
+        )
+        entities.append(
+            AqaraResourceButton(
+                api,
+                did,
+                name,
+                model,
+                G4_DEVICE_LABEL,
                 "Restart Coordinator",
                 "restart_coordinator",
                 "8.0.2108",
