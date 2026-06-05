@@ -116,7 +116,7 @@ Each discovered supported device in your Aqara account gets its own entities and
 
 For the full per-device entity details, see the published bridge documentation:
 
-- [Supported devices reference](https://darkdragon14.github.io/aqara-rocketmq-bridge/DEVICES/)
+- [Supported devices reference](https://darkdragon14.github.io/aqara-rocketmq-bridge/devices/)
 
 ## Need Help?
 
