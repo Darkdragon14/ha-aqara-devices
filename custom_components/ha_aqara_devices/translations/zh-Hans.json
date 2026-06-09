@@ -1,0 +1,76 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Aqara FP2",
+                "description": "设置您的 Aqara Open API 集成并请求授权码。",
+                "data": {
+                    "account": "Aqara 账户（邮箱或手机号）",
+                    "area": "地区",
+                    "bridge_url": "网桥 URL",
+                    "bridge_token": "网桥令牌",
+                    "app_id": "App ID",
+                    "key_id": "Key ID",
+                    "app_key": "App Key"
+                }
+            },
+            "auth_code": {
+                "title": "授权码",
+                "description": "输入 Aqara 发送到您邮箱或手机的验证码。",
+                "data": {
+                    "auth_code": "授权码"
+                }
+            }
+        },
+        "error": {
+            "auth": "认证失败，请检查账户、地区和授权码。",
+            "no_devices_found": "未找到 FP2 设备。"
+        },
+        "abort": {
+            "already_configured": "此设备已配置。"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Aqara FP2",
+                "description": "更新您的 Aqara Open API 账户详情或网桥连接设置。",
+                "data": {
+                    "account": "Aqara 账户（邮箱或手机号）",
+                    "area": "地区",
+                    "bridge_url": "网桥 URL",
+                    "bridge_token": "网桥令牌",
+                    "app_id": "App ID",
+                    "key_id": "Key ID",
+                    "app_key": "App Key"
+                }
+            },
+            "auth_code": {
+                "title": "授权码",
+                "description": "输入 Aqara 发送到您邮箱或手机的验证码。",
+                "data": {
+                    "auth_code": "授权码"
+                }
+            }
+        },
+        "error": {
+            "auth": "认证失败，请检查账户、地区和授权码。"
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "night_vision": { "name": "夜视" },
+            "gesture_v_sign": { "name": "V 手势" },
+            "gesture_four": { "name": "四指手势" },
+            "gesture_high_five": { "name": "击掌手势" },
+            "gesture_finger_gun": { "name": "手枪手势" },
+            "gesture_ok": { "name": "OK 手势" },
+            "gesture_v_sign_both_hands": { "name": "双手 V 手势" },
+            "gesture_four_both_hands": { "name": "双手四指手势" },
+            "gesture_high_five_both_hands": { "name": "双手击掌手势" },
+            "gesture_finger_gun_both_hands": { "name": "双手手枪手势" },
+            "gesture_ok_both_hands": { "name": "双手 OK 手势" },
+            "motion_event": { "name": "移动事件" }
+        }
+    }
+}
