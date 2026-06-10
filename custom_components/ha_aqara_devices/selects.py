@@ -1,37 +1,38 @@
 ALARM_BELL_INDEX_OPTIONS = [
-    (10000, "Default"),
-    (0, "Police car sound 1"),
-    (1, "Police car sound 2"),
-    (2, "Safety accident sound"),
-    (3, "Missile countdown"),
-    (4, "Ghost scream"),
-    (5, "Sniper rifle"),
-    (6, "Battle sound"),
-    (7, "Air raid alarm"),
-    (8, "Dog barking"),
+    (10000, "default"),
+    (0, "police_car_1"),
+    (1, "police_car_2"),
+    (2, "safety_accident"),
+    (3, "missile_countdown"),
+    (4, "ghost_scream"),
+    (5, "sniper_rifle"),
+    (6, "battle"),
+    (7, "air_raid_alarm"),
+    (8, "dog_barking"),
 ]
 
 DOORBELL_BELL_INDEX_OPTIONS = [
-    (10000, "Default"),
-    (0, "Index 0"),
-    (1, "Index 1"),
-    (2, "Index 2"),
-    (3, "Index 3"),
-    (4, "Index 4"),
-    (5, "Index 5"),
-    (6, "Index 6"),
-    (7, "Index 7"),
-    (8, "Index 8"),
+    (10000, "default"),
+    (0, "index_0"),
+    (1, "index_1"),
+    (2, "index_2"),
+    (3, "index_3"),
+    (4, "index_4"),
+    (5, "index_5"),
+    (6, "index_6"),
+    (7, "index_7"),
+    (8, "index_8"),
 ]
 
 M3_GATEWAY_LANGUAGE = {
     "name": "Gateway Language",
+    "translation_key": "gateway_language",
     "icon": "mdi:translate",
     "inApp": "gateway_language",
     "api": "14.10.85",
     "options": [
-        (0, "Chinese"),
-        (1, "English"),
+        (0, "chinese"),
+        (1, "english"),
     ],
     "value_type": "int",
     "default": None,
@@ -39,6 +40,7 @@ M3_GATEWAY_LANGUAGE = {
 
 M3_ALARM_BELL_INDEX = {
     "name": "Alarm Ringtone",
+    "translation_key": "alarm_ringtone",
     "icon": "mdi:bell",
     "inApp": "alarm_bell_index",
     "api": "14.1.85",
@@ -49,6 +51,7 @@ M3_ALARM_BELL_INDEX = {
 
 M3_DOORBELL_BELL_INDEX = {
     "name": "Doorbell Ringtone",
+    "translation_key": "doorbell_ringtone",
     "icon": "mdi:doorbell",
     "inApp": "doorbell_bell_index",
     "api": "14.2.85",
@@ -65,12 +68,13 @@ M3_SELECTS_DEF = [
 
 M100_GATEWAY_LANGUAGE = {
     "name": "Gateway Language",
+    "translation_key": "gateway_language",
     "icon": "mdi:translate",
     "inApp": "gateway_language",
     "api": "14.10.85",
     "options": [
-        (1, "Chinese"),
-        (2, "English"),
+        (1, "chinese"),
+        (2, "english"),
     ],
     "value_type": "int",
     "default": None,
@@ -78,6 +82,7 @@ M100_GATEWAY_LANGUAGE = {
 
 M100_ALARM_BELL_INDEX = {
     "name": "Alarm Ringtone",
+    "translation_key": "alarm_ringtone",
     "icon": "mdi:bell",
     "inApp": "alarm_bell_index",
     "api": "14.1.85",
@@ -88,6 +93,7 @@ M100_ALARM_BELL_INDEX = {
 
 M100_DOORBELL_BELL_INDEX = {
     "name": "Doorbell Ringtone",
+    "translation_key": "doorbell_ringtone",
     "icon": "mdi:doorbell",
     "inApp": "doorbell_bell_index",
     "api": "14.2.85",
@@ -104,6 +110,7 @@ M100_SELECTS_DEF = [
 
 G410_ALARM_BELL_INDEX = {
     "name": "Alarm Ringtone",
+    "translation_key": "alarm_ringtone",
     "icon": "mdi:bell",
     "inApp": "alarm_bell_index",
     "api": "14.1.85",
@@ -114,14 +121,15 @@ G410_ALARM_BELL_INDEX = {
 
 G410_IMAGE_FLIP = {
     "name": "Screen Flip",
+    "translation_key": "screen_flip",
     "icon": "mdi:flip-horizontal",
     "inApp": "image_flip",
     "api": "14.68.85",
     "options": [
-        (0, "Normal"),
-        (1, "Flip Horizontally"),
-        (2, "Flip Vertically"),
-        (3, "Flip Horizontally and Vertically"),
+        (0, "normal"),
+        (1, "flip_horizontally"),
+        (2, "flip_vertically"),
+        (3, "flip_horizontally_and_vertically"),
     ],
     "value_type": "int",
     "default": None,
@@ -129,13 +137,14 @@ G410_IMAGE_FLIP = {
 
 G410_CAMERA_MODE = {
     "name": "Camera Mode",
+    "translation_key": "camera_mode",
     "icon": "mdi:video",
     "inApp": "ctrl_camera",
     "api": "4.8.85",
     "options": [
-        (0, "Off"),
-        (1, "On"),
-        (255, "Always On"),
+        (0, "off"),
+        (1, "on"),
+        (255, "always_on"),
     ],
     "value_type": "int",
     "default": None,
@@ -153,14 +162,15 @@ G4_SELECTS_DEF = [
 
 FP300_WORK_MODE = {
     "name": "Work Mode",
+    "translation_key": "work_mode",
     "icon": "mdi:radar",
     "inApp": "work_mode",
     "api": "14.59.85",
     "poll_group": "slow",
     "options": [
-        (0, "Radar + Infrared"),
-        (1, "Radar only"),
-        (2, "Infrared only"),
+        (0, "radar_infrared"),
+        (1, "radar_only"),
+        (2, "infrared_only"),
     ],
     "value_type": "int",
     "default": None,

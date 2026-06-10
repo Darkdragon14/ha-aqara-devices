@@ -133,11 +133,14 @@ class AqaraNumber(CoordinatorEntity, NumberEntity):
 
         self._attr_unique_id = f"{did}_{spec['inApp']}"
         self._native_value: float | None = None
-        self._attr_name = "System Volume"
         self._attr_native_min_value = float(spec['min'])
         self._attr_native_max_value = float(spec['max'])
         self._attr_native_step = float(spec["step"])
-        self._attr_name = spec["name"]
+        translation_key = spec.get("translation_key")
+        if translation_key:
+            self._attr_translation_key = translation_key
+        else:
+            self._attr_name = spec["name"]
         self._attr_icon = spec["icon"]
 
     

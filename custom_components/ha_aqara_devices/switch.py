@@ -158,7 +158,11 @@ class AqaraResourceSwitch(CoordinatorEntity, SwitchEntity):
         self._model = model
         self._device_label = device_label
 
-        self._attr_name = spec["name"]
+        translation_key = spec.get("translation_key")
+        if translation_key:
+            self._attr_translation_key = translation_key
+        else:
+            self._attr_name = spec["name"]
         self._attr_icon = spec["icon"]
         self._attr_unique_id = f"{did}_{spec['inApp']}"
 

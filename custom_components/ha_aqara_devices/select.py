@@ -179,13 +179,17 @@ class AqaraSelect(CoordinatorEntity, SelectEntity):
         self._device_label = device_label
 
         self._attr_unique_id = f"{did}_{spec['inApp']}"
-        self._attr_name = spec["name"]
+        translation_key = spec.get("translation_key")
+        if translation_key:
+            self._attr_translation_key = translation_key
+        else:
+            self._attr_name = spec["name"]
         self._attr_icon = spec.get("icon")
 
         option_pairs = spec.get("options", [])
-        self._option_by_value = {value: label for value, label in option_pairs}
-        self._value_by_option = {label: value for value, label in option_pairs}
-        self._attr_options = [label for _, label in option_pairs]
+        self._option_by_value = {value: slug for value, slug in option_pairs}
+        self._value_by_option = {slug: value for value, slug in option_pairs}
+        self._attr_options = [slug for _, slug in option_pairs]
 
     @property
     def device_info(self):

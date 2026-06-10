@@ -32,18 +32,447 @@
     },
     "entity": {
         "binary_sensor": {
-            "night_vision": { "name": "Ночное видение" },
-            "gesture_v_sign": { "name": "Жест: V (мир)" },
-            "gesture_four": { "name": "Жест: Четыре" },
-            "gesture_high_five": { "name": "Жест: Дай пять" },
-            "gesture_finger_gun": { "name": "Жест: Пистолет" },
-            "gesture_ok": { "name": "Жест: OK" },
-            "gesture_v_sign_both_hands": { "name": "Жест: V двумя руками" },
-            "gesture_four_both_hands": { "name": "Жест: Четыре двумя руками" },
-            "gesture_high_five_both_hands": { "name": "Жест: Дай пять двумя руками" },
-            "gesture_finger_gun_both_hands": { "name": "Жест: Пистолет двумя руками" },
-            "gesture_ok_both_hands": { "name": "Жест: OK двумя руками" },
-            "motion_event": { "name": "Событие движения" }
+            "night_vision": {
+                "name": "Ночное видение"
+            },
+            "motion_event": {
+                "name": "Событие движения"
+            },
+            "gesture_v_sign": {
+                "name": "Жест «знак V»"
+            },
+            "gesture_four": {
+                "name": "Жест «четыре»"
+            },
+            "gesture_high_five": {
+                "name": "Жест «дай пять»"
+            },
+            "gesture_finger_gun": {
+                "name": "Жест «пистолет из пальцев»"
+            },
+            "gesture_ok": {
+                "name": "Жест «ОК»"
+            },
+            "gesture_v_sign_both_hands": {
+                "name": "Жест «знак V» двумя руками"
+            },
+            "gesture_four_both_hands": {
+                "name": "Жест «четыре» двумя руками"
+            },
+            "gesture_high_five_both_hands": {
+                "name": "Жест «дай пять» двумя руками"
+            },
+            "gesture_finger_gun_both_hands": {
+                "name": "Жест «пистолет из пальцев» двумя руками"
+            },
+            "gesture_ok_both_hands": {
+                "name": "Жест «ОК» двумя руками"
+            },
+            "doorbell_ring": {
+                "name": "Звонок в дверь"
+            },
+            "detection_area": {
+                "name": "Зона обнаружения {index}"
+            }
+        },
+        "sensor": {
+            "gateway_time_zone": {
+                "name": "Часовой пояс шлюза"
+            },
+            "night_light_configuration": {
+                "name": "Конфигурация ночника"
+            },
+            "face_recognition_event": {
+                "name": "Событие распознавания лица"
+            },
+            "stranger_face_event": {
+                "name": "Событие незнакомого лица"
+            },
+            "door_event": {
+                "name": "Событие двери",
+                "state": {
+                    "door_opened": "Дверь открыта",
+                    "door_closed": "Дверь закрыта",
+                    "timeout_without_closing": "Тайм-аут без закрытия",
+                    "knock_on_the_door": "Стук в дверь",
+                    "attempted_break_in": "Попытка взлома",
+                    "door_ajar": "Дверь приоткрыта"
+                }
+            },
+            "lock_state": {
+                "name": "Состояние замка",
+                "state": {
+                    "door_cannot_be_closed": "Дверь не может быть закрыта",
+                    "door_is_open": "Дверь открыта",
+                    "door_closed_handle_not_lifted": "Дверь закрыта, но ручка не поднята",
+                    "door_is_locked": "Дверь заперта",
+                    "door_is_locked_by_night_latch_knob": "Дверь заперта ночной защёлкой",
+                    "door_is_unlocked": "Дверь отперта",
+                    "door_is_locked_by_front_handle_and_night_latch_knob": "Дверь заперта передней ручкой и ночной защёлкой",
+                    "door_is_almost_closed": "Дверь почти закрыта"
+                }
+            },
+            "open_door_method": {
+                "name": "Способ открытия двери",
+                "state": {
+                    "fingerprint_unlock": "Разблокировка отпечатком",
+                    "permanent_password_unlock": "Разблокировка постоянным паролем",
+                    "nfc_unlock": "Разблокировка NFC",
+                    "bluetooth_unlock": "Разблокировка Bluetooth",
+                    "temporary_password_unlock": "Разблокировка временным паролем",
+                    "mechanical_key_unlock": "Разблокировка механическим ключом",
+                    "dual_authentication_unlock": "Разблокировка двойной аутентификацией",
+                    "duress_fingerprint_unlock": "Разблокировка отпечатком под принуждением",
+                    "homekit_unlock": "Разблокировка HomeKit",
+                    "face_unlock": "Разблокировка по лицу",
+                    "aiot_remote_unlock": "Удалённая разблокировка AIoT",
+                    "google_password_unlock": "Разблокировка паролем Google",
+                    "outdoor_unlock": "Разблокировка снаружи"
+                }
+            },
+            "user_id_fingerprint": {
+                "name": "ID пользователя отпечатка"
+            },
+            "user_id_password": {
+                "name": "ID пользователя пароля"
+            },
+            "user_id_nfc": {
+                "name": "ID пользователя NFC"
+            },
+            "user_id_ble_homekit": {
+                "name": "ID пользователя Bluetooth HomeKit"
+            },
+            "user_id_temporary_password": {
+                "name": "ID пользователя временного пароля"
+            },
+            "people_counting": {
+                "name": "Подсчёт людей"
+            },
+            "people_counting_per_minute": {
+                "name": "Подсчёт людей (в минуту)"
+            },
+            "whole_area_people_count_10s": {
+                "name": "Подсчёт людей по всей зоне (10 с)"
+            },
+            "zone_people_count_10s": {
+                "name": "Подсчёт людей зоны {index} (10 с)"
+            },
+            "zone_people_count_per_minute": {
+                "name": "Подсчёт людей зоны {index} (в минуту)"
+            },
+            "heart_rate": {
+                "name": "Частота сердечных сокращений"
+            },
+            "respiration_rate": {
+                "name": "Частота дыхания"
+            },
+            "body_movement": {
+                "name": "Движение тела"
+            },
+            "sleep_state": {
+                "name": "Состояние сна"
+            },
+            "operating_mode": {
+                "name": "Режим работы",
+                "state": {
+                    "zone_detection": "Обнаружение зоны",
+                    "fall_detection": "Обнаружение падения",
+                    "sleep_monitoring": "Мониторинг сна"
+                }
+            },
+            "view_zoom": {
+                "name": "Масштаб обзора",
+                "state": {
+                    "full": "Полный",
+                    "adaptive": "Адаптивный"
+                }
+            },
+            "mounting_position": {
+                "name": "Положение монтажа",
+                "state": {
+                    "wall": "Стена",
+                    "left_corner": "Левый угол",
+                    "right_corner": "Правый угол"
+                }
+            },
+            "installation_angle": {
+                "name": "Угол установки",
+                "state": {
+                    "face_up": "Вверх",
+                    "oblique": "Наклонно",
+                    "horizontal": "Горизонтально",
+                    "face_down": "Вниз"
+                }
+            },
+            "attitude_status": {
+                "name": "Состояние положения"
+            },
+            "presence_sensitivity": {
+                "name": "Чувствительность присутствия",
+                "state": {
+                    "low": "Низкая",
+                    "medium": "Средняя",
+                    "high": "Высокая"
+                }
+            },
+            "proximity_distance": {
+                "name": "Дистанция приближения",
+                "state": {
+                    "far": "Далеко",
+                    "medium": "Среднее",
+                    "close": "Близко"
+                }
+            },
+            "fall_detection_sensitivity": {
+                "name": "Чувствительность обнаружения падения",
+                "state": {
+                    "low": "Низкая",
+                    "medium": "Средняя",
+                    "high": "Высокая"
+                }
+            },
+            "reverse_coordinate_direction": {
+                "name": "Обратное направление координат",
+                "state": {
+                    "disable": "Отключено",
+                    "enable": "Включено",
+                    "auto": "Авто"
+                }
+            },
+            "detection_direction": {
+                "name": "Направление обнаружения",
+                "state": {
+                    "default": "По умолчанию",
+                    "left_right": "Лево/Право"
+                }
+            },
+            "ai_person_detection": {
+                "name": "ИИ-обнаружение человека",
+                "state": {
+                    "disable": "Отключено",
+                    "enable": "Включено"
+                }
+            },
+            "anti_light_pollution_mode": {
+                "name": "Режим защиты от светового загрязнения",
+                "state": {
+                    "disable": "Отключено",
+                    "enable": "Включено"
+                }
+            },
+            "activity_status": {
+                "name": "Состояние активности",
+                "state": {
+                    "unoccupied": "Не занято",
+                    "moving": "Движение",
+                    "stationary": "Неподвижно"
+                }
+            }
+        },
+        "switch": {
+            "video": {
+                "name": "Видео"
+            },
+            "detect_human": {
+                "name": "Обнаружение человека"
+            },
+            "detect_pet": {
+                "name": "Обнаружение питомца"
+            },
+            "detect_gesture": {
+                "name": "Обнаружение жеста"
+            },
+            "detect_face": {
+                "name": "Обнаружение лица"
+            },
+            "sub_device_deletion_protection": {
+                "name": "Защита от удаления подустройств"
+            },
+            "sound_detection": {
+                "name": "Обнаружение звука"
+            },
+            "timed_sleep": {
+                "name": "Сон по таймеру"
+            },
+            "motion_push": {
+                "name": "Push при движении"
+            },
+            "motion_detection": {
+                "name": "Обнаружение движения"
+            },
+            "indicator_light": {
+                "name": "Индикатор"
+            },
+            "timelapse_push": {
+                "name": "Push таймлапса"
+            },
+            "sound_push": {
+                "name": "Push звука"
+            },
+            "device_offline_push": {
+                "name": "Push отключения устройства"
+            },
+            "motion_recording": {
+                "name": "Запись при движении"
+            },
+            "timelapse": {
+                "name": "Таймлапс"
+            },
+            "sound_recording": {
+                "name": "Запись звука"
+            },
+            "camera": {
+                "name": "Камера"
+            },
+            "high_temp_alarm": {
+                "name": "Сигнал высокой температуры"
+            },
+            "face_recognition_push": {
+                "name": "Push распознавания лица"
+            },
+            "scheduled_sleep": {
+                "name": "Сон по расписанию"
+            },
+            "anti_tamper_alarm": {
+                "name": "Сигнал вскрытия"
+            },
+            "face_recording": {
+                "name": "Запись лица"
+            },
+            "doorbell_notification": {
+                "name": "Уведомление о звонке"
+            },
+            "low_temp_alarm": {
+                "name": "Сигнал низкой температуры"
+            },
+            "doorbell_recording": {
+                "name": "Запись звонка"
+            }
+        },
+        "number": {
+            "volume": {
+                "name": "Громкость"
+            },
+            "system_volume": {
+                "name": "Системная громкость"
+            },
+            "alarm_volume": {
+                "name": "Громкость сигнала"
+            },
+            "doorbell_volume": {
+                "name": "Громкость звонка"
+            },
+            "alarm_duration": {
+                "name": "Длительность сигнала"
+            },
+            "doorbell_duration": {
+                "name": "Длительность звонка"
+            },
+            "music_volume": {
+                "name": "Громкость музыки"
+            },
+            "alarm_clock_volume": {
+                "name": "Громкость будильника"
+            },
+            "night_light_brightness": {
+                "name": "Яркость ночника"
+            },
+            "arming_delay_time": {
+                "name": "Время задержки постановки на охрану"
+            },
+            "camera_volume": {
+                "name": "Громкость камеры"
+            },
+            "face_recognition_interval": {
+                "name": "Интервал распознавания лица"
+            }
+        },
+        "select": {
+            "gateway_language": {
+                "name": "Язык шлюза",
+                "state": {
+                    "chinese": "Китайский",
+                    "english": "Английский"
+                }
+            },
+            "alarm_ringtone": {
+                "name": "Мелодия сигнала",
+                "state": {
+                    "default": "По умолчанию",
+                    "police_car_1": "Звук полицейской машины 1",
+                    "police_car_2": "Звук полицейской машины 2",
+                    "safety_accident": "Звук аварии",
+                    "missile_countdown": "Обратный отсчёт ракеты",
+                    "ghost_scream": "Крик призрака",
+                    "sniper_rifle": "Снайперская винтовка",
+                    "battle": "Звук битвы",
+                    "air_raid_alarm": "Сигнал воздушной тревоги",
+                    "dog_barking": "Лай собаки"
+                }
+            },
+            "doorbell_ringtone": {
+                "name": "Мелодия звонка",
+                "state": {
+                    "default": "По умолчанию",
+                    "index_0": "Индекс 0",
+                    "index_1": "Индекс 1",
+                    "index_2": "Индекс 2",
+                    "index_3": "Индекс 3",
+                    "index_4": "Индекс 4",
+                    "index_5": "Индекс 5",
+                    "index_6": "Индекс 6",
+                    "index_7": "Индекс 7",
+                    "index_8": "Индекс 8"
+                }
+            },
+            "screen_flip": {
+                "name": "Переворот экрана",
+                "state": {
+                    "normal": "Обычный",
+                    "flip_horizontally": "Отразить по горизонтали",
+                    "flip_vertically": "Отразить по вертикали",
+                    "flip_horizontally_and_vertically": "Отразить по горизонтали и вертикали"
+                }
+            },
+            "camera_mode": {
+                "name": "Режим камеры",
+                "state": {
+                    "off": "Выкл",
+                    "on": "Вкл",
+                    "always_on": "Всегда включено"
+                }
+            },
+            "work_mode": {
+                "name": "Рабочий режим",
+                "state": {
+                    "radar_infrared": "Радар + Инфракрасный",
+                    "radar_only": "Только радар",
+                    "infrared_only": "Только инфракрасный"
+                }
+            }
+        },
+        "button": {
+            "ptz_up": {
+                "name": "Вверх"
+            },
+            "ptz_down": {
+                "name": "Вниз"
+            },
+            "ptz_left": {
+                "name": "Влево"
+            },
+            "ptz_right": {
+                "name": "Вправо"
+            },
+            "ring_alarm_bell": {
+                "name": "Включить сигнал тревоги"
+            },
+            "restart_device": {
+                "name": "Перезапустить устройство"
+            },
+            "restart_coordinator": {
+                "name": "Перезапустить координатор"
+            }
         }
     }
 }

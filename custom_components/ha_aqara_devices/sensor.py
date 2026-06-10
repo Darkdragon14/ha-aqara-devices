@@ -209,9 +209,16 @@ class AqaraSensor(CoordinatorEntity, SensorEntity):
         self._device_label = device_label
 
         self._attr_unique_id = f"{did}_{spec['inApp']}"
-        self._attr_name = spec["name"]
+        translation_key = spec.get("translation_key")
+        if translation_key:
+            self._attr_translation_key = translation_key
+        elif "name" in spec:
+            self._attr_name = spec["name"]
         self._attr_icon = spec.get("icon")
         self._attr_native_unit_of_measurement = spec.get("unit")
+        options = spec.get("options")
+        if options is not None:
+            self._attr_options = options
 
         device_class = spec.get("device_class")
         if isinstance(device_class, SensorDeviceClass):
@@ -243,7 +250,10 @@ class AqaraSensor(CoordinatorEntity, SensorEntity):
         raw = data.get(self._spec["inApp"])
         if raw is None:
             return
-        self._attr_native_value = self._value_map.get(str(raw), raw)
+        value = self._value_map.get(str(raw), raw)
+        if self._attr_options is not None and value not in self._attr_options:
+            value = None
+        self._attr_native_value = value
         self.async_write_ha_state()
 
 
@@ -267,7 +277,14 @@ class AqaraFP2Sensor(CoordinatorEntity, SensorEntity):
         self._device_label = device_label
         self._key = spec["key"]
 
-        self._attr_name = spec["name"]
+        translation_key = spec.get("translation_key")
+        if translation_key:
+            self._attr_translation_key = translation_key
+            placeholders = spec.get("translation_placeholders")
+            if placeholders:
+                self._attr_translation_placeholders = placeholders
+        elif "name" in spec:
+            self._attr_name = spec["name"]
         self._attr_icon = spec.get("icon")
         self._attr_unique_id = f"{did}_fp2_sensor_{self._key}"
         self._value_type = spec.get("value_type")
@@ -276,6 +293,9 @@ class AqaraFP2Sensor(CoordinatorEntity, SensorEntity):
         self._attr_native_unit_of_measurement = spec.get("unit")
         self._attr_device_class = spec.get("device_class")
         self._attr_state_class = spec.get("state_class")
+        options = spec.get("options")
+        if options is not None:
+            self._attr_options = options
         self._attr_entity_registry_enabled_default = spec.get("enabled_default", True)
 
     @property
@@ -289,7 +309,10 @@ class AqaraFP2Sensor(CoordinatorEntity, SensorEntity):
         if raw is None:
             return None
         if self._value_map:
-            return self._value_map.get(str(raw), raw)
+            value = self._value_map.get(str(raw), raw)
+            if self._attr_options is not None and value not in self._attr_options:
+                return None
+            return value
 
         def _apply_scale(value: int | float):
             if self._scale is None:
