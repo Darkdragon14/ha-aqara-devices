@@ -147,7 +147,7 @@ class AqaraG3PTZButton(ButtonEntity):
         self._api = api
         self._did = did
         self._direction = direction
-        self._attr_name = direction.capitalize()
+        self._attr_translation_key = f"ptz_{direction}"
         self._attr_icon = ICONS[direction]
         self._attr_unique_id = f"{did}_ptz_{direction}"
         self._device_name = device_name
@@ -169,7 +169,7 @@ class AqaraG3RingAlarmBell(ButtonEntity):
     def __init__(self, api: AqaraApi, did: str, device_name: str, model: str) -> None:
         self._api = api
         self._did = did
-        self._attr_name = "Ring Alarm Bell"
+        self._attr_translation_key = "ring_alarm_bell"
         self._attr_icon = ICONS["ring_alarm_bell"]
         self._attr_unique_id = f"{did}_ring_alarm_bell"
         self._device_name = device_name
@@ -220,7 +220,7 @@ class AqaraResourceButton(ButtonEntity):
         self._device_label = device_label
         self._resource_id = resource_id
         self._value = value
-        self._attr_name = name
+        self._attr_translation_key = key
         self._attr_icon = ICONS[key]
         self._attr_unique_id = f"{did}_{key}"
 

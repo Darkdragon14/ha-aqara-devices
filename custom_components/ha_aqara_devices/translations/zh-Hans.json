@@ -59,18 +59,447 @@
     },
     "entity": {
         "binary_sensor": {
-            "night_vision": { "name": "夜视" },
-            "gesture_v_sign": { "name": "V 手势" },
-            "gesture_four": { "name": "四指手势" },
-            "gesture_high_five": { "name": "击掌手势" },
-            "gesture_finger_gun": { "name": "手枪手势" },
-            "gesture_ok": { "name": "OK 手势" },
-            "gesture_v_sign_both_hands": { "name": "双手 V 手势" },
-            "gesture_four_both_hands": { "name": "双手四指手势" },
-            "gesture_high_five_both_hands": { "name": "双手击掌手势" },
-            "gesture_finger_gun_both_hands": { "name": "双手手枪手势" },
-            "gesture_ok_both_hands": { "name": "双手 OK 手势" },
-            "motion_event": { "name": "移动事件" }
+            "night_vision": {
+                "name": "夜视"
+            },
+            "motion_event": {
+                "name": "移动事件"
+            },
+            "gesture_v_sign": {
+                "name": "手势 V 字"
+            },
+            "gesture_four": {
+                "name": "手势四"
+            },
+            "gesture_high_five": {
+                "name": "手势击掌"
+            },
+            "gesture_finger_gun": {
+                "name": "手势手枪"
+            },
+            "gesture_ok": {
+                "name": "手势 OK"
+            },
+            "gesture_v_sign_both_hands": {
+                "name": "双手手势 V 字"
+            },
+            "gesture_four_both_hands": {
+                "name": "双手手势四"
+            },
+            "gesture_high_five_both_hands": {
+                "name": "双手手势击掌"
+            },
+            "gesture_finger_gun_both_hands": {
+                "name": "双手手势手枪"
+            },
+            "gesture_ok_both_hands": {
+                "name": "双手手势 OK"
+            },
+            "doorbell_ring": {
+                "name": "门铃响铃"
+            },
+            "detection_area": {
+                "name": "检测区域 {index}"
+            }
+        },
+        "sensor": {
+            "gateway_time_zone": {
+                "name": "网关时区"
+            },
+            "night_light_configuration": {
+                "name": "夜灯配置"
+            },
+            "face_recognition_event": {
+                "name": "人脸识别事件"
+            },
+            "stranger_face_event": {
+                "name": "陌生人脸事件"
+            },
+            "door_event": {
+                "name": "门事件",
+                "state": {
+                    "door_opened": "门已打开",
+                    "door_closed": "门已关闭",
+                    "timeout_without_closing": "超时未关闭",
+                    "knock_on_the_door": "敲门",
+                    "attempted_break_in": "闯入尝试",
+                    "door_ajar": "门虚掩"
+                }
+            },
+            "lock_state": {
+                "name": "门锁状态",
+                "state": {
+                    "door_cannot_be_closed": "门无法关闭",
+                    "door_is_open": "门已打开",
+                    "door_closed_handle_not_lifted": "门已关闭但门把手未抬起",
+                    "door_is_locked": "门已上锁",
+                    "door_is_locked_by_night_latch_knob": "门已由夜锁旋钮锁定",
+                    "door_is_unlocked": "门已解锁",
+                    "door_is_locked_by_front_handle_and_night_latch_knob": "门已由前把手和夜锁旋钮锁定",
+                    "door_is_almost_closed": "门即将关闭"
+                }
+            },
+            "open_door_method": {
+                "name": "开门方式",
+                "state": {
+                    "fingerprint_unlock": "指纹解锁",
+                    "permanent_password_unlock": "永久密码解锁",
+                    "nfc_unlock": "NFC 解锁",
+                    "bluetooth_unlock": "蓝牙解锁",
+                    "temporary_password_unlock": "临时密码解锁",
+                    "mechanical_key_unlock": "机械钥匙解锁",
+                    "dual_authentication_unlock": "双重认证解锁",
+                    "duress_fingerprint_unlock": "胁迫指纹解锁",
+                    "homekit_unlock": "HomeKit 解锁",
+                    "face_unlock": "人脸解锁",
+                    "aiot_remote_unlock": "AIoT 远程解锁",
+                    "google_password_unlock": "Google 密码解锁",
+                    "outdoor_unlock": "室外解锁"
+                }
+            },
+            "user_id_fingerprint": {
+                "name": "指纹用户 ID"
+            },
+            "user_id_password": {
+                "name": "密码用户 ID"
+            },
+            "user_id_nfc": {
+                "name": "NFC 用户 ID"
+            },
+            "user_id_ble_homekit": {
+                "name": "HomeKit 蓝牙用户 ID"
+            },
+            "user_id_temporary_password": {
+                "name": "临时密码用户 ID"
+            },
+            "people_counting": {
+                "name": "人数统计"
+            },
+            "people_counting_per_minute": {
+                "name": "人数统计（每分钟）"
+            },
+            "whole_area_people_count_10s": {
+                "name": "整个区域人数（10 秒）"
+            },
+            "zone_people_count_10s": {
+                "name": "区域 {index} 人数（10 秒）"
+            },
+            "zone_people_count_per_minute": {
+                "name": "区域 {index} 人数（每分钟）"
+            },
+            "heart_rate": {
+                "name": "心率"
+            },
+            "respiration_rate": {
+                "name": "呼吸频率"
+            },
+            "body_movement": {
+                "name": "身体活动"
+            },
+            "sleep_state": {
+                "name": "睡眠状态"
+            },
+            "operating_mode": {
+                "name": "工作模式",
+                "state": {
+                    "zone_detection": "区域检测",
+                    "fall_detection": "跌倒检测",
+                    "sleep_monitoring": "睡眠监测"
+                }
+            },
+            "view_zoom": {
+                "name": "视图缩放",
+                "state": {
+                    "full": "全画面",
+                    "adaptive": "自适应"
+                }
+            },
+            "mounting_position": {
+                "name": "安装位置",
+                "state": {
+                    "wall": "墙面",
+                    "left_corner": "左角",
+                    "right_corner": "右角"
+                }
+            },
+            "installation_angle": {
+                "name": "安装角度",
+                "state": {
+                    "face_up": "朝上",
+                    "oblique": "倾斜",
+                    "horizontal": "水平",
+                    "face_down": "朝下"
+                }
+            },
+            "attitude_status": {
+                "name": "姿态状态"
+            },
+            "presence_sensitivity": {
+                "name": "存在灵敏度",
+                "state": {
+                    "low": "低",
+                    "medium": "中",
+                    "high": "高"
+                }
+            },
+            "proximity_distance": {
+                "name": "接近距离",
+                "state": {
+                    "far": "远",
+                    "medium": "中",
+                    "close": "近"
+                }
+            },
+            "fall_detection_sensitivity": {
+                "name": "跌倒检测灵敏度",
+                "state": {
+                    "low": "低",
+                    "medium": "中",
+                    "high": "高"
+                }
+            },
+            "reverse_coordinate_direction": {
+                "name": "反转坐标方向",
+                "state": {
+                    "disable": "禁用",
+                    "enable": "启用",
+                    "auto": "自动"
+                }
+            },
+            "detection_direction": {
+                "name": "检测方向",
+                "state": {
+                    "default": "默认",
+                    "left_right": "左右"
+                }
+            },
+            "ai_person_detection": {
+                "name": "AI 人体检测",
+                "state": {
+                    "disable": "禁用",
+                    "enable": "启用"
+                }
+            },
+            "anti_light_pollution_mode": {
+                "name": "防光污染模式",
+                "state": {
+                    "disable": "禁用",
+                    "enable": "启用"
+                }
+            },
+            "activity_status": {
+                "name": "活动状态",
+                "state": {
+                    "unoccupied": "无人",
+                    "moving": "移动中",
+                    "stationary": "静止"
+                }
+            }
+        },
+        "switch": {
+            "video": {
+                "name": "视频"
+            },
+            "detect_human": {
+                "name": "检测人类"
+            },
+            "detect_pet": {
+                "name": "检测宠物"
+            },
+            "detect_gesture": {
+                "name": "检测手势"
+            },
+            "detect_face": {
+                "name": "检测人脸"
+            },
+            "sub_device_deletion_protection": {
+                "name": "子设备删除保护"
+            },
+            "sound_detection": {
+                "name": "声音检测"
+            },
+            "timed_sleep": {
+                "name": "定时休眠"
+            },
+            "motion_push": {
+                "name": "移动推送"
+            },
+            "motion_detection": {
+                "name": "移动检测"
+            },
+            "indicator_light": {
+                "name": "指示灯"
+            },
+            "timelapse_push": {
+                "name": "延时推送"
+            },
+            "sound_push": {
+                "name": "声音推送"
+            },
+            "device_offline_push": {
+                "name": "设备离线推送"
+            },
+            "motion_recording": {
+                "name": "移动录制"
+            },
+            "timelapse": {
+                "name": "延时摄影"
+            },
+            "sound_recording": {
+                "name": "声音录制"
+            },
+            "camera": {
+                "name": "摄像头"
+            },
+            "high_temp_alarm": {
+                "name": "高温警报"
+            },
+            "face_recognition_push": {
+                "name": "人脸识别推送"
+            },
+            "scheduled_sleep": {
+                "name": "计划休眠"
+            },
+            "anti_tamper_alarm": {
+                "name": "防拆警报"
+            },
+            "face_recording": {
+                "name": "人脸录制"
+            },
+            "doorbell_notification": {
+                "name": "门铃通知"
+            },
+            "low_temp_alarm": {
+                "name": "低温警报"
+            },
+            "doorbell_recording": {
+                "name": "门铃录制"
+            }
+        },
+        "number": {
+            "volume": {
+                "name": "音量"
+            },
+            "system_volume": {
+                "name": "系统音量"
+            },
+            "alarm_volume": {
+                "name": "警报音量"
+            },
+            "doorbell_volume": {
+                "name": "门铃音量"
+            },
+            "alarm_duration": {
+                "name": "警报时长"
+            },
+            "doorbell_duration": {
+                "name": "门铃时长"
+            },
+            "music_volume": {
+                "name": "音乐音量"
+            },
+            "alarm_clock_volume": {
+                "name": "闹钟音量"
+            },
+            "night_light_brightness": {
+                "name": "夜灯亮度"
+            },
+            "arming_delay_time": {
+                "name": "布防延迟时间"
+            },
+            "camera_volume": {
+                "name": "摄像头音量"
+            },
+            "face_recognition_interval": {
+                "name": "人脸识别间隔"
+            }
+        },
+        "select": {
+            "gateway_language": {
+                "name": "网关语言",
+                "state": {
+                    "chinese": "中文",
+                    "english": "英文"
+                }
+            },
+            "alarm_ringtone": {
+                "name": "警报铃声",
+                "state": {
+                    "default": "默认",
+                    "police_car_1": "警车声 1",
+                    "police_car_2": "警车声 2",
+                    "safety_accident": "安全事故声",
+                    "missile_countdown": "导弹倒计时",
+                    "ghost_scream": "幽灵尖叫",
+                    "sniper_rifle": "狙击步枪",
+                    "battle": "战斗声",
+                    "air_raid_alarm": "空袭警报",
+                    "dog_barking": "狗叫声"
+                }
+            },
+            "doorbell_ringtone": {
+                "name": "门铃铃声",
+                "state": {
+                    "default": "默认",
+                    "index_0": "铃声 0",
+                    "index_1": "铃声 1",
+                    "index_2": "铃声 2",
+                    "index_3": "铃声 3",
+                    "index_4": "铃声 4",
+                    "index_5": "铃声 5",
+                    "index_6": "铃声 6",
+                    "index_7": "铃声 7",
+                    "index_8": "铃声 8"
+                }
+            },
+            "screen_flip": {
+                "name": "屏幕翻转",
+                "state": {
+                    "normal": "正常",
+                    "flip_horizontally": "水平翻转",
+                    "flip_vertically": "垂直翻转",
+                    "flip_horizontally_and_vertically": "水平和垂直翻转"
+                }
+            },
+            "camera_mode": {
+                "name": "摄像头模式",
+                "state": {
+                    "off": "关闭",
+                    "on": "开启",
+                    "always_on": "始终开启"
+                }
+            },
+            "work_mode": {
+                "name": "工作模式",
+                "state": {
+                    "radar_infrared": "雷达 + 红外",
+                    "radar_only": "仅雷达",
+                    "infrared_only": "仅红外"
+                }
+            }
+        },
+        "button": {
+            "ptz_up": {
+                "name": "向上"
+            },
+            "ptz_down": {
+                "name": "向下"
+            },
+            "ptz_left": {
+                "name": "向左"
+            },
+            "ptz_right": {
+                "name": "向右"
+            },
+            "ring_alarm_bell": {
+                "name": "响铃报警"
+            },
+            "restart_device": {
+                "name": "重启设备"
+            },
+            "restart_coordinator": {
+                "name": "重启协调器"
+            }
         }
     }
 }

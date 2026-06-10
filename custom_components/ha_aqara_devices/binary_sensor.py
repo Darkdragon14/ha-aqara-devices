@@ -213,10 +213,13 @@ class AqaraBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._model = model
         self._device_label = device_label
 
-        self._attr_name = spec["name"]
+        translation_key = spec.get("translation_key")
+        if translation_key:
+            self._attr_translation_key = translation_key
+        elif "name" in spec:
+            self._attr_name = spec["name"]
         self._attr_icon = spec["icon"]
         self._attr_unique_id = f"{did}_{spec['inApp']}"
-        self._attr_translation_key = spec.get("translation_key")
         self._value_type = spec.get("value_type")
         self._hold_seconds = spec.get("hold_seconds", 5)
         self._clear_listener: Callable[[], None] | None = None
@@ -371,7 +374,14 @@ class AqaraFP2BinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._key = spec["key"]
         self._fallback_key = spec.get("fallback_key")
         self._on_values = {str(v) for v in spec.get("on_values", set())}
-        self._attr_name = spec["name"]
+        translation_key = spec.get("translation_key")
+        if translation_key:
+            self._attr_translation_key = translation_key
+            placeholders = spec.get("translation_placeholders")
+            if placeholders:
+                self._attr_translation_placeholders = placeholders
+        elif "name" in spec:
+            self._attr_name = spec["name"]
         self._attr_icon = spec.get("icon")
         self._attr_unique_id = f"{did}_fp2_{self._key}"
         self._attr_entity_registry_enabled_default = spec.get("enabled_default", True)

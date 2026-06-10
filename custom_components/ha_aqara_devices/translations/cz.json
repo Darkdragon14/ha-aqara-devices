@@ -59,18 +59,447 @@
     },
     "entity": {
         "binary_sensor": {
-            "night_vision": { "name": "Noční vidění" },
-            "gesture_v_sign": { "name": "Gesto znaku V" },
-            "gesture_four": { "name": "Gesto čtyři" },
-            "gesture_high_five": { "name": "Gesto High Five" },
-            "gesture_finger_gun": { "name": "Gesto pistole" },
-            "gesture_ok": { "name": "Gesto OK" },
-            "gesture_v_sign_both_hands": { "name": "Gesto znaku V obema rukama" },
-            "gesture_four_both_hands": { "name": "Gesto ctyri obema rukama" },
-            "gesture_high_five_both_hands": { "name": "Gesto High Five obema rukama" },
-            "gesture_finger_gun_both_hands": { "name": "Gesto pistole obema rukama" },
-            "gesture_ok_both_hands": { "name": "Gesto OK obema rukama" },
-            "motion_event": { "name": "Udalost pohybu" }
+            "night_vision": {
+                "name": "Noční vidění"
+            },
+            "motion_event": {
+                "name": "Událost pohybu"
+            },
+            "gesture_v_sign": {
+                "name": "Gesto znak V"
+            },
+            "gesture_four": {
+                "name": "Gesto čtyři"
+            },
+            "gesture_high_five": {
+                "name": "Gesto plácnutí"
+            },
+            "gesture_finger_gun": {
+                "name": "Gesto prstová pistole"
+            },
+            "gesture_ok": {
+                "name": "Gesto OK"
+            },
+            "gesture_v_sign_both_hands": {
+                "name": "Gesto znak V oběma rukama"
+            },
+            "gesture_four_both_hands": {
+                "name": "Gesto čtyři oběma rukama"
+            },
+            "gesture_high_five_both_hands": {
+                "name": "Gesto plácnutí oběma rukama"
+            },
+            "gesture_finger_gun_both_hands": {
+                "name": "Gesto prstová pistole oběma rukama"
+            },
+            "gesture_ok_both_hands": {
+                "name": "Gesto OK oběma rukama"
+            },
+            "doorbell_ring": {
+                "name": "Zvonek"
+            },
+            "detection_area": {
+                "name": "Detekční zóna {index}"
+            }
+        },
+        "sensor": {
+            "gateway_time_zone": {
+                "name": "Časové pásmo brány"
+            },
+            "night_light_configuration": {
+                "name": "Konfigurace nočního světla"
+            },
+            "face_recognition_event": {
+                "name": "Událost rozpoznání obličeje"
+            },
+            "stranger_face_event": {
+                "name": "Událost cizí tváře"
+            },
+            "door_event": {
+                "name": "Událost dveří",
+                "state": {
+                    "door_opened": "Dveře otevřeny",
+                    "door_closed": "Dveře zavřeny",
+                    "timeout_without_closing": "Vypršení času bez zavření",
+                    "knock_on_the_door": "Zaklepání na dveře",
+                    "attempted_break_in": "Pokus o vloupání",
+                    "door_ajar": "Dveře pootevřené"
+                }
+            },
+            "lock_state": {
+                "name": "Stav zámku",
+                "state": {
+                    "door_cannot_be_closed": "Dveře nelze zavřít",
+                    "door_is_open": "Dveře jsou otevřené",
+                    "door_closed_handle_not_lifted": "Dveře zavřené, ale klika není zvednutá",
+                    "door_is_locked": "Dveře jsou zamčené",
+                    "door_is_locked_by_night_latch_knob": "Dveře zamčené noční západkou",
+                    "door_is_unlocked": "Dveře jsou odemčené",
+                    "door_is_locked_by_front_handle_and_night_latch_knob": "Dveře zamčené přední klikou a noční západkou",
+                    "door_is_almost_closed": "Dveře jsou téměř zavřené"
+                }
+            },
+            "open_door_method": {
+                "name": "Způsob otevření dveří",
+                "state": {
+                    "fingerprint_unlock": "Odemčení otiskem prstu",
+                    "permanent_password_unlock": "Odemčení trvalým heslem",
+                    "nfc_unlock": "Odemčení NFC",
+                    "bluetooth_unlock": "Odemčení Bluetooth",
+                    "temporary_password_unlock": "Odemčení dočasným heslem",
+                    "mechanical_key_unlock": "Odemčení mechanickým klíčem",
+                    "dual_authentication_unlock": "Odemčení dvojitým ověřením",
+                    "duress_fingerprint_unlock": "Odemčení nouzovým otiskem",
+                    "homekit_unlock": "Odemčení HomeKit",
+                    "face_unlock": "Odemčení obličejem",
+                    "aiot_remote_unlock": "Vzdálené odemčení AIoT",
+                    "google_password_unlock": "Odemčení heslem Google",
+                    "outdoor_unlock": "Venkovní odemčení"
+                }
+            },
+            "user_id_fingerprint": {
+                "name": "ID uživatele otisku"
+            },
+            "user_id_password": {
+                "name": "ID uživatele hesla"
+            },
+            "user_id_nfc": {
+                "name": "ID uživatele NFC"
+            },
+            "user_id_ble_homekit": {
+                "name": "ID uživatele HomeKit Bluetooth"
+            },
+            "user_id_temporary_password": {
+                "name": "ID uživatele dočasného hesla"
+            },
+            "people_counting": {
+                "name": "Počítání osob"
+            },
+            "people_counting_per_minute": {
+                "name": "Počítání osob (za minutu)"
+            },
+            "whole_area_people_count_10s": {
+                "name": "Počet osob v celé oblasti (10 s)"
+            },
+            "zone_people_count_10s": {
+                "name": "Počet osob zóny {index} (10 s)"
+            },
+            "zone_people_count_per_minute": {
+                "name": "Počet osob zóny {index} (za minutu)"
+            },
+            "heart_rate": {
+                "name": "Tepová frekvence"
+            },
+            "respiration_rate": {
+                "name": "Dechová frekvence"
+            },
+            "body_movement": {
+                "name": "Pohyb těla"
+            },
+            "sleep_state": {
+                "name": "Stav spánku"
+            },
+            "operating_mode": {
+                "name": "Provozní režim",
+                "state": {
+                    "zone_detection": "Detekce zóny",
+                    "fall_detection": "Detekce pádu",
+                    "sleep_monitoring": "Sledování spánku"
+                }
+            },
+            "view_zoom": {
+                "name": "Přiblížení zobrazení",
+                "state": {
+                    "full": "Plný",
+                    "adaptive": "Adaptivní"
+                }
+            },
+            "mounting_position": {
+                "name": "Pozice montáže",
+                "state": {
+                    "wall": "Stěna",
+                    "left_corner": "Levý roh",
+                    "right_corner": "Pravý roh"
+                }
+            },
+            "installation_angle": {
+                "name": "Úhel instalace",
+                "state": {
+                    "face_up": "Lícem nahoru",
+                    "oblique": "Šikmo",
+                    "horizontal": "Vodorovně",
+                    "face_down": "Lícem dolů"
+                }
+            },
+            "attitude_status": {
+                "name": "Stav polohy"
+            },
+            "presence_sensitivity": {
+                "name": "Citlivost přítomnosti",
+                "state": {
+                    "low": "Nízká",
+                    "medium": "Střední",
+                    "high": "Vysoká"
+                }
+            },
+            "proximity_distance": {
+                "name": "Vzdálenost přiblížení",
+                "state": {
+                    "far": "Daleko",
+                    "medium": "Střední",
+                    "close": "Blízko"
+                }
+            },
+            "fall_detection_sensitivity": {
+                "name": "Citlivost detekce pádu",
+                "state": {
+                    "low": "Nízká",
+                    "medium": "Střední",
+                    "high": "Vysoká"
+                }
+            },
+            "reverse_coordinate_direction": {
+                "name": "Obrátit směr souřadnic",
+                "state": {
+                    "disable": "Zakázáno",
+                    "enable": "Povoleno",
+                    "auto": "Automaticky"
+                }
+            },
+            "detection_direction": {
+                "name": "Směr detekce",
+                "state": {
+                    "default": "Výchozí",
+                    "left_right": "Vlevo/Vpravo"
+                }
+            },
+            "ai_person_detection": {
+                "name": "AI detekce osob",
+                "state": {
+                    "disable": "Zakázáno",
+                    "enable": "Povoleno"
+                }
+            },
+            "anti_light_pollution_mode": {
+                "name": "Režim proti světelnému znečištění",
+                "state": {
+                    "disable": "Zakázáno",
+                    "enable": "Povoleno"
+                }
+            },
+            "activity_status": {
+                "name": "Stav aktivity",
+                "state": {
+                    "unoccupied": "Neobsazeno",
+                    "moving": "Pohyb",
+                    "stationary": "Nehybný"
+                }
+            }
+        },
+        "switch": {
+            "video": {
+                "name": "Video"
+            },
+            "detect_human": {
+                "name": "Detekce člověka"
+            },
+            "detect_pet": {
+                "name": "Detekce mazlíčka"
+            },
+            "detect_gesture": {
+                "name": "Detekce gesta"
+            },
+            "detect_face": {
+                "name": "Detekce obličeje"
+            },
+            "sub_device_deletion_protection": {
+                "name": "Ochrana proti smazání podzařízení"
+            },
+            "sound_detection": {
+                "name": "Detekce zvuku"
+            },
+            "timed_sleep": {
+                "name": "Časovaný spánek"
+            },
+            "motion_push": {
+                "name": "Push pohybu"
+            },
+            "motion_detection": {
+                "name": "Detekce pohybu"
+            },
+            "indicator_light": {
+                "name": "Kontrolka"
+            },
+            "timelapse_push": {
+                "name": "Push časosběru"
+            },
+            "sound_push": {
+                "name": "Push zvuku"
+            },
+            "device_offline_push": {
+                "name": "Push zařízení offline"
+            },
+            "motion_recording": {
+                "name": "Záznam pohybu"
+            },
+            "timelapse": {
+                "name": "Časosběr"
+            },
+            "sound_recording": {
+                "name": "Záznam zvuku"
+            },
+            "camera": {
+                "name": "Kamera"
+            },
+            "high_temp_alarm": {
+                "name": "Alarm vysoké teploty"
+            },
+            "face_recognition_push": {
+                "name": "Push rozpoznání obličeje"
+            },
+            "scheduled_sleep": {
+                "name": "Naplánovaný spánek"
+            },
+            "anti_tamper_alarm": {
+                "name": "Alarm proti manipulaci"
+            },
+            "face_recording": {
+                "name": "Záznam obličeje"
+            },
+            "doorbell_notification": {
+                "name": "Oznámení zvonku"
+            },
+            "low_temp_alarm": {
+                "name": "Alarm nízké teploty"
+            },
+            "doorbell_recording": {
+                "name": "Záznam zvonku"
+            }
+        },
+        "number": {
+            "volume": {
+                "name": "Hlasitost"
+            },
+            "system_volume": {
+                "name": "Hlasitost systému"
+            },
+            "alarm_volume": {
+                "name": "Hlasitost alarmu"
+            },
+            "doorbell_volume": {
+                "name": "Hlasitost zvonku"
+            },
+            "alarm_duration": {
+                "name": "Doba trvání alarmu"
+            },
+            "doorbell_duration": {
+                "name": "Doba trvání zvonku"
+            },
+            "music_volume": {
+                "name": "Hlasitost hudby"
+            },
+            "alarm_clock_volume": {
+                "name": "Hlasitost budíku"
+            },
+            "night_light_brightness": {
+                "name": "Jas nočního světla"
+            },
+            "arming_delay_time": {
+                "name": "Doba zpoždění aktivace"
+            },
+            "camera_volume": {
+                "name": "Hlasitost kamery"
+            },
+            "face_recognition_interval": {
+                "name": "Interval rozpoznání obličeje"
+            }
+        },
+        "select": {
+            "gateway_language": {
+                "name": "Jazyk brány",
+                "state": {
+                    "chinese": "Čínština",
+                    "english": "Angličtina"
+                }
+            },
+            "alarm_ringtone": {
+                "name": "Vyzvánění alarmu",
+                "state": {
+                    "default": "Výchozí",
+                    "police_car_1": "Zvuk policejního auta 1",
+                    "police_car_2": "Zvuk policejního auta 2",
+                    "safety_accident": "Zvuk nehody",
+                    "missile_countdown": "Odpočet rakety",
+                    "ghost_scream": "Křik ducha",
+                    "sniper_rifle": "Odstřelovací puška",
+                    "battle": "Zvuk bitvy",
+                    "air_raid_alarm": "Poplach náletu",
+                    "dog_barking": "Štěkání psa"
+                }
+            },
+            "doorbell_ringtone": {
+                "name": "Vyzvánění zvonku",
+                "state": {
+                    "default": "Výchozí",
+                    "index_0": "Index 0",
+                    "index_1": "Index 1",
+                    "index_2": "Index 2",
+                    "index_3": "Index 3",
+                    "index_4": "Index 4",
+                    "index_5": "Index 5",
+                    "index_6": "Index 6",
+                    "index_7": "Index 7",
+                    "index_8": "Index 8"
+                }
+            },
+            "screen_flip": {
+                "name": "Překlopení obrazovky",
+                "state": {
+                    "normal": "Normální",
+                    "flip_horizontally": "Překlopit vodorovně",
+                    "flip_vertically": "Překlopit svisle",
+                    "flip_horizontally_and_vertically": "Překlopit vodorovně i svisle"
+                }
+            },
+            "camera_mode": {
+                "name": "Režim kamery",
+                "state": {
+                    "off": "Vypnuto",
+                    "on": "Zapnuto",
+                    "always_on": "Vždy zapnuto"
+                }
+            },
+            "work_mode": {
+                "name": "Pracovní režim",
+                "state": {
+                    "radar_infrared": "Radar + Infračervený",
+                    "radar_only": "Pouze radar",
+                    "infrared_only": "Pouze infračervený"
+                }
+            }
+        },
+        "button": {
+            "ptz_up": {
+                "name": "Nahoru"
+            },
+            "ptz_down": {
+                "name": "Dolů"
+            },
+            "ptz_left": {
+                "name": "Doleva"
+            },
+            "ptz_right": {
+                "name": "Doprava"
+            },
+            "ring_alarm_bell": {
+                "name": "Spustit zvonek alarmu"
+            },
+            "restart_device": {
+                "name": "Restartovat zařízení"
+            },
+            "restart_coordinator": {
+                "name": "Restartovat koordinátor"
+            }
         }
     }
 }
