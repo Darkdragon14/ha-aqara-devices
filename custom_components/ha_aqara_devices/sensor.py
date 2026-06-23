@@ -13,6 +13,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     A100_PRO_DEVICE_LABEL,
+    ACN002_DEVICE_LABEL,
     DOMAIN,
     FP2_DEVICE_LABEL,
     FP2_MODEL,
@@ -28,6 +29,7 @@ from .fp300 import FP300_SENSOR_SPECS
 from .fp2 import FP2_SENSOR_SPECS
 from .sensors import (
     A100_PRO_SENSORS_DEF,
+    ACN002_SENSORS_DEF,
     G410_SENSORS_DEF,
     G4_SENSORS_DEF,
     M100_SENSORS_DEF,
@@ -44,12 +46,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     hubs_m3: list[dict] = data.get("hubs_m3", [])
     hubs_m100: list[dict] = data.get("hubs_m100", [])
     a100_pro_locks: list[dict] = data.get("a100_pro_locks", [])
+    acn002_locks: list[dict] = data.get("acn002_locks", [])
     presence_devices: list[dict] = data.get("presence_devices", [])
     g410_coordinators: dict[str, DataUpdateCoordinator] = data.get("g410_coordinators", {})
     g4_coordinators: dict[str, DataUpdateCoordinator] = data.get("g4_coordinators", {})
     m3_coordinators: dict[str, DataUpdateCoordinator] = data.get("m3_coordinators", {})
     m100_coordinators: dict[str, DataUpdateCoordinator] = data.get("m100_coordinators", {})
     a100_pro_coordinators: dict[str, DataUpdateCoordinator] = data.get("a100_pro_coordinators", {})
+    acn002_coordinators: dict[str, DataUpdateCoordinator] = data.get("acn002_coordinators", {})
     presence_coordinators: dict[str, dict[str, DataUpdateCoordinator]] = data.get("presence_coordinators", {})
 
     entities: list[SensorEntity] = []
@@ -154,6 +158,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                 )
             )
 
+    for lock in acn002_locks:
+        did = lock["did"]
+        name = lock["deviceName"]
+        model = lock["model"]
+        coordinator = acn002_coordinators.get(did)
+        if coordinator is None:
+            continue
+
+        for sensor_def in ACN002_SENSORS_DEF:
+            entities.append(
+                AqaraSensor(
+                    coordinator,
+                    did,
+                    name,
+                    sensor_def,
+                    model,
+                    ACN002_DEVICE_LABEL,
+                )
+            )
+
     for presence in presence_devices:
         did = presence["did"]
         name = presence["deviceName"]
@@ -216,6 +240,7 @@ class AqaraSensor(CoordinatorEntity, SensorEntity):
             self._attr_name = spec["name"]
         self._attr_icon = spec.get("icon")
         self._attr_native_unit_of_measurement = spec.get("unit")
+        self._attr_options = None
         options = spec.get("options")
         if options is not None:
             self._attr_options = options
@@ -293,6 +318,7 @@ class AqaraFP2Sensor(CoordinatorEntity, SensorEntity):
         self._attr_native_unit_of_measurement = spec.get("unit")
         self._attr_device_class = spec.get("device_class")
         self._attr_state_class = spec.get("state_class")
+        self._attr_options = None
         options = spec.get("options")
         if options is not None:
             self._attr_options = options
