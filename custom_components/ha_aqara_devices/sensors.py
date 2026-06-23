@@ -254,3 +254,49 @@ A100_PRO_SENSORS_DEF = [
     A100_PRO_USER_ID_BLE_HOMEKIT,
     A100_PRO_USER_ID_TEMPORARY_PASSWORD,
 ]
+
+ACN002_LOCK_EXCEPTION = {
+    "name": "Lock Exception Alert",
+    "icon": "mdi:lock-alert",
+    "inApp": "lock_exception_alert",
+    "api": "13.32.85",
+    "value_type": "uint32_t",
+    "default": None,
+}
+
+ACN002_DEVICE_ONLINE_STATUS = {
+    "name": "Device Online Status",
+    "icon": "mdi:lan-connect",
+    "inApp": "device_online_status",
+    "api": "8.0.2045",
+    "value_type": "uint8_t",
+    "device_class": "enum",
+    "value_map": {
+        "0": "offline",
+        "1": "online",
+    },
+    "options": [
+        "offline",
+        "online",
+    ],
+    "default": None,
+}
+
+ACN002_ZIGBEE_SIGNAL_STRENGTH = {
+    "name": "Zigbee Signal Strength",
+    "icon": "mdi:signal",
+    "inApp": "zigbee_signal_strength",
+    "api": "8.0.2007",
+    "value_type": "uint8_t",
+    "state_class": "measurement",
+    "default": None,
+}
+
+ACN002_SENSORS_DEF = [
+    A100_PRO_DOOR_EVENT,
+    A100_PRO_LOCK_STATE,
+    A100_PRO_OPEN_DOOR_METHOD,
+    ACN002_LOCK_EXCEPTION,
+    ACN002_DEVICE_ONLINE_STATUS,
+    ACN002_ZIGBEE_SIGNAL_STRENGTH,
+]
