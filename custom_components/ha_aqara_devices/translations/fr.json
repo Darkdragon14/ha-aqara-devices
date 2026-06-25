@@ -98,6 +98,9 @@
             "doorbell_ring": {
                 "name": "Sonnette"
             },
+            "ac_on_off_status": {
+                "name": "État marche/arrêt de la climatisation"
+            },
             "detection_area": {
                 "name": "Zone de détection {index}"
             },
@@ -183,6 +186,19 @@
             },
             "battery_voltage": {
                 "name": "Tension de la batterie"
+            },
+            "lock_exception_alert": {
+                "name": "Alerte d'anomalie de serrure"
+            },
+            "device_online_status": {
+                "name": "État de connexion de l'appareil",
+                "state": {
+                    "offline": "Hors ligne",
+                    "online": "En ligne"
+                }
+            },
+            "zigbee_signal_strength": {
+                "name": "Puissance du signal Zigbee"
             },
             "people_counting": {
                 "name": "Comptage de personnes"
@@ -487,6 +503,16 @@
                     "radar_infrared": "Radar + Infrarouge",
                     "radar_only": "Radar uniquement",
                     "infrared_only": "Infrarouge uniquement"
+                }
+            },
+            "ac_mode": {
+                "name": "Mode climatisation",
+                "state": {
+                    "unconfigured": "Mode non configuré",
+                    "air_conditioner_with_socket": "Climatiseur branché sur prise",
+                    "air_conditioner_without_socket": "Climatiseur non branché sur prise",
+                    "infrared_water_heater": "Mode chauffe-eau infrarouge",
+                    "16a_socket": "Mode prise 16 A"
                 }
             }
         },

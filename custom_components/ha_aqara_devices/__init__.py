@@ -16,6 +16,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     A100_PRO_MODELS,
+    ACN002_MODELS,
     BRIDGE_SANITY_INTERVAL_SECONDS,
     BRIDGE_UNAVAILABLE_AFTER_FAILURES,
     CONF_APP_ID,
@@ -32,6 +33,7 @@ from .const import (
     G4_MODELS,
     G3_MODELS,
     M100_MODELS,
+    M200_MODELS,
     M3_MODELS,
     PLATFORMS,
     PRESENCE_MODELS,
@@ -110,6 +112,28 @@ def _create_resilient_coordinator(
     )
     hass.async_create_task(coordinator.async_refresh())
     return coordinator
+
+
+async def _async_refresh_coordinators_after_setup(
+    label: str,
+    coordinators: list[DataUpdateCoordinator],
+    delay_seconds: int = 5,
+) -> None:
+    """Refresh coordinators once after entities have subscribed to updates."""
+    if not coordinators:
+        return
+
+    await asyncio.sleep(delay_seconds)
+    for coordinator in coordinators:
+        try:
+            await coordinator.async_request_refresh()
+        except Exception as err:
+            _LOGGER.debug(
+                "Delayed Aqara %s refresh failed for %s: %s",
+                label,
+                coordinator.name,
+                err,
+            )
 
 
 def _setup_device_state_coordinators(
@@ -282,11 +306,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     from .api import AqaraApi, AqaraAuthError
     from .bridge_specs import (
         A100_PRO_STATE_SPECS,
+        ACN002_STATE_SPECS,
         G2H_PRO_STATE_SPECS,
         G410_STATE_SPECS,
         G4_STATE_SPECS,
         G3_STATE_SPECS,
         M100_STATE_SPECS,
+        M200_STATE_SPECS,
         M3_STATE_SPECS,
         build_active_subscriptions,
     )
@@ -330,7 +356,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         g4_doorbells = [device for device in devices if device.get("model") in G4_MODELS]
         hubs_m3 = [device for device in devices if device.get("model") in M3_MODELS]
         hubs_m100 = [device for device in devices if device.get("model") in M100_MODELS]
+        hubs_m200 = [device for device in devices if device.get("model") in M200_MODELS]
         a100_pro_locks = [device for device in devices if device.get("model") in A100_PRO_MODELS]
+        acn002_locks = [device for device in devices if device.get("model") in ACN002_MODELS]
         presence_devices = [device for device in devices if device.get("model") in PRESENCE_MODELS]
         u200_locks = [device for device in devices if device.get("model") in U200_MODELS]
 
@@ -341,12 +369,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             and not g4_doorbells
             and not hubs_m3
             and not hubs_m100
+            and not hubs_m200
             and not a100_pro_locks
+            and not acn002_locks
             and not presence_devices
             and not u200_locks
         ):
             raise ConfigEntryNotReady(
-                "No Aqara G2H Pro, G3, G410, G4, M3, M100, A100 Pro, FP2, FP300, or U200 devices found"
+                "No Aqara G2H Pro, G3, G410, G4, M3, M100, M200, A100 Pro, ACN002, FP2, FP300, or U200 devices found"
             )
 
     except (ConfigEntryAuthFailed, AqaraAuthError) as err:
@@ -382,12 +412,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     m3_coordinators = _setup_device_state_coordinators(hass, api, hubs_m3, "hub-m3-state", M3_STATE_SPECS)
     m100_coordinators = _setup_device_state_coordinators(hass, api, hubs_m100, "hub-m100-state", M100_STATE_SPECS)
+    m200_coordinators = _setup_device_state_coordinators(hass, api, hubs_m200, "hub-m200-state", M200_STATE_SPECS)
     a100_pro_coordinators = _setup_device_state_coordinators(
         hass,
         api,
         a100_pro_locks,
         "a100-pro-state",
         A100_PRO_STATE_SPECS,
+    )
+    acn002_coordinators = _setup_device_state_coordinators(
+        hass,
+        api,
+        acn002_locks,
+        "acn002-state",
+        ACN002_STATE_SPECS,
     )
     presence_coordinators = _setup_presence_coordinators(hass, api, presence_devices)
     u200_coordinators = _setup_u200_coordinators(hass, api, u200_locks)
@@ -405,7 +443,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "g4_doorbells": g4_doorbells,
         "hubs_m3": hubs_m3,
         "hubs_m100": hubs_m100,
+        "hubs_m200": hubs_m200,
         "a100_pro_locks": a100_pro_locks,
+        "acn002_locks": acn002_locks,
         "presence_devices": presence_devices,
         "u200_locks": u200_locks,
         "camera_coordinators": camera_coordinators,
@@ -414,11 +454,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "g4_coordinators": g4_coordinators,
         "m3_coordinators": m3_coordinators,
         "m100_coordinators": m100_coordinators,
+        "m200_coordinators": m200_coordinators,
         "a100_pro_coordinators": a100_pro_coordinators,
+        "acn002_coordinators": acn002_coordinators,
         "presence_coordinators": presence_coordinators,
         "u200_coordinators": u200_coordinators,
         "bridge_manager": None,
         "bridge_task": None,
+        "warmup_tasks": [],
         "active_subscriptions": [],
     }
     hass.data[DOMAIN][entry.entry_id] = entry_data
@@ -439,7 +482,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         g4_doorbells,
         hubs_m3,
         hubs_m100,
+        hubs_m200,
         a100_pro_locks,
+        acn002_locks,
         presence_devices,
     )
     entry_data["active_subscriptions"] = active_subscriptions
@@ -456,7 +501,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         g4_doorbells,
         hubs_m3,
         hubs_m100,
+        hubs_m200,
         a100_pro_locks,
+        acn002_locks,
         presence_devices,
         camera_coordinators,
         g2h_pro_coordinators,
@@ -464,7 +511,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         g4_coordinators,
         m3_coordinators,
         m100_coordinators,
+        m200_coordinators,
         a100_pro_coordinators,
+        acn002_coordinators,
         presence_coordinators,
         active_subscriptions,
     )
@@ -474,6 +523,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _async_start_bridge_with_retry(entry, bridge_manager),
         f"{DOMAIN} bridge startup",
     )
+    if acn002_coordinators:
+        entry_data["warmup_tasks"].append(
+            hass.async_create_background_task(
+                _async_refresh_coordinators_after_setup(
+                    "acn002-state",
+                    list(acn002_coordinators.values()),
+                ),
+                f"{DOMAIN} ACN002 delayed refresh",
+            )
+        )
 
     total_resources = sum(len(subscription["resourceIds"]) for subscription in active_subscriptions)
     _LOGGER.info(
@@ -515,6 +574,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         bridge_task.cancel()
         with suppress(asyncio.CancelledError):
             await bridge_task
+    warmup_tasks = [] if entry_data is None else entry_data.get("warmup_tasks", [])
+    for task in warmup_tasks:
+        task.cancel()
+        with suppress(asyncio.CancelledError):
+            await task
 
     bridge_manager = None if entry_data is None else entry_data.get("bridge_manager")
     if bridge_manager is not None:

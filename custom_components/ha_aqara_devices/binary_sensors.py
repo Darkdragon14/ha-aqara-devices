@@ -89,6 +89,20 @@ M100_BINARY_SENSORS_DEF = [
     M100_DEVICE_ONLINE_STATUS,
 ]
 
+M200_AC_ON_OFF_STATUS = {
+    "name": "AC On/Off Status",
+    "translation_key": "ac_on_off_status",
+    "icon": "mdi:air-conditioner",
+    "inApp": "on_off_status",
+    "api": "3.1.85",
+    "device_class": "power",
+    "value_type": "bool",
+}
+
+M200_BINARY_SENSORS_DEF = [
+    M200_AC_ON_OFF_STATUS,
+]
+
 G410_DOORBELL_RING = {
     "name": "Doorbell Ring",
     "translation_key": "doorbell_ring",

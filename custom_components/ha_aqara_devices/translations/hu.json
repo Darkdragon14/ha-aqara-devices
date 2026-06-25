@@ -71,6 +71,9 @@
             "doorbell_ring": {
                 "name": "Csengetés"
             },
+            "ac_on_off_status": {
+                "name": "Légkondicionáló be/ki állapota"
+            },
             "detection_area": {
                 "name": "Érzékelési terület {index}"
             },
@@ -156,6 +159,19 @@
             },
             "battery_voltage": {
                 "name": "Akkumulátor feszültsége"
+            },
+            "lock_exception_alert": {
+                "name": "Zárhiba riasztás"
+            },
+            "device_online_status": {
+                "name": "Eszköz online állapota",
+                "state": {
+                    "offline": "Offline",
+                    "online": "Online"
+                }
+            },
+            "zigbee_signal_strength": {
+                "name": "Zigbee jelerősség"
             },
             "people_counting": {
                 "name": "Emberszámlálás"
@@ -460,6 +476,16 @@
                     "radar_infrared": "Radar + Infravörös",
                     "radar_only": "Csak radar",
                     "infrared_only": "Csak infravörös"
+                }
+            },
+            "ac_mode": {
+                "name": "Légkondicionáló mód",
+                "state": {
+                    "unconfigured": "Nincs konfigurálva",
+                    "air_conditioner_with_socket": "Légkondicionáló aljzatba csatlakoztatva",
+                    "air_conditioner_without_socket": "Légkondicionáló nincs aljzatba csatlakoztatva",
+                    "infrared_water_heater": "Infravörös vízmelegítő mód",
+                    "16a_socket": "16 A aljzat mód"
                 }
             }
         },

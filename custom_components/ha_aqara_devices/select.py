@@ -18,6 +18,7 @@ from .const import (
     G410_DEVICE_LABEL,
     G4_DEVICE_LABEL,
     M100_DEVICE_LABEL,
+    M200_DEVICE_LABEL,
     M3_DEVICE_LABEL,
 )
 from .device_info import build_device_info
@@ -26,6 +27,7 @@ from .selects import (
     G410_SELECTS_DEF,
     G4_SELECTS_DEF,
     M100_SELECTS_DEF,
+    M200_SELECTS_DEF,
     M3_SELECTS_DEF,
 )
 
@@ -39,11 +41,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     g4_doorbells: list[dict] = data.get("g4_doorbells", [])
     hubs_m3: list[dict] = data.get("hubs_m3", [])
     hubs_m100: list[dict] = data.get("hubs_m100", [])
+    hubs_m200: list[dict] = data.get("hubs_m200", [])
     presence_devices: list[dict] = data.get("presence_devices", [])
     g410_coordinators: dict[str, DataUpdateCoordinator] = data.get("g410_coordinators", {})
     g4_coordinators: dict[str, DataUpdateCoordinator] = data.get("g4_coordinators", {})
     m3_coordinators: dict[str, DataUpdateCoordinator] = data.get("m3_coordinators", {})
     m100_coordinators: dict[str, DataUpdateCoordinator] = data.get("m100_coordinators", {})
+    m200_coordinators: dict[str, DataUpdateCoordinator] = data.get("m200_coordinators", {})
     presence_coordinators: dict[str, dict[str, DataUpdateCoordinator]] = data.get("presence_coordinators", {})
 
     entities: list[SelectEntity] = []
@@ -125,6 +129,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                 select_def,
                 model,
                 M100_DEVICE_LABEL,
+            )
+            entities.append(select)
+
+    for hub in hubs_m200:
+        did = hub["did"]
+        name = hub["deviceName"]
+        model = hub["model"]
+        coordinator = m200_coordinators.get(did)
+        if coordinator is None:
+            continue
+
+        for select_def in M200_SELECTS_DEF:
+            select = AqaraSelect(
+                coordinator,
+                api,
+                did,
+                name,
+                select_def,
+                model,
+                M200_DEVICE_LABEL,
             )
             entities.append(select)
 
