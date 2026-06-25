@@ -257,6 +257,7 @@ A100_PRO_SENSORS_DEF = [
 
 ACN002_LOCK_EXCEPTION = {
     "name": "Lock Exception Alert",
+    "translation_key": "lock_exception_alert",
     "icon": "mdi:lock-alert",
     "inApp": "lock_exception_alert",
     "api": "13.32.85",
@@ -266,6 +267,7 @@ ACN002_LOCK_EXCEPTION = {
 
 ACN002_DEVICE_ONLINE_STATUS = {
     "name": "Device Online Status",
+    "translation_key": "device_online_status",
     "icon": "mdi:lan-connect",
     "inApp": "device_online_status",
     "api": "8.0.2045",
@@ -284,6 +286,7 @@ ACN002_DEVICE_ONLINE_STATUS = {
 
 ACN002_ZIGBEE_SIGNAL_STRENGTH = {
     "name": "Zigbee Signal Strength",
+    "translation_key": "zigbee_signal_strength",
     "icon": "mdi:signal",
     "inApp": "zigbee_signal_strength",
     "api": "8.0.2007",

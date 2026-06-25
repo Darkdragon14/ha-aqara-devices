@@ -145,6 +145,19 @@
             "user_id_temporary_password": {
                 "name": "Gebruikers-ID tijdelijk wachtwoord"
             },
+            "lock_exception_alert": {
+                "name": "Waarschuwing slotafwijking"
+            },
+            "device_online_status": {
+                "name": "Online status apparaat",
+                "state": {
+                    "offline": "Offline",
+                    "online": "Online"
+                }
+            },
+            "zigbee_signal_strength": {
+                "name": "Zigbee-signaalsterkte"
+            },
             "people_counting": {
                 "name": "Personen tellen"
             },

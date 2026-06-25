@@ -172,6 +172,19 @@
             "user_id_temporary_password": {
                 "name": "临时密码用户 ID"
             },
+            "lock_exception_alert": {
+                "name": "锁异常告警"
+            },
+            "device_online_status": {
+                "name": "设备在线状态",
+                "state": {
+                    "offline": "离线",
+                    "online": "在线"
+                }
+            },
+            "zigbee_signal_strength": {
+                "name": "Zigbee 信号强度"
+            },
             "people_counting": {
                 "name": "人数统计"
             },

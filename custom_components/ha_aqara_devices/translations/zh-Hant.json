@@ -172,6 +172,19 @@
             "user_id_temporary_password": {
                 "name": "臨時密碼使用者 ID"
             },
+            "lock_exception_alert": {
+                "name": "鎖異常警告"
+            },
+            "device_online_status": {
+                "name": "裝置線上狀態",
+                "state": {
+                    "offline": "離線",
+                    "online": "線上"
+                }
+            },
+            "zigbee_signal_strength": {
+                "name": "Zigbee 訊號強度"
+            },
             "people_counting": {
                 "name": "人數統計"
             },
