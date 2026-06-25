@@ -1,0 +1,505 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Aqara FP2",
+                "description": "設定您的 Aqara Open API 整合並請求授權碼。",
+                "data": {
+                    "account": "Aqara 帳戶（電子郵件或手機號碼）",
+                    "area": "地區",
+                    "bridge_url": "網橋 URL",
+                    "bridge_token": "網橋令牌",
+                    "app_id": "App ID",
+                    "key_id": "Key ID",
+                    "app_key": "App Key"
+                }
+            },
+            "auth_code": {
+                "title": "授權碼",
+                "description": "輸入 Aqara 發送到您電子郵件或手機的驗證碼。",
+                "data": {
+                    "auth_code": "授權碼"
+                }
+            }
+        },
+        "error": {
+            "auth": "認證失敗，請檢查帳戶、地區和授權碼。",
+            "no_devices_found": "未找到 FP2 裝置。"
+        },
+        "abort": {
+            "already_configured": "此裝置已設定。"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Aqara FP2",
+                "description": "更新您的 Aqara Open API 帳戶詳情或網橋連線設定。",
+                "data": {
+                    "account": "Aqara 帳戶（電子郵件或手機號碼）",
+                    "area": "地區",
+                    "bridge_url": "網橋 URL",
+                    "bridge_token": "網橋令牌",
+                    "app_id": "App ID",
+                    "key_id": "Key ID",
+                    "app_key": "App Key"
+                }
+            },
+            "auth_code": {
+                "title": "授權碼",
+                "description": "輸入 Aqara 發送到您電子郵件或手機的驗證碼。",
+                "data": {
+                    "auth_code": "授權碼"
+                }
+            }
+        },
+        "error": {
+            "auth": "認證失敗，請檢查帳戶、地區和授權碼。"
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "night_vision": {
+                "name": "夜視"
+            },
+            "motion_event": {
+                "name": "移動事件"
+            },
+            "gesture_v_sign": {
+                "name": "手勢 V 字"
+            },
+            "gesture_four": {
+                "name": "手勢四"
+            },
+            "gesture_high_five": {
+                "name": "手勢擊掌"
+            },
+            "gesture_finger_gun": {
+                "name": "手勢手槍"
+            },
+            "gesture_ok": {
+                "name": "手勢 OK"
+            },
+            "gesture_v_sign_both_hands": {
+                "name": "雙手手勢 V 字"
+            },
+            "gesture_four_both_hands": {
+                "name": "雙手手勢四"
+            },
+            "gesture_high_five_both_hands": {
+                "name": "雙手手勢擊掌"
+            },
+            "gesture_finger_gun_both_hands": {
+                "name": "雙手手勢手槍"
+            },
+            "gesture_ok_both_hands": {
+                "name": "雙手手勢 OK"
+            },
+            "doorbell_ring": {
+                "name": "門鈴響鈴"
+            },
+            "detection_area": {
+                "name": "偵測區域 {index}"
+            }
+        },
+        "sensor": {
+            "gateway_time_zone": {
+                "name": "閘道時區"
+            },
+            "night_light_configuration": {
+                "name": "夜燈設定"
+            },
+            "face_recognition_event": {
+                "name": "人臉辨識事件"
+            },
+            "stranger_face_event": {
+                "name": "陌生人臉事件"
+            },
+            "door_event": {
+                "name": "門事件",
+                "state": {
+                    "door_opened": "門已開啟",
+                    "door_closed": "門已關閉",
+                    "timeout_without_closing": "逾時未關閉",
+                    "knock_on_the_door": "敲門",
+                    "attempted_break_in": "闖入嘗試",
+                    "door_ajar": "門虛掩"
+                }
+            },
+            "lock_state": {
+                "name": "門鎖狀態",
+                "state": {
+                    "door_cannot_be_closed": "門無法關閉",
+                    "door_is_open": "門已開啟",
+                    "door_closed_handle_not_lifted": "門已關閉但門把手未抬起",
+                    "door_is_locked": "門已上鎖",
+                    "door_is_locked_by_night_latch_knob": "門已由夜鎖旋鈕鎖定",
+                    "door_is_unlocked": "門已解鎖",
+                    "door_is_locked_by_front_handle_and_night_latch_knob": "門已由前把手和夜鎖旋鈕鎖定",
+                    "door_is_almost_closed": "門即將關閉"
+                }
+            },
+            "open_door_method": {
+                "name": "開門方式",
+                "state": {
+                    "fingerprint_unlock": "指紋解鎖",
+                    "permanent_password_unlock": "永久密碼解鎖",
+                    "nfc_unlock": "NFC 解鎖",
+                    "bluetooth_unlock": "藍牙解鎖",
+                    "temporary_password_unlock": "臨時密碼解鎖",
+                    "mechanical_key_unlock": "機械鑰匙解鎖",
+                    "dual_authentication_unlock": "雙重驗證解鎖",
+                    "duress_fingerprint_unlock": "脅迫指紋解鎖",
+                    "homekit_unlock": "HomeKit 解鎖",
+                    "face_unlock": "人臉解鎖",
+                    "aiot_remote_unlock": "AIoT 遠端解鎖",
+                    "google_password_unlock": "Google 密碼解鎖",
+                    "outdoor_unlock": "室外解鎖"
+                }
+            },
+            "user_id_fingerprint": {
+                "name": "指紋使用者 ID"
+            },
+            "user_id_password": {
+                "name": "密碼使用者 ID"
+            },
+            "user_id_nfc": {
+                "name": "NFC 使用者 ID"
+            },
+            "user_id_ble_homekit": {
+                "name": "HomeKit 藍牙使用者 ID"
+            },
+            "user_id_temporary_password": {
+                "name": "臨時密碼使用者 ID"
+            },
+            "people_counting": {
+                "name": "人數統計"
+            },
+            "people_counting_per_minute": {
+                "name": "人數統計（每分鐘）"
+            },
+            "whole_area_people_count_10s": {
+                "name": "整個區域人數（10 秒）"
+            },
+            "zone_people_count_10s": {
+                "name": "區域 {index} 人數（10 秒）"
+            },
+            "zone_people_count_per_minute": {
+                "name": "區域 {index} 人數（每分鐘）"
+            },
+            "heart_rate": {
+                "name": "心率"
+            },
+            "respiration_rate": {
+                "name": "呼吸頻率"
+            },
+            "body_movement": {
+                "name": "身體活動"
+            },
+            "sleep_state": {
+                "name": "睡眠狀態"
+            },
+            "operating_mode": {
+                "name": "工作模式",
+                "state": {
+                    "zone_detection": "區域偵測",
+                    "fall_detection": "跌倒偵測",
+                    "sleep_monitoring": "睡眠監測"
+                }
+            },
+            "view_zoom": {
+                "name": "視圖縮放",
+                "state": {
+                    "full": "全畫面",
+                    "adaptive": "自適應"
+                }
+            },
+            "mounting_position": {
+                "name": "安裝位置",
+                "state": {
+                    "wall": "牆面",
+                    "left_corner": "左角",
+                    "right_corner": "右角"
+                }
+            },
+            "installation_angle": {
+                "name": "安裝角度",
+                "state": {
+                    "face_up": "朝上",
+                    "oblique": "傾斜",
+                    "horizontal": "水平",
+                    "face_down": "朝下"
+                }
+            },
+            "attitude_status": {
+                "name": "姿態狀態"
+            },
+            "presence_sensitivity": {
+                "name": "存在靈敏度",
+                "state": {
+                    "low": "低",
+                    "medium": "中",
+                    "high": "高"
+                }
+            },
+            "proximity_distance": {
+                "name": "接近距離",
+                "state": {
+                    "far": "遠",
+                    "medium": "中",
+                    "close": "近"
+                }
+            },
+            "fall_detection_sensitivity": {
+                "name": "跌倒偵測靈敏度",
+                "state": {
+                    "low": "低",
+                    "medium": "中",
+                    "high": "高"
+                }
+            },
+            "reverse_coordinate_direction": {
+                "name": "反轉座標方向",
+                "state": {
+                    "disable": "停用",
+                    "enable": "啟用",
+                    "auto": "自動"
+                }
+            },
+            "detection_direction": {
+                "name": "偵測方向",
+                "state": {
+                    "default": "預設",
+                    "left_right": "左右"
+                }
+            },
+            "ai_person_detection": {
+                "name": "AI 人體偵測",
+                "state": {
+                    "disable": "停用",
+                    "enable": "啟用"
+                }
+            },
+            "anti_light_pollution_mode": {
+                "name": "防光污染模式",
+                "state": {
+                    "disable": "停用",
+                    "enable": "啟用"
+                }
+            },
+            "activity_status": {
+                "name": "活動狀態",
+                "state": {
+                    "unoccupied": "無人",
+                    "moving": "移動中",
+                    "stationary": "靜止"
+                }
+            }
+        },
+        "switch": {
+            "video": {
+                "name": "視訊"
+            },
+            "detect_human": {
+                "name": "偵測人類"
+            },
+            "detect_pet": {
+                "name": "偵測寵物"
+            },
+            "detect_gesture": {
+                "name": "偵測手勢"
+            },
+            "detect_face": {
+                "name": "偵測人臉"
+            },
+            "sub_device_deletion_protection": {
+                "name": "子裝置刪除保護"
+            },
+            "sound_detection": {
+                "name": "聲音偵測"
+            },
+            "timed_sleep": {
+                "name": "定時休眠"
+            },
+            "motion_push": {
+                "name": "移動推播"
+            },
+            "motion_detection": {
+                "name": "移動偵測"
+            },
+            "indicator_light": {
+                "name": "指示燈"
+            },
+            "timelapse_push": {
+                "name": "縮時推播"
+            },
+            "sound_push": {
+                "name": "聲音推播"
+            },
+            "device_offline_push": {
+                "name": "裝置離線推播"
+            },
+            "motion_recording": {
+                "name": "移動錄影"
+            },
+            "timelapse": {
+                "name": "縮時攝影"
+            },
+            "sound_recording": {
+                "name": "聲音錄製"
+            },
+            "camera": {
+                "name": "攝影機"
+            },
+            "high_temp_alarm": {
+                "name": "高溫警報"
+            },
+            "face_recognition_push": {
+                "name": "人臉辨識推播"
+            },
+            "scheduled_sleep": {
+                "name": "排程休眠"
+            },
+            "anti_tamper_alarm": {
+                "name": "防拆警報"
+            },
+            "face_recording": {
+                "name": "人臉錄製"
+            },
+            "doorbell_notification": {
+                "name": "門鈴通知"
+            },
+            "low_temp_alarm": {
+                "name": "低溫警報"
+            },
+            "doorbell_recording": {
+                "name": "門鈴錄製"
+            }
+        },
+        "number": {
+            "volume": {
+                "name": "音量"
+            },
+            "system_volume": {
+                "name": "系統音量"
+            },
+            "alarm_volume": {
+                "name": "警報音量"
+            },
+            "doorbell_volume": {
+                "name": "門鈴音量"
+            },
+            "alarm_duration": {
+                "name": "警報時長"
+            },
+            "doorbell_duration": {
+                "name": "門鈴時長"
+            },
+            "music_volume": {
+                "name": "音樂音量"
+            },
+            "alarm_clock_volume": {
+                "name": "鬧鐘音量"
+            },
+            "night_light_brightness": {
+                "name": "夜燈亮度"
+            },
+            "arming_delay_time": {
+                "name": "佈防延遲時間"
+            },
+            "camera_volume": {
+                "name": "攝影機音量"
+            },
+            "face_recognition_interval": {
+                "name": "人臉辨識間隔"
+            }
+        },
+        "select": {
+            "gateway_language": {
+                "name": "閘道語言",
+                "state": {
+                    "chinese": "中文",
+                    "english": "英文"
+                }
+            },
+            "alarm_ringtone": {
+                "name": "警報鈴聲",
+                "state": {
+                    "default": "預設",
+                    "police_car_1": "警車聲 1",
+                    "police_car_2": "警車聲 2",
+                    "safety_accident": "安全事故聲",
+                    "missile_countdown": "飛彈倒數",
+                    "ghost_scream": "幽靈尖叫",
+                    "sniper_rifle": "狙擊步槍",
+                    "battle": "戰鬥聲",
+                    "air_raid_alarm": "空襲警報",
+                    "dog_barking": "狗叫聲"
+                }
+            },
+            "doorbell_ringtone": {
+                "name": "門鈴鈴聲",
+                "state": {
+                    "default": "預設",
+                    "index_0": "鈴聲 0",
+                    "index_1": "鈴聲 1",
+                    "index_2": "鈴聲 2",
+                    "index_3": "鈴聲 3",
+                    "index_4": "鈴聲 4",
+                    "index_5": "鈴聲 5",
+                    "index_6": "鈴聲 6",
+                    "index_7": "鈴聲 7",
+                    "index_8": "鈴聲 8"
+                }
+            },
+            "screen_flip": {
+                "name": "螢幕翻轉",
+                "state": {
+                    "normal": "正常",
+                    "flip_horizontally": "水平翻轉",
+                    "flip_vertically": "垂直翻轉",
+                    "flip_horizontally_and_vertically": "水平和垂直翻轉"
+                }
+            },
+            "camera_mode": {
+                "name": "攝影機模式",
+                "state": {
+                    "off": "關閉",
+                    "on": "開啟",
+                    "always_on": "始終開啟"
+                }
+            },
+            "work_mode": {
+                "name": "工作模式",
+                "state": {
+                    "radar_infrared": "雷達 + 紅外線",
+                    "radar_only": "僅雷達",
+                    "infrared_only": "僅紅外線"
+                }
+            }
+        },
+        "button": {
+            "ptz_up": {
+                "name": "向上"
+            },
+            "ptz_down": {
+                "name": "向下"
+            },
+            "ptz_left": {
+                "name": "向左"
+            },
+            "ptz_right": {
+                "name": "向右"
+            },
+            "ring_alarm_bell": {
+                "name": "響鈴警報"
+            },
+            "restart_device": {
+                "name": "重新啟動裝置"
+            },
+            "restart_coordinator": {
+                "name": "重新啟動協調器"
+            }
+        }
+    }
+}

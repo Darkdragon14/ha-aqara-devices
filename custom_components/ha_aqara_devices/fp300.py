@@ -6,7 +6,6 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 
 FP300_BINARY_SENSORS_DEF = [
     {
-        "name": "Presence",
         "key": "report_status01",
         "api": "3.51.85",
         "poll_group": "fast",
@@ -14,12 +13,39 @@ FP300_BINARY_SENSORS_DEF = [
         "icon": "mdi:motion-sensor",
         "on_values": {"1"},
     },
+    {
+        "key": "people_active_status",
+        "api": "13.1.85",
+        "poll_group": "fast",
+        "device_class": BinarySensorDeviceClass.MOTION,
+        "icon": "mdi:motion-sensor",
+        "on_values": {"3"},
+        "value_type": "int",
+    },
 ]
+
+
+FP300_ACTIVITY_STATUS_MAP = {
+    "2": "unoccupied",
+    "3": "moving",
+    "4": "stationary",
+}
 
 
 FP300_SENSOR_SPECS = [
     {
-        "name": "Temperature",
+        "name": "Activity Status",
+        "translation_key": "activity_status",
+        "key": "people_active_status",
+        "api": "13.1.85",
+        "poll_group": "fast",
+        "icon": "mdi:motion-sensor",
+        "value_type": "int",
+        "device_class": SensorDeviceClass.ENUM,
+        "value_map": FP300_ACTIVITY_STATUS_MAP,
+        "options": list(dict.fromkeys(FP300_ACTIVITY_STATUS_MAP.values())),
+    },
+    {
         "key": "environment_temperature",
         "api": "0.1.85",
         "poll_group": "medium",
@@ -31,7 +57,6 @@ FP300_SENSOR_SPECS = [
         "scale": 0.01,
     },
     {
-        "name": "Humidity",
         "key": "environment_humidity",
         "api": "0.2.85",
         "poll_group": "medium",
@@ -43,7 +68,6 @@ FP300_SENSOR_SPECS = [
         "scale": 0.01,
     },
     {
-        "name": "Illuminance",
         "key": "lux",
         "api": "0.3.85",
         "poll_group": "medium",
@@ -54,7 +78,6 @@ FP300_SENSOR_SPECS = [
         "value_type": "float",
     },
     {
-        "name": "Battery",
         "key": "battery_percentage",
         "api": "8.0.2001",
         "poll_group": "slow",

@@ -11,8 +11,8 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.number import NumberEntity
 
-from .const import DOMAIN, G2H_PRO_DEVICE_LABEL, G410_DEVICE_LABEL, G3_MODEL, G3_DEVICE_LABEL, M100_DEVICE_LABEL, M3_DEVICE_LABEL
-from .numbers import ALL_NUMBERS_DEF, G2H_PRO_NUMBERS_DEF, G410_NUMBERS_DEF, M100_NUMBERS_DEF, M3_NUMBERS_DEF
+from .const import DOMAIN, G2H_PRO_DEVICE_LABEL, G410_DEVICE_LABEL, G4_DEVICE_LABEL, G3_MODEL, G3_DEVICE_LABEL, M100_DEVICE_LABEL, M3_DEVICE_LABEL
+from .numbers import ALL_NUMBERS_DEF, G2H_PRO_NUMBERS_DEF, G410_NUMBERS_DEF, G4_NUMBERS_DEF, M100_NUMBERS_DEF, M3_NUMBERS_DEF
 from .api import AqaraApi
 from .device_info import build_device_info
 
@@ -24,11 +24,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     cameras: list[dict] = data["cameras"]
     g2h_pro_cameras: list[dict] = data.get("g2h_pro_cameras", [])
     g410_doorbells: list[dict] = data.get("g410_doorbells", [])
+    g4_doorbells: list[dict] = data.get("g4_doorbells", [])
     hubs_m3: list[dict] = data.get("hubs_m3", [])
     hubs_m100: list[dict] = data.get("hubs_m100", [])
     camera_coordinators: dict[str, DataUpdateCoordinator] = data.get("camera_coordinators", {})
     g2h_pro_coordinators: dict[str, DataUpdateCoordinator] = data.get("g2h_pro_coordinators", {})
     g410_coordinators: dict[str, DataUpdateCoordinator] = data.get("g410_coordinators", {})
+    g4_coordinators: dict[str, DataUpdateCoordinator] = data.get("g4_coordinators", {})
     m3_coordinators: dict[str, DataUpdateCoordinator] = data.get("m3_coordinators", {})
     m100_coordinators: dict[str, DataUpdateCoordinator] = data.get("m100_coordinators", {})
 
@@ -68,6 +70,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
         for number_def in G410_NUMBERS_DEF:
             number = AqaraNumber(coordinator, api, did, name, number_def, model, G410_DEVICE_LABEL)
+            entities.append(number)
+
+    for doorbell in g4_doorbells:
+        did = doorbell["did"]
+        name = doorbell["deviceName"]
+        model = doorbell["model"]
+        coordinator = g4_coordinators.get(did)
+        if coordinator is None:
+            continue
+
+        for number_def in G4_NUMBERS_DEF:
+            number = AqaraNumber(coordinator, api, did, name, number_def, model, G4_DEVICE_LABEL)
             entities.append(number)
 
     for hub in hubs_m3:
@@ -119,11 +133,14 @@ class AqaraNumber(CoordinatorEntity, NumberEntity):
 
         self._attr_unique_id = f"{did}_{spec['inApp']}"
         self._native_value: float | None = None
-        self._attr_name = "System Volume"
         self._attr_native_min_value = float(spec['min'])
         self._attr_native_max_value = float(spec['max'])
         self._attr_native_step = float(spec["step"])
-        self._attr_name = spec["name"]
+        translation_key = spec.get("translation_key")
+        if translation_key:
+            self._attr_translation_key = translation_key
+        else:
+            self._attr_name = spec["name"]
         self._attr_icon = spec["icon"]
 
     

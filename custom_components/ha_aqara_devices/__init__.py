@@ -15,6 +15,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    A100_PRO_MODELS,
     BRIDGE_SANITY_INTERVAL_SECONDS,
     BRIDGE_UNAVAILABLE_AFTER_FAILURES,
     CONF_APP_ID,
@@ -28,6 +29,7 @@ from .const import (
     FP300_MODEL,
     G2H_PRO_MODELS,
     G410_MODELS,
+    G4_MODELS,
     G3_MODELS,
     M100_MODELS,
     M3_MODELS,
@@ -41,7 +43,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 BRIDGE_START_RETRY_INITIAL_SECONDS = 5
-BRIDGE_START_RETRY_MAX_SECONDS = 600
+BRIDGE_START_RETRY_MAX_SECONDS = 30
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -247,8 +249,10 @@ async def _async_start_bridge_with_retry(entry: ConfigEntry, bridge_manager) -> 
     from .api import AqaraAuthError
 
     delay = BRIDGE_START_RETRY_INITIAL_SECONDS
+    attempt = 1
     while True:
         try:
+            _LOGGER.info("Aqara bridge startup attempt %s for %s", attempt, entry.title)
             await bridge_manager.async_start()
         except asyncio.CancelledError:
             raise
@@ -265,6 +269,7 @@ async def _async_start_bridge_with_retry(entry: ConfigEntry, bridge_manager) -> 
             )
             await asyncio.sleep(delay)
             delay = min(delay * 2, BRIDGE_START_RETRY_MAX_SECONDS)
+            attempt += 1
             continue
 
         _LOGGER.info("Aqara bridge started for %s", entry.title)
@@ -276,8 +281,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     from .api import AqaraApi, AqaraAuthError
     from .bridge_specs import (
+        A100_PRO_STATE_SPECS,
         G2H_PRO_STATE_SPECS,
         G410_STATE_SPECS,
+        G4_STATE_SPECS,
         G3_STATE_SPECS,
         M100_STATE_SPECS,
         M3_STATE_SPECS,
@@ -320,8 +327,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         cameras = [device for device in devices if device.get("model") in G3_MODELS]
         g2h_pro_cameras = [device for device in devices if device.get("model") in G2H_PRO_MODELS]
         g410_doorbells = [device for device in devices if device.get("model") in G410_MODELS]
+        g4_doorbells = [device for device in devices if device.get("model") in G4_MODELS]
         hubs_m3 = [device for device in devices if device.get("model") in M3_MODELS]
         hubs_m100 = [device for device in devices if device.get("model") in M100_MODELS]
+        a100_pro_locks = [device for device in devices if device.get("model") in A100_PRO_MODELS]
         presence_devices = [device for device in devices if device.get("model") in PRESENCE_MODELS]
         u200_locks = [device for device in devices if device.get("model") in U200_MODELS]
 
@@ -329,12 +338,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             not cameras
             and not g2h_pro_cameras
             and not g410_doorbells
+            and not g4_doorbells
             and not hubs_m3
             and not hubs_m100
+            and not a100_pro_locks
             and not presence_devices
             and not u200_locks
         ):
-            raise ConfigEntryNotReady("No Aqara G2H Pro, G3, G410, M3, M100, FP2, FP300, or U200 devices found")
+            raise ConfigEntryNotReady(
+                "No Aqara G2H Pro, G3, G410, G4, M3, M100, A100 Pro, FP2, FP300, or U200 devices found"
+            )
 
     except (ConfigEntryAuthFailed, AqaraAuthError) as err:
         if isinstance(err, AqaraAuthError):
@@ -360,8 +373,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "g410-state",
         G410_STATE_SPECS,
     )
+    g4_coordinators = _setup_device_state_coordinators(
+        hass,
+        api,
+        g4_doorbells,
+        "g4-state",
+        G4_STATE_SPECS,
+    )
     m3_coordinators = _setup_device_state_coordinators(hass, api, hubs_m3, "hub-m3-state", M3_STATE_SPECS)
     m100_coordinators = _setup_device_state_coordinators(hass, api, hubs_m100, "hub-m100-state", M100_STATE_SPECS)
+    a100_pro_coordinators = _setup_device_state_coordinators(
+        hass,
+        api,
+        a100_pro_locks,
+        "a100-pro-state",
+        A100_PRO_STATE_SPECS,
+    )
     presence_coordinators = _setup_presence_coordinators(hass, api, presence_devices)
     u200_coordinators = _setup_u200_coordinators(hass, api, u200_locks)
 
@@ -375,15 +402,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "cameras": cameras,
         "g2h_pro_cameras": g2h_pro_cameras,
         "g410_doorbells": g410_doorbells,
+        "g4_doorbells": g4_doorbells,
         "hubs_m3": hubs_m3,
         "hubs_m100": hubs_m100,
+        "a100_pro_locks": a100_pro_locks,
         "presence_devices": presence_devices,
         "u200_locks": u200_locks,
         "camera_coordinators": camera_coordinators,
         "g2h_pro_coordinators": g2h_pro_coordinators,
         "g410_coordinators": g410_coordinators,
+        "g4_coordinators": g4_coordinators,
         "m3_coordinators": m3_coordinators,
         "m100_coordinators": m100_coordinators,
+        "a100_pro_coordinators": a100_pro_coordinators,
         "presence_coordinators": presence_coordinators,
         "u200_coordinators": u200_coordinators,
         "bridge_manager": None,
@@ -405,8 +436,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         cameras,
         g2h_pro_cameras,
         g410_doorbells,
+        g4_doorbells,
         hubs_m3,
         hubs_m100,
+        a100_pro_locks,
         presence_devices,
     )
     entry_data["active_subscriptions"] = active_subscriptions
@@ -420,14 +453,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         cameras,
         g2h_pro_cameras,
         g410_doorbells,
+        g4_doorbells,
         hubs_m3,
         hubs_m100,
+        a100_pro_locks,
         presence_devices,
         camera_coordinators,
         g2h_pro_coordinators,
         g410_coordinators,
+        g4_coordinators,
         m3_coordinators,
         m100_coordinators,
+        a100_pro_coordinators,
         presence_coordinators,
         active_subscriptions,
     )

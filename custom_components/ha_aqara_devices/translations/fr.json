@@ -59,18 +59,447 @@
     },
     "entity": {
         "binary_sensor": {
-            "night_vision": { "name": "Vision nocturne" },
-            "gesture_v_sign": { "name": "Geste signe V" },
-            "gesture_four": { "name": "Geste quatre" },
-            "gesture_high_five": { "name": "Geste tape m'en cinq" },
-            "gesture_finger_gun": { "name": "Geste pistolet avec les doigts" },
-            "gesture_ok": { "name": "Geste OK" },
-            "gesture_v_sign_both_hands": { "name": "Geste signe V deux mains" },
-            "gesture_four_both_hands": { "name": "Geste quatre deux mains" },
-            "gesture_high_five_both_hands": { "name": "Geste tape m'en cinq deux mains" },
-            "gesture_finger_gun_both_hands": { "name": "Geste pistolet avec les doigts deux mains" },
-            "gesture_ok_both_hands": { "name": "Geste OK deux mains" },
-            "motion_event": { "name": "Evenement de mouvement" }
+            "night_vision": {
+                "name": "Vision nocturne"
+            },
+            "motion_event": {
+                "name": "Événement de mouvement"
+            },
+            "gesture_v_sign": {
+                "name": "Geste signe V"
+            },
+            "gesture_four": {
+                "name": "Geste Quatre"
+            },
+            "gesture_high_five": {
+                "name": "Geste Tape m'en cinq"
+            },
+            "gesture_finger_gun": {
+                "name": "Geste Pistolet à doigts"
+            },
+            "gesture_ok": {
+                "name": "Geste OK"
+            },
+            "gesture_v_sign_both_hands": {
+                "name": "Geste signe V deux mains"
+            },
+            "gesture_four_both_hands": {
+                "name": "Geste Quatre deux mains"
+            },
+            "gesture_high_five_both_hands": {
+                "name": "Geste Tape m'en cinq deux mains"
+            },
+            "gesture_finger_gun_both_hands": {
+                "name": "Geste Pistolet à doigts deux mains"
+            },
+            "gesture_ok_both_hands": {
+                "name": "Geste OK deux mains"
+            },
+            "doorbell_ring": {
+                "name": "Sonnette"
+            },
+            "detection_area": {
+                "name": "Zone de détection {index}"
+            }
+        },
+        "sensor": {
+            "gateway_time_zone": {
+                "name": "Fuseau horaire de la passerelle"
+            },
+            "night_light_configuration": {
+                "name": "Configuration de la veilleuse"
+            },
+            "face_recognition_event": {
+                "name": "Événement de reconnaissance faciale"
+            },
+            "stranger_face_event": {
+                "name": "Événement de visage inconnu"
+            },
+            "door_event": {
+                "name": "Événement de porte",
+                "state": {
+                    "door_opened": "Porte ouverte",
+                    "door_closed": "Porte fermée",
+                    "timeout_without_closing": "Expiration sans fermeture",
+                    "knock_on_the_door": "Coup frappé à la porte",
+                    "attempted_break_in": "Tentative d'effraction",
+                    "door_ajar": "Porte entrouverte"
+                }
+            },
+            "lock_state": {
+                "name": "État du verrou",
+                "state": {
+                    "door_cannot_be_closed": "La porte ne peut pas être fermée",
+                    "door_is_open": "La porte est ouverte",
+                    "door_closed_handle_not_lifted": "Porte fermée mais poignée non relevée",
+                    "door_is_locked": "La porte est verrouillée",
+                    "door_is_locked_by_night_latch_knob": "Porte verrouillée par le bouton de nuit",
+                    "door_is_unlocked": "La porte est déverrouillée",
+                    "door_is_locked_by_front_handle_and_night_latch_knob": "Porte verrouillée par la poignée avant et le bouton de nuit",
+                    "door_is_almost_closed": "La porte est presque fermée"
+                }
+            },
+            "open_door_method": {
+                "name": "Méthode d'ouverture",
+                "state": {
+                    "fingerprint_unlock": "Déverrouillage par empreinte",
+                    "permanent_password_unlock": "Déverrouillage par mot de passe permanent",
+                    "nfc_unlock": "Déverrouillage NFC",
+                    "bluetooth_unlock": "Déverrouillage Bluetooth",
+                    "temporary_password_unlock": "Déverrouillage par mot de passe temporaire",
+                    "mechanical_key_unlock": "Déverrouillage par clé mécanique",
+                    "dual_authentication_unlock": "Déverrouillage par double authentification",
+                    "duress_fingerprint_unlock": "Déverrouillage par empreinte sous contrainte",
+                    "homekit_unlock": "Déverrouillage HomeKit",
+                    "face_unlock": "Déverrouillage par reconnaissance faciale",
+                    "aiot_remote_unlock": "Déverrouillage à distance AIoT",
+                    "google_password_unlock": "Déverrouillage par mot de passe Google",
+                    "outdoor_unlock": "Déverrouillage extérieur"
+                }
+            },
+            "user_id_fingerprint": {
+                "name": "ID utilisateur empreinte"
+            },
+            "user_id_password": {
+                "name": "ID utilisateur mot de passe"
+            },
+            "user_id_nfc": {
+                "name": "ID utilisateur NFC"
+            },
+            "user_id_ble_homekit": {
+                "name": "ID utilisateur Bluetooth HomeKit"
+            },
+            "user_id_temporary_password": {
+                "name": "ID utilisateur mot de passe temporaire"
+            },
+            "people_counting": {
+                "name": "Comptage de personnes"
+            },
+            "people_counting_per_minute": {
+                "name": "Comptage de personnes (par minute)"
+            },
+            "whole_area_people_count_10s": {
+                "name": "Comptage de personnes zone entière (10 s)"
+            },
+            "zone_people_count_10s": {
+                "name": "Comptage de personnes zone {index} (10 s)"
+            },
+            "zone_people_count_per_minute": {
+                "name": "Comptage de personnes zone {index} (par minute)"
+            },
+            "heart_rate": {
+                "name": "Fréquence cardiaque"
+            },
+            "respiration_rate": {
+                "name": "Fréquence respiratoire"
+            },
+            "body_movement": {
+                "name": "Mouvement corporel"
+            },
+            "sleep_state": {
+                "name": "État du sommeil"
+            },
+            "operating_mode": {
+                "name": "Mode de fonctionnement",
+                "state": {
+                    "zone_detection": "Détection de zone",
+                    "fall_detection": "Détection de chute",
+                    "sleep_monitoring": "Surveillance du sommeil"
+                }
+            },
+            "view_zoom": {
+                "name": "Zoom de la vue",
+                "state": {
+                    "full": "Complet",
+                    "adaptive": "Adaptatif"
+                }
+            },
+            "mounting_position": {
+                "name": "Position de montage",
+                "state": {
+                    "wall": "Mur",
+                    "left_corner": "Coin gauche",
+                    "right_corner": "Coin droit"
+                }
+            },
+            "installation_angle": {
+                "name": "Angle d'installation",
+                "state": {
+                    "face_up": "Vers le haut",
+                    "oblique": "Oblique",
+                    "horizontal": "Horizontal",
+                    "face_down": "Vers le bas"
+                }
+            },
+            "attitude_status": {
+                "name": "État d'orientation"
+            },
+            "presence_sensitivity": {
+                "name": "Sensibilité de présence",
+                "state": {
+                    "low": "Faible",
+                    "medium": "Moyen",
+                    "high": "Élevé"
+                }
+            },
+            "proximity_distance": {
+                "name": "Distance de proximité",
+                "state": {
+                    "far": "Loin",
+                    "medium": "Moyen",
+                    "close": "Proche"
+                }
+            },
+            "fall_detection_sensitivity": {
+                "name": "Sensibilité de détection de chute",
+                "state": {
+                    "low": "Faible",
+                    "medium": "Moyen",
+                    "high": "Élevé"
+                }
+            },
+            "reverse_coordinate_direction": {
+                "name": "Inverser la direction des coordonnées",
+                "state": {
+                    "disable": "Désactivé",
+                    "enable": "Activé",
+                    "auto": "Auto"
+                }
+            },
+            "detection_direction": {
+                "name": "Direction de détection",
+                "state": {
+                    "default": "Par défaut",
+                    "left_right": "Gauche/Droite"
+                }
+            },
+            "ai_person_detection": {
+                "name": "Détection de personne par IA",
+                "state": {
+                    "disable": "Désactivé",
+                    "enable": "Activé"
+                }
+            },
+            "anti_light_pollution_mode": {
+                "name": "Mode anti-pollution lumineuse",
+                "state": {
+                    "disable": "Désactivé",
+                    "enable": "Activé"
+                }
+            },
+            "activity_status": {
+                "name": "État d'activité",
+                "state": {
+                    "unoccupied": "Inoccupé",
+                    "moving": "En mouvement",
+                    "stationary": "Immobile"
+                }
+            }
+        },
+        "switch": {
+            "video": {
+                "name": "Vidéo"
+            },
+            "detect_human": {
+                "name": "Détecter humain"
+            },
+            "detect_pet": {
+                "name": "Détecter animal"
+            },
+            "detect_gesture": {
+                "name": "Détecter geste"
+            },
+            "detect_face": {
+                "name": "Détecter visage"
+            },
+            "sub_device_deletion_protection": {
+                "name": "Protection contre la suppression des sous-appareils"
+            },
+            "sound_detection": {
+                "name": "Détection sonore"
+            },
+            "timed_sleep": {
+                "name": "Veille programmée"
+            },
+            "motion_push": {
+                "name": "Notification de mouvement"
+            },
+            "motion_detection": {
+                "name": "Détection de mouvement"
+            },
+            "indicator_light": {
+                "name": "Voyant lumineux"
+            },
+            "timelapse_push": {
+                "name": "Notification time-lapse"
+            },
+            "sound_push": {
+                "name": "Notification sonore"
+            },
+            "device_offline_push": {
+                "name": "Notification appareil hors ligne"
+            },
+            "motion_recording": {
+                "name": "Enregistrement sur mouvement"
+            },
+            "timelapse": {
+                "name": "Time-lapse"
+            },
+            "sound_recording": {
+                "name": "Enregistrement sonore"
+            },
+            "camera": {
+                "name": "Caméra"
+            },
+            "high_temp_alarm": {
+                "name": "Alarme de température élevée"
+            },
+            "face_recognition_push": {
+                "name": "Notification de reconnaissance faciale"
+            },
+            "scheduled_sleep": {
+                "name": "Veille planifiée"
+            },
+            "anti_tamper_alarm": {
+                "name": "Alarme anti-sabotage"
+            },
+            "face_recording": {
+                "name": "Enregistrement du visage"
+            },
+            "doorbell_notification": {
+                "name": "Notification de sonnette"
+            },
+            "low_temp_alarm": {
+                "name": "Alarme de température basse"
+            },
+            "doorbell_recording": {
+                "name": "Enregistrement de sonnette"
+            }
+        },
+        "number": {
+            "volume": {
+                "name": "Volume"
+            },
+            "system_volume": {
+                "name": "Volume du système"
+            },
+            "alarm_volume": {
+                "name": "Volume de l'alarme"
+            },
+            "doorbell_volume": {
+                "name": "Volume de la sonnette"
+            },
+            "alarm_duration": {
+                "name": "Durée de l'alarme"
+            },
+            "doorbell_duration": {
+                "name": "Durée de la sonnette"
+            },
+            "music_volume": {
+                "name": "Volume de la musique"
+            },
+            "alarm_clock_volume": {
+                "name": "Volume du réveil"
+            },
+            "night_light_brightness": {
+                "name": "Luminosité de la veilleuse"
+            },
+            "arming_delay_time": {
+                "name": "Délai d'armement"
+            },
+            "camera_volume": {
+                "name": "Volume de la caméra"
+            },
+            "face_recognition_interval": {
+                "name": "Intervalle de reconnaissance faciale"
+            }
+        },
+        "select": {
+            "gateway_language": {
+                "name": "Langue de la passerelle",
+                "state": {
+                    "chinese": "Chinois",
+                    "english": "Anglais"
+                }
+            },
+            "alarm_ringtone": {
+                "name": "Sonnerie d'alarme",
+                "state": {
+                    "default": "Par défaut",
+                    "police_car_1": "Sirène de police 1",
+                    "police_car_2": "Sirène de police 2",
+                    "safety_accident": "Son d'accident de sécurité",
+                    "missile_countdown": "Compte à rebours de missile",
+                    "ghost_scream": "Cri de fantôme",
+                    "sniper_rifle": "Fusil de sniper",
+                    "battle": "Son de bataille",
+                    "air_raid_alarm": "Alarme de raid aérien",
+                    "dog_barking": "Aboiement de chien"
+                }
+            },
+            "doorbell_ringtone": {
+                "name": "Sonnerie de la sonnette",
+                "state": {
+                    "default": "Par défaut",
+                    "index_0": "Index 0",
+                    "index_1": "Index 1",
+                    "index_2": "Index 2",
+                    "index_3": "Index 3",
+                    "index_4": "Index 4",
+                    "index_5": "Index 5",
+                    "index_6": "Index 6",
+                    "index_7": "Index 7",
+                    "index_8": "Index 8"
+                }
+            },
+            "screen_flip": {
+                "name": "Retournement de l'écran",
+                "state": {
+                    "normal": "Normal",
+                    "flip_horizontally": "Retournement horizontal",
+                    "flip_vertically": "Retournement vertical",
+                    "flip_horizontally_and_vertically": "Retournement horizontal et vertical"
+                }
+            },
+            "camera_mode": {
+                "name": "Mode caméra",
+                "state": {
+                    "off": "Désactivé",
+                    "on": "Activé",
+                    "always_on": "Toujours activé"
+                }
+            },
+            "work_mode": {
+                "name": "Mode de travail",
+                "state": {
+                    "radar_infrared": "Radar + Infrarouge",
+                    "radar_only": "Radar uniquement",
+                    "infrared_only": "Infrarouge uniquement"
+                }
+            }
+        },
+        "button": {
+            "ptz_up": {
+                "name": "Haut"
+            },
+            "ptz_down": {
+                "name": "Bas"
+            },
+            "ptz_left": {
+                "name": "Gauche"
+            },
+            "ptz_right": {
+                "name": "Droite"
+            },
+            "ring_alarm_bell": {
+                "name": "Déclencher l'alarme"
+            },
+            "restart_device": {
+                "name": "Redémarrer l'appareil"
+            },
+            "restart_coordinator": {
+                "name": "Redémarrer le coordinateur"
+            }
         }
     }
 }
