@@ -71,6 +71,9 @@
             "doorbell_ring": {
                 "name": "Campanello"
             },
+            "ac_on_off_status": {
+                "name": "Stato acceso/spento climatizzatore"
+            },
             "detection_area": {
                 "name": "Area di rilevamento {index}"
             }
@@ -448,6 +451,16 @@
                     "radar_infrared": "Radar + Infrarosso",
                     "radar_only": "Solo radar",
                     "infrared_only": "Solo infrarosso"
+                }
+            },
+            "ac_mode": {
+                "name": "Modalità climatizzatore",
+                "state": {
+                    "unconfigured": "Modalità non configurata",
+                    "air_conditioner_with_socket": "Climatizzatore collegato alla presa",
+                    "air_conditioner_without_socket": "Climatizzatore non collegato alla presa",
+                    "infrared_water_heater": "Modalità scaldabagno a infrarossi",
+                    "16a_socket": "Modalità presa 16 A"
                 }
             }
         },

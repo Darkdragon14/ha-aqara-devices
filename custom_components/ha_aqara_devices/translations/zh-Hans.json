@@ -98,6 +98,9 @@
             "doorbell_ring": {
                 "name": "门铃响铃"
             },
+            "ac_on_off_status": {
+                "name": "空调开关状态"
+            },
             "detection_area": {
                 "name": "检测区域 {index}"
             }
@@ -475,6 +478,16 @@
                     "radar_infrared": "雷达 + 红外",
                     "radar_only": "仅雷达",
                     "infrared_only": "仅红外"
+                }
+            },
+            "ac_mode": {
+                "name": "空调模式",
+                "state": {
+                    "unconfigured": "未配置模式",
+                    "air_conditioner_with_socket": "空调已插入插座模式",
+                    "air_conditioner_without_socket": "空调未插入插座模式",
+                    "infrared_water_heater": "红外热水器模式",
+                    "16a_socket": "16A 插座模式"
                 }
             }
         },

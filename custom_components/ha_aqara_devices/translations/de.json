@@ -71,6 +71,9 @@
             "doorbell_ring": {
                 "name": "Türklingel"
             },
+            "ac_on_off_status": {
+                "name": "Klimaanlage Ein/Aus-Status"
+            },
             "detection_area": {
                 "name": "Erkennungsbereich {index}"
             }
@@ -448,6 +451,16 @@
                     "radar_infrared": "Radar + Infrarot",
                     "radar_only": "Nur Radar",
                     "infrared_only": "Nur Infrarot"
+                }
+            },
+            "ac_mode": {
+                "name": "Klimaanlagenmodus",
+                "state": {
+                    "unconfigured": "Nicht konfigurierter Modus",
+                    "air_conditioner_with_socket": "Klimaanlage an Steckdose angeschlossen",
+                    "air_conditioner_without_socket": "Klimaanlage nicht an Steckdose angeschlossen",
+                    "infrared_water_heater": "Infrarot-Warmwasserbereiter-Modus",
+                    "16a_socket": "16-A-Steckdosenmodus"
                 }
             }
         },

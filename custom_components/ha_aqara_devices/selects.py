@@ -110,12 +110,13 @@ M100_SELECTS_DEF = [
 
 M200_GATEWAY_LANGUAGE = {
     "name": "Gateway Language",
+    "translation_key": "gateway_language",
     "icon": "mdi:translate",
     "inApp": "gateway_language",
     "api": "14.10.85",
     "options": [
-        (1, "Chinese"),
-        (2, "English"),
+        (1, "chinese"),
+        (2, "english"),
     ],
     "value_type": "int",
     "default": None,
@@ -123,6 +124,7 @@ M200_GATEWAY_LANGUAGE = {
 
 M200_ALERT_RINGTONE = {
     "name": "Alert Ringtone",
+    "translation_key": "alarm_ringtone",
     "icon": "mdi:bell",
     "inApp": "alarm_bell_index",
     "api": "14.1.85",
@@ -133,15 +135,16 @@ M200_ALERT_RINGTONE = {
 
 M200_AC_MODE = {
     "name": "AC Mode",
+    "translation_key": "ac_mode",
     "icon": "mdi:air-conditioner",
     "inApp": "ac_mode",
     "api": "14.25.85",
     "options": [
-        (0, "Unconfigured Mode"),
-        (1, "Air Conditioner Plugged into Socket Mode"),
-        (2, "Air Conditioner Not Plugged into Socket Mode"),
-        (3, "Infrared Water Heater Mode"),
-        (4, "16A Socket Mode"),
+        (0, "unconfigured"),
+        (1, "air_conditioner_with_socket"),
+        (2, "air_conditioner_without_socket"),
+        (3, "infrared_water_heater"),
+        (4, "16a_socket"),
     ],
     "value_type": "int",
     "default": None,

@@ -91,6 +91,7 @@ M100_BINARY_SENSORS_DEF = [
 
 M200_AC_ON_OFF_STATUS = {
     "name": "AC On/Off Status",
+    "translation_key": "ac_on_off_status",
     "icon": "mdi:air-conditioner",
     "inApp": "on_off_status",
     "api": "3.1.85",

@@ -165,6 +165,7 @@ M100_NUMBERS_DEF = [
 
 M200_ALERT_VOLUME = {
     "name": "Alert Volume",
+    "translation_key": "alarm_volume",
     "icon": "mdi:bell-ring",
     "inApp": "alarm_bell_volume",
     "api": "14.1.1000",
@@ -176,6 +177,7 @@ M200_ALERT_VOLUME = {
 
 M200_SYSTEM_VOLUME = {
     "name": "System Volume",
+    "translation_key": "system_volume",
     "icon": "mdi:volume-high",
     "inApp": "system_volume",
     "api": "14.11.85",
@@ -187,6 +189,7 @@ M200_SYSTEM_VOLUME = {
 
 M200_ALERT_DURATION = {
     "name": "Alert Duration",
+    "translation_key": "alarm_duration",
     "icon": "mdi:timer",
     "inApp": "alarm_time_length",
     "api": "14.1.113",

@@ -98,6 +98,9 @@
             "doorbell_ring": {
                 "name": "Zvonek"
             },
+            "ac_on_off_status": {
+                "name": "Stav zapnutí/vypnutí klimatizace"
+            },
             "detection_area": {
                 "name": "Detekční zóna {index}"
             }
@@ -475,6 +478,16 @@
                     "radar_infrared": "Radar + Infračervený",
                     "radar_only": "Pouze radar",
                     "infrared_only": "Pouze infračervený"
+                }
+            },
+            "ac_mode": {
+                "name": "Režim klimatizace",
+                "state": {
+                    "unconfigured": "Nenakonfigurovaný režim",
+                    "air_conditioner_with_socket": "Klimatizace zapojená do zásuvky",
+                    "air_conditioner_without_socket": "Klimatizace nezapojená do zásuvky",
+                    "infrared_water_heater": "Režim infračerveného ohřívače vody",
+                    "16a_socket": "Režim zásuvky 16 A"
                 }
             }
         },

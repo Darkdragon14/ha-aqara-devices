@@ -71,6 +71,9 @@
             "doorbell_ring": {
                 "name": "Deurbel"
             },
+            "ac_on_off_status": {
+                "name": "Airco aan/uit-status"
+            },
             "detection_area": {
                 "name": "Detectiezone {index}"
             }
@@ -448,6 +451,16 @@
                     "radar_infrared": "Radar + Infrarood",
                     "radar_only": "Alleen radar",
                     "infrared_only": "Alleen infrarood"
+                }
+            },
+            "ac_mode": {
+                "name": "Aircomodus",
+                "state": {
+                    "unconfigured": "Niet-geconfigureerde modus",
+                    "air_conditioner_with_socket": "Airco aangesloten op stopcontact",
+                    "air_conditioner_without_socket": "Airco niet aangesloten op stopcontact",
+                    "infrared_water_heater": "Infraroodboiler-modus",
+                    "16a_socket": "16 A stopcontactmodus"
                 }
             }
         },

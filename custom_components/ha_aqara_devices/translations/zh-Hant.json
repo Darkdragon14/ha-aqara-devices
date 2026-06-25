@@ -98,6 +98,9 @@
             "doorbell_ring": {
                 "name": "門鈴響鈴"
             },
+            "ac_on_off_status": {
+                "name": "空調開關狀態"
+            },
             "detection_area": {
                 "name": "偵測區域 {index}"
             }
@@ -475,6 +478,16 @@
                     "radar_infrared": "雷達 + 紅外線",
                     "radar_only": "僅雷達",
                     "infrared_only": "僅紅外線"
+                }
+            },
+            "ac_mode": {
+                "name": "空調模式",
+                "state": {
+                    "unconfigured": "未設定模式",
+                    "air_conditioner_with_socket": "空調已插入插座模式",
+                    "air_conditioner_without_socket": "空調未插入插座模式",
+                    "infrared_water_heater": "紅外線熱水器模式",
+                    "16a_socket": "16A 插座模式"
                 }
             }
         },
