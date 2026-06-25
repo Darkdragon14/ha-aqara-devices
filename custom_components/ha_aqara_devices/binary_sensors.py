@@ -57,7 +57,6 @@ ALL_BINARY_SENSORS_DEF = [
 ]
 
 M3_ALARM_STATUS = {
-    "name": "Alarm Status",
     "icon": "mdi:alarm-bell",
     "inApp": "alarm_status",
     "api": "14.1.111",
@@ -66,7 +65,6 @@ M3_ALARM_STATUS = {
 }
 
 M3_DEVICE_ONLINE_STATUS = {
-    "name": "Device Online",
     "icon": "mdi:lan-connect",
     "inApp": "device_online_status",
     "api": "8.0.2045",
@@ -80,7 +78,6 @@ M3_BINARY_SENSORS_DEF = [
 ]
 
 M100_DEVICE_ONLINE_STATUS = {
-    "name": "Device Online",
     "icon": "mdi:lan-connect",
     "inApp": "device_online_status",
     "api": "8.0.2045",
@@ -107,6 +104,7 @@ M200_BINARY_SENSORS_DEF = [
 
 G410_DOORBELL_RING = {
     "name": "Doorbell Ring",
+    "translation_key": "doorbell_ring",
     "icon": "mdi:doorbell-video",
     "inApp": "bell_ring",
     "api": "13.12.85",
@@ -116,7 +114,6 @@ G410_DOORBELL_RING = {
 }
 
 G410_ALARM_STATUS = {
-    "name": "Alarm Status",
     "icon": "mdi:alarm-light",
     "inApp": "alarm_status",
     "api": "14.1.111",
@@ -127,4 +124,8 @@ G410_ALARM_STATUS = {
 G410_BINARY_SENSORS_DEF = [
     G410_DOORBELL_RING,
     G410_ALARM_STATUS,
+]
+
+G4_BINARY_SENSORS_DEF = [
+    G410_DOORBELL_RING,
 ]

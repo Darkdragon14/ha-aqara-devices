@@ -32,18 +32,447 @@
     },
     "entity": {
         "binary_sensor": {
-            "night_vision": { "name": "Nachtzicht" },
-            "gesture_v_sign": { "name": "Gebaar V-teken" },
-            "gesture_four": { "name": "Gebaar vier" },
-            "gesture_high_five": { "name": "Gebaar high five" },
-            "gesture_finger_gun": { "name": "Gebaar vingerpistool" },
-            "gesture_ok": { "name": "Gebaar OK" },
-            "gesture_v_sign_both_hands": { "name": "Gebaar V-teken met beide handen" },
-            "gesture_four_both_hands": { "name": "Gebaar vier met beide handen" },
-            "gesture_high_five_both_hands": { "name": "Gebaar high five met beide handen" },
-            "gesture_finger_gun_both_hands": { "name": "Gebaar vingerpistool met beide handen" },
-            "gesture_ok_both_hands": { "name": "Gebaar OK met beide handen" },
-            "motion_event": { "name": "Bewegingsgebeurtenis" }
+            "night_vision": {
+                "name": "Nachtzicht"
+            },
+            "motion_event": {
+                "name": "Bewegingsgebeurtenis"
+            },
+            "gesture_v_sign": {
+                "name": "Gebaar V-teken"
+            },
+            "gesture_four": {
+                "name": "Gebaar Vier"
+            },
+            "gesture_high_five": {
+                "name": "Gebaar High Five"
+            },
+            "gesture_finger_gun": {
+                "name": "Gebaar Vingerpistool"
+            },
+            "gesture_ok": {
+                "name": "Gebaar OK"
+            },
+            "gesture_v_sign_both_hands": {
+                "name": "Gebaar V-teken beide handen"
+            },
+            "gesture_four_both_hands": {
+                "name": "Gebaar Vier beide handen"
+            },
+            "gesture_high_five_both_hands": {
+                "name": "Gebaar High Five beide handen"
+            },
+            "gesture_finger_gun_both_hands": {
+                "name": "Gebaar Vingerpistool beide handen"
+            },
+            "gesture_ok_both_hands": {
+                "name": "Gebaar OK beide handen"
+            },
+            "doorbell_ring": {
+                "name": "Deurbel"
+            },
+            "detection_area": {
+                "name": "Detectiezone {index}"
+            }
+        },
+        "sensor": {
+            "gateway_time_zone": {
+                "name": "Tijdzone gateway"
+            },
+            "night_light_configuration": {
+                "name": "Configuratie nachtlamp"
+            },
+            "face_recognition_event": {
+                "name": "Gezichtsherkenningsgebeurtenis"
+            },
+            "stranger_face_event": {
+                "name": "Onbekend gezicht-gebeurtenis"
+            },
+            "door_event": {
+                "name": "Deurgebeurtenis",
+                "state": {
+                    "door_opened": "Deur geopend",
+                    "door_closed": "Deur gesloten",
+                    "timeout_without_closing": "Time-out zonder sluiten",
+                    "knock_on_the_door": "Klop op de deur",
+                    "attempted_break_in": "Inbraakpoging",
+                    "door_ajar": "Deur op een kier"
+                }
+            },
+            "lock_state": {
+                "name": "Status deurslot",
+                "state": {
+                    "door_cannot_be_closed": "Deur kan niet worden gesloten",
+                    "door_is_open": "Deur is open",
+                    "door_closed_handle_not_lifted": "Deur gesloten maar klink niet omhoog",
+                    "door_is_locked": "Deur is vergrendeld",
+                    "door_is_locked_by_night_latch_knob": "Deur vergrendeld met nachtknop",
+                    "door_is_unlocked": "Deur is ontgrendeld",
+                    "door_is_locked_by_front_handle_and_night_latch_knob": "Deur vergrendeld met voorklink en nachtknop",
+                    "door_is_almost_closed": "Deur is bijna gesloten"
+                }
+            },
+            "open_door_method": {
+                "name": "Methode deur openen",
+                "state": {
+                    "fingerprint_unlock": "Ontgrendelen met vingerafdruk",
+                    "permanent_password_unlock": "Ontgrendelen met permanent wachtwoord",
+                    "nfc_unlock": "Ontgrendelen met NFC",
+                    "bluetooth_unlock": "Ontgrendelen met Bluetooth",
+                    "temporary_password_unlock": "Ontgrendelen met tijdelijk wachtwoord",
+                    "mechanical_key_unlock": "Ontgrendelen met mechanische sleutel",
+                    "dual_authentication_unlock": "Ontgrendelen met dubbele authenticatie",
+                    "duress_fingerprint_unlock": "Ontgrendelen met noodvingerafdruk",
+                    "homekit_unlock": "Ontgrendelen met HomeKit",
+                    "face_unlock": "Ontgrendelen met gezicht",
+                    "aiot_remote_unlock": "AIoT-ontgrendeling op afstand",
+                    "google_password_unlock": "Ontgrendelen met Google-wachtwoord",
+                    "outdoor_unlock": "Ontgrendelen buiten"
+                }
+            },
+            "user_id_fingerprint": {
+                "name": "Gebruikers-ID vingerafdruk"
+            },
+            "user_id_password": {
+                "name": "Gebruikers-ID wachtwoord"
+            },
+            "user_id_nfc": {
+                "name": "Gebruikers-ID NFC"
+            },
+            "user_id_ble_homekit": {
+                "name": "Gebruikers-ID HomeKit Bluetooth"
+            },
+            "user_id_temporary_password": {
+                "name": "Gebruikers-ID tijdelijk wachtwoord"
+            },
+            "people_counting": {
+                "name": "Personen tellen"
+            },
+            "people_counting_per_minute": {
+                "name": "Personen tellen (per minuut)"
+            },
+            "whole_area_people_count_10s": {
+                "name": "Personentelling hele gebied (10 s)"
+            },
+            "zone_people_count_10s": {
+                "name": "Personentelling zone {index} (10 s)"
+            },
+            "zone_people_count_per_minute": {
+                "name": "Personentelling zone {index} (per minuut)"
+            },
+            "heart_rate": {
+                "name": "Hartslag"
+            },
+            "respiration_rate": {
+                "name": "Ademhalingsfrequentie"
+            },
+            "body_movement": {
+                "name": "Lichaamsbeweging"
+            },
+            "sleep_state": {
+                "name": "Slaaptoestand"
+            },
+            "operating_mode": {
+                "name": "Bedrijfsmodus",
+                "state": {
+                    "zone_detection": "Zonedetectie",
+                    "fall_detection": "Valdetectie",
+                    "sleep_monitoring": "Slaapmonitoring"
+                }
+            },
+            "view_zoom": {
+                "name": "Weergavezoom",
+                "state": {
+                    "full": "Volledig",
+                    "adaptive": "Adaptief"
+                }
+            },
+            "mounting_position": {
+                "name": "Montagepositie",
+                "state": {
+                    "wall": "Muur",
+                    "left_corner": "Linkerhoek",
+                    "right_corner": "Rechterhoek"
+                }
+            },
+            "installation_angle": {
+                "name": "Installatiehoek",
+                "state": {
+                    "face_up": "Naar boven",
+                    "oblique": "Schuin",
+                    "horizontal": "Horizontaal",
+                    "face_down": "Naar beneden"
+                }
+            },
+            "attitude_status": {
+                "name": "Oriëntatiestatus"
+            },
+            "presence_sensitivity": {
+                "name": "Aanwezigheidsgevoeligheid",
+                "state": {
+                    "low": "Laag",
+                    "medium": "Gemiddeld",
+                    "high": "Hoog"
+                }
+            },
+            "proximity_distance": {
+                "name": "Nabijheidsafstand",
+                "state": {
+                    "far": "Ver",
+                    "medium": "Gemiddeld",
+                    "close": "Dichtbij"
+                }
+            },
+            "fall_detection_sensitivity": {
+                "name": "Gevoeligheid valdetectie",
+                "state": {
+                    "low": "Laag",
+                    "medium": "Gemiddeld",
+                    "high": "Hoog"
+                }
+            },
+            "reverse_coordinate_direction": {
+                "name": "Coördinaatrichting omkeren",
+                "state": {
+                    "disable": "Uitgeschakeld",
+                    "enable": "Ingeschakeld",
+                    "auto": "Automatisch"
+                }
+            },
+            "detection_direction": {
+                "name": "Detectierichting",
+                "state": {
+                    "default": "Standaard",
+                    "left_right": "Links/Rechts"
+                }
+            },
+            "ai_person_detection": {
+                "name": "AI-persoonsdetectie",
+                "state": {
+                    "disable": "Uitgeschakeld",
+                    "enable": "Ingeschakeld"
+                }
+            },
+            "anti_light_pollution_mode": {
+                "name": "Anti-lichtvervuilingsmodus",
+                "state": {
+                    "disable": "Uitgeschakeld",
+                    "enable": "Ingeschakeld"
+                }
+            },
+            "activity_status": {
+                "name": "Activiteitsstatus",
+                "state": {
+                    "unoccupied": "Onbezet",
+                    "moving": "In beweging",
+                    "stationary": "Stilstaand"
+                }
+            }
+        },
+        "switch": {
+            "video": {
+                "name": "Video"
+            },
+            "detect_human": {
+                "name": "Mens detecteren"
+            },
+            "detect_pet": {
+                "name": "Huisdier detecteren"
+            },
+            "detect_gesture": {
+                "name": "Gebaar detecteren"
+            },
+            "detect_face": {
+                "name": "Gezicht detecteren"
+            },
+            "sub_device_deletion_protection": {
+                "name": "Verwijderingsbeveiliging subapparaat"
+            },
+            "sound_detection": {
+                "name": "Geluidsdetectie"
+            },
+            "timed_sleep": {
+                "name": "Getimede slaapstand"
+            },
+            "motion_push": {
+                "name": "Bewegingsmelding"
+            },
+            "motion_detection": {
+                "name": "Bewegingsdetectie"
+            },
+            "indicator_light": {
+                "name": "Indicatielampje"
+            },
+            "timelapse_push": {
+                "name": "Timelapse-melding"
+            },
+            "sound_push": {
+                "name": "Geluidsmelding"
+            },
+            "device_offline_push": {
+                "name": "Apparaat-offline-melding"
+            },
+            "motion_recording": {
+                "name": "Bewegingsopname"
+            },
+            "timelapse": {
+                "name": "Timelapse"
+            },
+            "sound_recording": {
+                "name": "Geluidsopname"
+            },
+            "camera": {
+                "name": "Camera"
+            },
+            "high_temp_alarm": {
+                "name": "Alarm hoge temperatuur"
+            },
+            "face_recognition_push": {
+                "name": "Gezichtsherkenningsmelding"
+            },
+            "scheduled_sleep": {
+                "name": "Geplande slaapstand"
+            },
+            "anti_tamper_alarm": {
+                "name": "Sabotagealarm"
+            },
+            "face_recording": {
+                "name": "Gezichtsopname"
+            },
+            "doorbell_notification": {
+                "name": "Deurbelmelding"
+            },
+            "low_temp_alarm": {
+                "name": "Alarm lage temperatuur"
+            },
+            "doorbell_recording": {
+                "name": "Deurbelopname"
+            }
+        },
+        "number": {
+            "volume": {
+                "name": "Volume"
+            },
+            "system_volume": {
+                "name": "Systeemvolume"
+            },
+            "alarm_volume": {
+                "name": "Alarmvolume"
+            },
+            "doorbell_volume": {
+                "name": "Deurbelvolume"
+            },
+            "alarm_duration": {
+                "name": "Alarmduur"
+            },
+            "doorbell_duration": {
+                "name": "Deurbelduur"
+            },
+            "music_volume": {
+                "name": "Muziekvolume"
+            },
+            "alarm_clock_volume": {
+                "name": "Wekkervolume"
+            },
+            "night_light_brightness": {
+                "name": "Helderheid nachtlamp"
+            },
+            "arming_delay_time": {
+                "name": "Inschakelvertraging"
+            },
+            "camera_volume": {
+                "name": "Cameravolume"
+            },
+            "face_recognition_interval": {
+                "name": "Interval gezichtsherkenning"
+            }
+        },
+        "select": {
+            "gateway_language": {
+                "name": "Taal gateway",
+                "state": {
+                    "chinese": "Chinees",
+                    "english": "Engels"
+                }
+            },
+            "alarm_ringtone": {
+                "name": "Alarmtoon",
+                "state": {
+                    "default": "Standaard",
+                    "police_car_1": "Politieautogeluid 1",
+                    "police_car_2": "Politieautogeluid 2",
+                    "safety_accident": "Veiligheidsongevalgeluid",
+                    "missile_countdown": "Raketaftelling",
+                    "ghost_scream": "Spookgeschreeuw",
+                    "sniper_rifle": "Sluipschuttersgeweer",
+                    "battle": "Gevechtsgeluid",
+                    "air_raid_alarm": "Luchtalarm",
+                    "dog_barking": "Hondengeblaf"
+                }
+            },
+            "doorbell_ringtone": {
+                "name": "Deurbeltoon",
+                "state": {
+                    "default": "Standaard",
+                    "index_0": "Index 0",
+                    "index_1": "Index 1",
+                    "index_2": "Index 2",
+                    "index_3": "Index 3",
+                    "index_4": "Index 4",
+                    "index_5": "Index 5",
+                    "index_6": "Index 6",
+                    "index_7": "Index 7",
+                    "index_8": "Index 8"
+                }
+            },
+            "screen_flip": {
+                "name": "Scherm spiegelen",
+                "state": {
+                    "normal": "Normaal",
+                    "flip_horizontally": "Horizontaal spiegelen",
+                    "flip_vertically": "Verticaal spiegelen",
+                    "flip_horizontally_and_vertically": "Horizontaal en verticaal spiegelen"
+                }
+            },
+            "camera_mode": {
+                "name": "Cameramodus",
+                "state": {
+                    "off": "Uit",
+                    "on": "Aan",
+                    "always_on": "Altijd aan"
+                }
+            },
+            "work_mode": {
+                "name": "Werkmodus",
+                "state": {
+                    "radar_infrared": "Radar + Infrarood",
+                    "radar_only": "Alleen radar",
+                    "infrared_only": "Alleen infrarood"
+                }
+            }
+        },
+        "button": {
+            "ptz_up": {
+                "name": "Omhoog"
+            },
+            "ptz_down": {
+                "name": "Omlaag"
+            },
+            "ptz_left": {
+                "name": "Links"
+            },
+            "ptz_right": {
+                "name": "Rechts"
+            },
+            "ring_alarm_bell": {
+                "name": "Alarmbel laten rinkelen"
+            },
+            "restart_device": {
+                "name": "Apparaat herstarten"
+            },
+            "restart_coordinator": {
+                "name": "Coördinator herstarten"
+            }
         }
     }
 }

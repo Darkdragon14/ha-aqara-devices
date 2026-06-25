@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 
 from .api import AqaraApi
-from .const import DOMAIN, G2H_PRO_DEVICE_LABEL, G410_DEVICE_LABEL, G3_MODEL, G3_DEVICE_LABEL
+from .const import DOMAIN, G2H_PRO_DEVICE_LABEL, G410_DEVICE_LABEL, G4_DEVICE_LABEL, G3_MODEL, G3_DEVICE_LABEL
 from .device_info import build_device_info
 
 PTZ_ACTIONS: dict[str, str] = {
@@ -33,6 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     cameras: list[dict] = data["cameras"]
     g2h_pro_cameras: list[dict] = data.get("g2h_pro_cameras", [])
     g410_doorbells: list[dict] = data.get("g410_doorbells", [])
+    g4_doorbells: list[dict] = data.get("g4_doorbells", [])
 
     entities: list[ButtonEntity] = []
     for cam in cameras:
@@ -105,6 +106,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             )
         )
 
+    for doorbell in g4_doorbells:
+        did = doorbell["did"]
+        name = doorbell["deviceName"]
+        model = doorbell["model"]
+        entities.append(
+            AqaraResourceButton(
+                api,
+                did,
+                name,
+                model,
+                G4_DEVICE_LABEL,
+                "Restart Device",
+                "restart_device",
+                "8.0.2108",
+                0,
+            )
+        )
+        entities.append(
+            AqaraResourceButton(
+                api,
+                did,
+                name,
+                model,
+                G4_DEVICE_LABEL,
+                "Restart Coordinator",
+                "restart_coordinator",
+                "8.0.2108",
+                1,
+            )
+        )
+
     async_add_entities(entities)
 
 
@@ -115,7 +147,7 @@ class AqaraG3PTZButton(ButtonEntity):
         self._api = api
         self._did = did
         self._direction = direction
-        self._attr_name = direction.capitalize()
+        self._attr_translation_key = f"ptz_{direction}"
         self._attr_icon = ICONS[direction]
         self._attr_unique_id = f"{did}_ptz_{direction}"
         self._device_name = device_name
@@ -137,7 +169,7 @@ class AqaraG3RingAlarmBell(ButtonEntity):
     def __init__(self, api: AqaraApi, did: str, device_name: str, model: str) -> None:
         self._api = api
         self._did = did
-        self._attr_name = "Ring Alarm Bell"
+        self._attr_translation_key = "ring_alarm_bell"
         self._attr_icon = ICONS["ring_alarm_bell"]
         self._attr_unique_id = f"{did}_ring_alarm_bell"
         self._device_name = device_name
@@ -188,7 +220,7 @@ class AqaraResourceButton(ButtonEntity):
         self._device_label = device_label
         self._resource_id = resource_id
         self._value = value
-        self._attr_name = name
+        self._attr_translation_key = key
         self._attr_icon = ICONS[key]
         self._attr_unique_id = f"{did}_{key}"
 

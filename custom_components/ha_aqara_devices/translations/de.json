@@ -32,18 +32,447 @@
     },
     "entity": {
         "binary_sensor": {
-            "night_vision": { "name": "Nachtsicht" },
-            "gesture_v_sign": { "name": "Geste V-Zeichen" },
-            "gesture_four": { "name": "Geste Vier" },
-            "gesture_high_five": { "name": "Geste High Five" },
-            "gesture_finger_gun": { "name": "Geste Fingerpistole" },
-            "gesture_ok": { "name": "Geste OK" },
-            "gesture_v_sign_both_hands": { "name": "Geste V-Zeichen mit beiden Haenden" },
-            "gesture_four_both_hands": { "name": "Geste Vier mit beiden Haenden" },
-            "gesture_high_five_both_hands": { "name": "Geste High Five mit beiden Haenden" },
-            "gesture_finger_gun_both_hands": { "name": "Geste Fingerpistole mit beiden Haenden" },
-            "gesture_ok_both_hands": { "name": "Geste OK mit beiden Haenden" },
-            "motion_event": { "name": "Bewegungsereignis" }
+            "night_vision": {
+                "name": "Nachtsicht"
+            },
+            "motion_event": {
+                "name": "Bewegungsereignis"
+            },
+            "gesture_v_sign": {
+                "name": "Geste V-Zeichen"
+            },
+            "gesture_four": {
+                "name": "Geste Vier"
+            },
+            "gesture_high_five": {
+                "name": "Geste High Five"
+            },
+            "gesture_finger_gun": {
+                "name": "Geste Fingerpistole"
+            },
+            "gesture_ok": {
+                "name": "Geste OK"
+            },
+            "gesture_v_sign_both_hands": {
+                "name": "Geste V-Zeichen beide Hände"
+            },
+            "gesture_four_both_hands": {
+                "name": "Geste Vier beide Hände"
+            },
+            "gesture_high_five_both_hands": {
+                "name": "Geste High Five beide Hände"
+            },
+            "gesture_finger_gun_both_hands": {
+                "name": "Geste Fingerpistole beide Hände"
+            },
+            "gesture_ok_both_hands": {
+                "name": "Geste OK beide Hände"
+            },
+            "doorbell_ring": {
+                "name": "Türklingel"
+            },
+            "detection_area": {
+                "name": "Erkennungsbereich {index}"
+            }
+        },
+        "sensor": {
+            "gateway_time_zone": {
+                "name": "Gateway-Zeitzone"
+            },
+            "night_light_configuration": {
+                "name": "Nachtlicht-Konfiguration"
+            },
+            "face_recognition_event": {
+                "name": "Gesichtserkennungsereignis"
+            },
+            "stranger_face_event": {
+                "name": "Fremdgesicht-Ereignis"
+            },
+            "door_event": {
+                "name": "Türereignis",
+                "state": {
+                    "door_opened": "Tür geöffnet",
+                    "door_closed": "Tür geschlossen",
+                    "timeout_without_closing": "Zeitüberschreitung ohne Schließen",
+                    "knock_on_the_door": "Klopfen an der Tür",
+                    "attempted_break_in": "Einbruchsversuch",
+                    "door_ajar": "Tür angelehnt"
+                }
+            },
+            "lock_state": {
+                "name": "Türschlossstatus",
+                "state": {
+                    "door_cannot_be_closed": "Tür kann nicht geschlossen werden",
+                    "door_is_open": "Tür ist offen",
+                    "door_closed_handle_not_lifted": "Tür geschlossen, aber Griff nicht angehoben",
+                    "door_is_locked": "Tür ist verriegelt",
+                    "door_is_locked_by_night_latch_knob": "Tür durch Nachtriegelknopf verriegelt",
+                    "door_is_unlocked": "Tür ist entriegelt",
+                    "door_is_locked_by_front_handle_and_night_latch_knob": "Tür durch Frontgriff und Nachtriegelknopf verriegelt",
+                    "door_is_almost_closed": "Tür ist fast geschlossen"
+                }
+            },
+            "open_door_method": {
+                "name": "Türöffnungsmethode",
+                "state": {
+                    "fingerprint_unlock": "Entriegelung per Fingerabdruck",
+                    "permanent_password_unlock": "Entriegelung per Dauerpasswort",
+                    "nfc_unlock": "Entriegelung per NFC",
+                    "bluetooth_unlock": "Entriegelung per Bluetooth",
+                    "temporary_password_unlock": "Entriegelung per temporärem Passwort",
+                    "mechanical_key_unlock": "Entriegelung per mechanischem Schlüssel",
+                    "dual_authentication_unlock": "Entriegelung per Zwei-Faktor-Authentifizierung",
+                    "duress_fingerprint_unlock": "Entriegelung per Notfall-Fingerabdruck",
+                    "homekit_unlock": "Entriegelung per HomeKit",
+                    "face_unlock": "Entriegelung per Gesichtserkennung",
+                    "aiot_remote_unlock": "AIoT-Fernentriegelung",
+                    "google_password_unlock": "Entriegelung per Google-Passwort",
+                    "outdoor_unlock": "Entriegelung von außen"
+                }
+            },
+            "user_id_fingerprint": {
+                "name": "Benutzer-ID Fingerabdruck"
+            },
+            "user_id_password": {
+                "name": "Benutzer-ID Passwort"
+            },
+            "user_id_nfc": {
+                "name": "Benutzer-ID NFC"
+            },
+            "user_id_ble_homekit": {
+                "name": "HomeKit-Bluetooth-Benutzer-ID"
+            },
+            "user_id_temporary_password": {
+                "name": "Benutzer-ID temporäres Passwort"
+            },
+            "people_counting": {
+                "name": "Personenzählung"
+            },
+            "people_counting_per_minute": {
+                "name": "Personenzählung (pro Minute)"
+            },
+            "whole_area_people_count_10s": {
+                "name": "Personenzahl gesamter Bereich (10 s)"
+            },
+            "zone_people_count_10s": {
+                "name": "Personenzahl Zone {index} (10 s)"
+            },
+            "zone_people_count_per_minute": {
+                "name": "Personenzahl Zone {index} (pro Minute)"
+            },
+            "heart_rate": {
+                "name": "Herzfrequenz"
+            },
+            "respiration_rate": {
+                "name": "Atemfrequenz"
+            },
+            "body_movement": {
+                "name": "Körperbewegung"
+            },
+            "sleep_state": {
+                "name": "Schlafzustand"
+            },
+            "operating_mode": {
+                "name": "Betriebsmodus",
+                "state": {
+                    "zone_detection": "Zonenerkennung",
+                    "fall_detection": "Sturzerkennung",
+                    "sleep_monitoring": "Schlafüberwachung"
+                }
+            },
+            "view_zoom": {
+                "name": "Ansichtszoom",
+                "state": {
+                    "full": "Voll",
+                    "adaptive": "Adaptiv"
+                }
+            },
+            "mounting_position": {
+                "name": "Montageposition",
+                "state": {
+                    "wall": "Wand",
+                    "left_corner": "Linke Ecke",
+                    "right_corner": "Rechte Ecke"
+                }
+            },
+            "installation_angle": {
+                "name": "Installationswinkel",
+                "state": {
+                    "face_up": "Nach oben",
+                    "oblique": "Schräg",
+                    "horizontal": "Horizontal",
+                    "face_down": "Nach unten"
+                }
+            },
+            "attitude_status": {
+                "name": "Lagestatus"
+            },
+            "presence_sensitivity": {
+                "name": "Anwesenheitsempfindlichkeit",
+                "state": {
+                    "low": "Niedrig",
+                    "medium": "Mittel",
+                    "high": "Hoch"
+                }
+            },
+            "proximity_distance": {
+                "name": "Näherungsabstand",
+                "state": {
+                    "far": "Weit",
+                    "medium": "Mittel",
+                    "close": "Nah"
+                }
+            },
+            "fall_detection_sensitivity": {
+                "name": "Sturzerkennungsempfindlichkeit",
+                "state": {
+                    "low": "Niedrig",
+                    "medium": "Mittel",
+                    "high": "Hoch"
+                }
+            },
+            "reverse_coordinate_direction": {
+                "name": "Koordinatenrichtung umkehren",
+                "state": {
+                    "disable": "Deaktiviert",
+                    "enable": "Aktiviert",
+                    "auto": "Auto"
+                }
+            },
+            "detection_direction": {
+                "name": "Erkennungsrichtung",
+                "state": {
+                    "default": "Standard",
+                    "left_right": "Links/Rechts"
+                }
+            },
+            "ai_person_detection": {
+                "name": "KI-Personenerkennung",
+                "state": {
+                    "disable": "Deaktiviert",
+                    "enable": "Aktiviert"
+                }
+            },
+            "anti_light_pollution_mode": {
+                "name": "Anti-Lichtverschmutzungsmodus",
+                "state": {
+                    "disable": "Deaktiviert",
+                    "enable": "Aktiviert"
+                }
+            },
+            "activity_status": {
+                "name": "Aktivitätsstatus",
+                "state": {
+                    "unoccupied": "Unbesetzt",
+                    "moving": "In Bewegung",
+                    "stationary": "Stationär"
+                }
+            }
+        },
+        "switch": {
+            "video": {
+                "name": "Video"
+            },
+            "detect_human": {
+                "name": "Mensch erkennen"
+            },
+            "detect_pet": {
+                "name": "Haustier erkennen"
+            },
+            "detect_gesture": {
+                "name": "Geste erkennen"
+            },
+            "detect_face": {
+                "name": "Gesicht erkennen"
+            },
+            "sub_device_deletion_protection": {
+                "name": "Löschschutz für Untergeräte"
+            },
+            "sound_detection": {
+                "name": "Geräuscherkennung"
+            },
+            "timed_sleep": {
+                "name": "Zeitgesteuerter Ruhemodus"
+            },
+            "motion_push": {
+                "name": "Bewegungs-Push"
+            },
+            "motion_detection": {
+                "name": "Bewegungserkennung"
+            },
+            "indicator_light": {
+                "name": "Anzeigeleuchte"
+            },
+            "timelapse_push": {
+                "name": "Zeitraffer-Push"
+            },
+            "sound_push": {
+                "name": "Geräusch-Push"
+            },
+            "device_offline_push": {
+                "name": "Gerät-Offline-Push"
+            },
+            "motion_recording": {
+                "name": "Bewegungsaufnahme"
+            },
+            "timelapse": {
+                "name": "Zeitraffer"
+            },
+            "sound_recording": {
+                "name": "Tonaufnahme"
+            },
+            "camera": {
+                "name": "Kamera"
+            },
+            "high_temp_alarm": {
+                "name": "Hochtemperaturalarm"
+            },
+            "face_recognition_push": {
+                "name": "Gesichtserkennungs-Push"
+            },
+            "scheduled_sleep": {
+                "name": "Geplanter Ruhemodus"
+            },
+            "anti_tamper_alarm": {
+                "name": "Manipulationsalarm"
+            },
+            "face_recording": {
+                "name": "Gesichtsaufnahme"
+            },
+            "doorbell_notification": {
+                "name": "Türklingelbenachrichtigung"
+            },
+            "low_temp_alarm": {
+                "name": "Niedrigtemperaturalarm"
+            },
+            "doorbell_recording": {
+                "name": "Türklingelaufnahme"
+            }
+        },
+        "number": {
+            "volume": {
+                "name": "Lautstärke"
+            },
+            "system_volume": {
+                "name": "Systemlautstärke"
+            },
+            "alarm_volume": {
+                "name": "Alarmlautstärke"
+            },
+            "doorbell_volume": {
+                "name": "Türklingellautstärke"
+            },
+            "alarm_duration": {
+                "name": "Alarmdauer"
+            },
+            "doorbell_duration": {
+                "name": "Türklingeldauer"
+            },
+            "music_volume": {
+                "name": "Musiklautstärke"
+            },
+            "alarm_clock_volume": {
+                "name": "Weckerlautstärke"
+            },
+            "night_light_brightness": {
+                "name": "Nachtlichthelligkeit"
+            },
+            "arming_delay_time": {
+                "name": "Scharfschaltungsverzögerung"
+            },
+            "camera_volume": {
+                "name": "Kameralautstärke"
+            },
+            "face_recognition_interval": {
+                "name": "Gesichtserkennungsintervall"
+            }
+        },
+        "select": {
+            "gateway_language": {
+                "name": "Gateway-Sprache",
+                "state": {
+                    "chinese": "Chinesisch",
+                    "english": "Englisch"
+                }
+            },
+            "alarm_ringtone": {
+                "name": "Alarmklingelton",
+                "state": {
+                    "default": "Standard",
+                    "police_car_1": "Polizeiwagen-Ton 1",
+                    "police_car_2": "Polizeiwagen-Ton 2",
+                    "safety_accident": "Sicherheitsunfallton",
+                    "missile_countdown": "Raketen-Countdown",
+                    "ghost_scream": "Geisterschrei",
+                    "sniper_rifle": "Scharfschützengewehr",
+                    "battle": "Kampfgeräusch",
+                    "air_raid_alarm": "Luftangriffsalarm",
+                    "dog_barking": "Hundebellen"
+                }
+            },
+            "doorbell_ringtone": {
+                "name": "Türklingelton",
+                "state": {
+                    "default": "Standard",
+                    "index_0": "Index 0",
+                    "index_1": "Index 1",
+                    "index_2": "Index 2",
+                    "index_3": "Index 3",
+                    "index_4": "Index 4",
+                    "index_5": "Index 5",
+                    "index_6": "Index 6",
+                    "index_7": "Index 7",
+                    "index_8": "Index 8"
+                }
+            },
+            "screen_flip": {
+                "name": "Bildschirm spiegeln",
+                "state": {
+                    "normal": "Normal",
+                    "flip_horizontally": "Horizontal spiegeln",
+                    "flip_vertically": "Vertikal spiegeln",
+                    "flip_horizontally_and_vertically": "Horizontal und vertikal spiegeln"
+                }
+            },
+            "camera_mode": {
+                "name": "Kameramodus",
+                "state": {
+                    "off": "Aus",
+                    "on": "Ein",
+                    "always_on": "Immer ein"
+                }
+            },
+            "work_mode": {
+                "name": "Arbeitsmodus",
+                "state": {
+                    "radar_infrared": "Radar + Infrarot",
+                    "radar_only": "Nur Radar",
+                    "infrared_only": "Nur Infrarot"
+                }
+            }
+        },
+        "button": {
+            "ptz_up": {
+                "name": "Hoch"
+            },
+            "ptz_down": {
+                "name": "Runter"
+            },
+            "ptz_left": {
+                "name": "Links"
+            },
+            "ptz_right": {
+                "name": "Rechts"
+            },
+            "ring_alarm_bell": {
+                "name": "Alarmglocke läuten"
+            },
+            "restart_device": {
+                "name": "Gerät neu starten"
+            },
+            "restart_coordinator": {
+                "name": "Koordinator neu starten"
+            }
         }
     }
 }

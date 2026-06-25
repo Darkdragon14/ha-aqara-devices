@@ -32,18 +32,447 @@
     },
     "entity": {
         "binary_sensor": {
-            "night_vision": { "name": "Ejjellatas" },
-            "gesture_v_sign": { "name": "V jel kezmozdulat" },
-            "gesture_four": { "name": "Negyes kezmozdulat" },
-            "gesture_high_five": { "name": "Pacsi kezmozdulat" },
-            "gesture_finger_gun": { "name": "Pisztoly kezmozdulat" },
-            "gesture_ok": { "name": "OK kezmozdulat" },
-            "gesture_v_sign_both_hands": { "name": "V jel kezmozdulat ket kezzel" },
-            "gesture_four_both_hands": { "name": "Negyes kezmozdulat ket kezzel" },
-            "gesture_high_five_both_hands": { "name": "Pacsi kezmozdulat ket kezzel" },
-            "gesture_finger_gun_both_hands": { "name": "Pisztoly kezmozdulat ket kezzel" },
-            "gesture_ok_both_hands": { "name": "OK kezmozdulat ket kezzel" },
-            "motion_event": { "name": "Mozgasesemeny" }
+            "night_vision": {
+                "name": "Éjjellátó"
+            },
+            "motion_event": {
+                "name": "Mozgásesemény"
+            },
+            "gesture_v_sign": {
+                "name": "V-jel gesztus"
+            },
+            "gesture_four": {
+                "name": "Négyes gesztus"
+            },
+            "gesture_high_five": {
+                "name": "High five gesztus"
+            },
+            "gesture_finger_gun": {
+                "name": "Ujjpisztoly gesztus"
+            },
+            "gesture_ok": {
+                "name": "OK gesztus"
+            },
+            "gesture_v_sign_both_hands": {
+                "name": "V-jel gesztus két kézzel"
+            },
+            "gesture_four_both_hands": {
+                "name": "Négyes gesztus két kézzel"
+            },
+            "gesture_high_five_both_hands": {
+                "name": "High five gesztus két kézzel"
+            },
+            "gesture_finger_gun_both_hands": {
+                "name": "Ujjpisztoly gesztus két kézzel"
+            },
+            "gesture_ok_both_hands": {
+                "name": "OK gesztus két kézzel"
+            },
+            "doorbell_ring": {
+                "name": "Csengetés"
+            },
+            "detection_area": {
+                "name": "Érzékelési terület {index}"
+            }
+        },
+        "sensor": {
+            "gateway_time_zone": {
+                "name": "Átjáró időzónája"
+            },
+            "night_light_configuration": {
+                "name": "Éjszakai fény beállítása"
+            },
+            "face_recognition_event": {
+                "name": "Arcfelismerési esemény"
+            },
+            "stranger_face_event": {
+                "name": "Idegen arc esemény"
+            },
+            "door_event": {
+                "name": "Ajtó esemény",
+                "state": {
+                    "door_opened": "Ajtó kinyitva",
+                    "door_closed": "Ajtó becsukva",
+                    "timeout_without_closing": "Időtúllépés zárás nélkül",
+                    "knock_on_the_door": "Kopogás az ajtón",
+                    "attempted_break_in": "Betörési kísérlet",
+                    "door_ajar": "Ajtó résnyire nyitva"
+                }
+            },
+            "lock_state": {
+                "name": "Ajtózár állapota",
+                "state": {
+                    "door_cannot_be_closed": "Az ajtó nem zárható",
+                    "door_is_open": "Az ajtó nyitva van",
+                    "door_closed_handle_not_lifted": "Ajtó becsukva, de a kilincs nincs felemelve",
+                    "door_is_locked": "Az ajtó zárva van",
+                    "door_is_locked_by_night_latch_knob": "Ajtó éjszakai retesz gombbal zárva",
+                    "door_is_unlocked": "Az ajtó nyitva (kireteszelve)",
+                    "door_is_locked_by_front_handle_and_night_latch_knob": "Ajtó az első kilinccsel és éjszakai retesz gombbal zárva",
+                    "door_is_almost_closed": "Az ajtó majdnem becsukva"
+                }
+            },
+            "open_door_method": {
+                "name": "Ajtónyitási mód",
+                "state": {
+                    "fingerprint_unlock": "Ujjlenyomatos nyitás",
+                    "permanent_password_unlock": "Állandó jelszavas nyitás",
+                    "nfc_unlock": "NFC nyitás",
+                    "bluetooth_unlock": "Bluetooth nyitás",
+                    "temporary_password_unlock": "Ideiglenes jelszavas nyitás",
+                    "mechanical_key_unlock": "Mechanikus kulcsos nyitás",
+                    "dual_authentication_unlock": "Kétfaktoros nyitás",
+                    "duress_fingerprint_unlock": "Kényszer-ujjlenyomatos nyitás",
+                    "homekit_unlock": "HomeKit nyitás",
+                    "face_unlock": "Arcfelismeréses nyitás",
+                    "aiot_remote_unlock": "AIoT távoli nyitás",
+                    "google_password_unlock": "Google jelszavas nyitás",
+                    "outdoor_unlock": "Kültéri nyitás"
+                }
+            },
+            "user_id_fingerprint": {
+                "name": "Ujjlenyomat felhasználói azonosító"
+            },
+            "user_id_password": {
+                "name": "Jelszó felhasználói azonosító"
+            },
+            "user_id_nfc": {
+                "name": "NFC felhasználói azonosító"
+            },
+            "user_id_ble_homekit": {
+                "name": "HomeKit Bluetooth felhasználói azonosító"
+            },
+            "user_id_temporary_password": {
+                "name": "Ideiglenes jelszó felhasználói azonosító"
+            },
+            "people_counting": {
+                "name": "Emberszámlálás"
+            },
+            "people_counting_per_minute": {
+                "name": "Emberszámlálás (percenként)"
+            },
+            "whole_area_people_count_10s": {
+                "name": "Teljes terület emberszám (10 mp)"
+            },
+            "zone_people_count_10s": {
+                "name": "{index}. zóna emberszám (10 mp)"
+            },
+            "zone_people_count_per_minute": {
+                "name": "{index}. zóna emberszám (percenként)"
+            },
+            "heart_rate": {
+                "name": "Pulzusszám"
+            },
+            "respiration_rate": {
+                "name": "Légzésszám"
+            },
+            "body_movement": {
+                "name": "Testmozgás"
+            },
+            "sleep_state": {
+                "name": "Alvási állapot"
+            },
+            "operating_mode": {
+                "name": "Üzemmód",
+                "state": {
+                    "zone_detection": "Zónaérzékelés",
+                    "fall_detection": "Esésérzékelés",
+                    "sleep_monitoring": "Alvásfigyelés"
+                }
+            },
+            "view_zoom": {
+                "name": "Nézet nagyítása",
+                "state": {
+                    "full": "Teljes",
+                    "adaptive": "Adaptív"
+                }
+            },
+            "mounting_position": {
+                "name": "Felszerelési pozíció",
+                "state": {
+                    "wall": "Fal",
+                    "left_corner": "Bal sarok",
+                    "right_corner": "Jobb sarok"
+                }
+            },
+            "installation_angle": {
+                "name": "Telepítési szög",
+                "state": {
+                    "face_up": "Felfelé",
+                    "oblique": "Ferde",
+                    "horizontal": "Vízszintes",
+                    "face_down": "Lefelé"
+                }
+            },
+            "attitude_status": {
+                "name": "Helyzet állapota"
+            },
+            "presence_sensitivity": {
+                "name": "Jelenlét érzékenysége",
+                "state": {
+                    "low": "Alacsony",
+                    "medium": "Közepes",
+                    "high": "Magas"
+                }
+            },
+            "proximity_distance": {
+                "name": "Közelségi távolság",
+                "state": {
+                    "far": "Távoli",
+                    "medium": "Közepes",
+                    "close": "Közeli"
+                }
+            },
+            "fall_detection_sensitivity": {
+                "name": "Esésérzékelés érzékenysége",
+                "state": {
+                    "low": "Alacsony",
+                    "medium": "Közepes",
+                    "high": "Magas"
+                }
+            },
+            "reverse_coordinate_direction": {
+                "name": "Koordináta-irány megfordítása",
+                "state": {
+                    "disable": "Letiltva",
+                    "enable": "Engedélyezve",
+                    "auto": "Automatikus"
+                }
+            },
+            "detection_direction": {
+                "name": "Érzékelési irány",
+                "state": {
+                    "default": "Alapértelmezett",
+                    "left_right": "Bal/Jobb"
+                }
+            },
+            "ai_person_detection": {
+                "name": "MI-személyérzékelés",
+                "state": {
+                    "disable": "Letiltva",
+                    "enable": "Engedélyezve"
+                }
+            },
+            "anti_light_pollution_mode": {
+                "name": "Fényszennyezés elleni mód",
+                "state": {
+                    "disable": "Letiltva",
+                    "enable": "Engedélyezve"
+                }
+            },
+            "activity_status": {
+                "name": "Tevékenység állapota",
+                "state": {
+                    "unoccupied": "Üres",
+                    "moving": "Mozgásban",
+                    "stationary": "Mozdulatlan"
+                }
+            }
+        },
+        "switch": {
+            "video": {
+                "name": "Videó"
+            },
+            "detect_human": {
+                "name": "Ember érzékelése"
+            },
+            "detect_pet": {
+                "name": "Háziállat érzékelése"
+            },
+            "detect_gesture": {
+                "name": "Gesztus érzékelése"
+            },
+            "detect_face": {
+                "name": "Arc érzékelése"
+            },
+            "sub_device_deletion_protection": {
+                "name": "Aleszköz törlésvédelem"
+            },
+            "sound_detection": {
+                "name": "Hangérzékelés"
+            },
+            "timed_sleep": {
+                "name": "Időzített alvás"
+            },
+            "motion_push": {
+                "name": "Mozgás értesítés"
+            },
+            "motion_detection": {
+                "name": "Mozgásérzékelés"
+            },
+            "indicator_light": {
+                "name": "Jelzőfény"
+            },
+            "timelapse_push": {
+                "name": "Időzített felvétel értesítés"
+            },
+            "sound_push": {
+                "name": "Hang értesítés"
+            },
+            "device_offline_push": {
+                "name": "Eszköz offline értesítés"
+            },
+            "motion_recording": {
+                "name": "Mozgásrögzítés"
+            },
+            "timelapse": {
+                "name": "Időzített felvétel"
+            },
+            "sound_recording": {
+                "name": "Hangrögzítés"
+            },
+            "camera": {
+                "name": "Kamera"
+            },
+            "high_temp_alarm": {
+                "name": "Magas hőmérséklet riasztás"
+            },
+            "face_recognition_push": {
+                "name": "Arcfelismerés értesítés"
+            },
+            "scheduled_sleep": {
+                "name": "Ütemezett alvás"
+            },
+            "anti_tamper_alarm": {
+                "name": "Szabotázs elleni riasztás"
+            },
+            "face_recording": {
+                "name": "Arcrögzítés"
+            },
+            "doorbell_notification": {
+                "name": "Csengő értesítés"
+            },
+            "low_temp_alarm": {
+                "name": "Alacsony hőmérséklet riasztás"
+            },
+            "doorbell_recording": {
+                "name": "Csengő rögzítés"
+            }
+        },
+        "number": {
+            "volume": {
+                "name": "Hangerő"
+            },
+            "system_volume": {
+                "name": "Rendszerhangerő"
+            },
+            "alarm_volume": {
+                "name": "Riasztás hangereje"
+            },
+            "doorbell_volume": {
+                "name": "Csengő hangereje"
+            },
+            "alarm_duration": {
+                "name": "Riasztás időtartama"
+            },
+            "doorbell_duration": {
+                "name": "Csengő időtartama"
+            },
+            "music_volume": {
+                "name": "Zene hangereje"
+            },
+            "alarm_clock_volume": {
+                "name": "Ébresztő hangereje"
+            },
+            "night_light_brightness": {
+                "name": "Éjszakai fény fényereje"
+            },
+            "arming_delay_time": {
+                "name": "Élesítési késleltetés"
+            },
+            "camera_volume": {
+                "name": "Kamera hangereje"
+            },
+            "face_recognition_interval": {
+                "name": "Arcfelismerési időköz"
+            }
+        },
+        "select": {
+            "gateway_language": {
+                "name": "Átjáró nyelve",
+                "state": {
+                    "chinese": "Kínai",
+                    "english": "Angol"
+                }
+            },
+            "alarm_ringtone": {
+                "name": "Riasztás csengőhangja",
+                "state": {
+                    "default": "Alapértelmezett",
+                    "police_car_1": "Rendőrautó hang 1",
+                    "police_car_2": "Rendőrautó hang 2",
+                    "safety_accident": "Biztonsági baleset hang",
+                    "missile_countdown": "Rakéta visszaszámlálás",
+                    "ghost_scream": "Szellemsikoly",
+                    "sniper_rifle": "Mesterlövész puska",
+                    "battle": "Csata hang",
+                    "air_raid_alarm": "Légiriadó",
+                    "dog_barking": "Kutyaugatás"
+                }
+            },
+            "doorbell_ringtone": {
+                "name": "Csengőhang",
+                "state": {
+                    "default": "Alapértelmezett",
+                    "index_0": "0. index",
+                    "index_1": "1. index",
+                    "index_2": "2. index",
+                    "index_3": "3. index",
+                    "index_4": "4. index",
+                    "index_5": "5. index",
+                    "index_6": "6. index",
+                    "index_7": "7. index",
+                    "index_8": "8. index"
+                }
+            },
+            "screen_flip": {
+                "name": "Képernyő tükrözése",
+                "state": {
+                    "normal": "Normál",
+                    "flip_horizontally": "Vízszintes tükrözés",
+                    "flip_vertically": "Függőleges tükrözés",
+                    "flip_horizontally_and_vertically": "Vízszintes és függőleges tükrözés"
+                }
+            },
+            "camera_mode": {
+                "name": "Kamera mód",
+                "state": {
+                    "off": "Ki",
+                    "on": "Be",
+                    "always_on": "Mindig be"
+                }
+            },
+            "work_mode": {
+                "name": "Munkamód",
+                "state": {
+                    "radar_infrared": "Radar + Infravörös",
+                    "radar_only": "Csak radar",
+                    "infrared_only": "Csak infravörös"
+                }
+            }
+        },
+        "button": {
+            "ptz_up": {
+                "name": "Fel"
+            },
+            "ptz_down": {
+                "name": "Le"
+            },
+            "ptz_left": {
+                "name": "Balra"
+            },
+            "ptz_right": {
+                "name": "Jobbra"
+            },
+            "ring_alarm_bell": {
+                "name": "Riasztócsengő megszólaltatása"
+            },
+            "restart_device": {
+                "name": "Eszköz újraindítása"
+            },
+            "restart_coordinator": {
+                "name": "Koordinátor újraindítása"
+            }
         }
     }
 }

@@ -13,7 +13,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .binary_sensors import ALL_BINARY_SENSORS_DEF, G410_BINARY_SENSORS_DEF, M100_BINARY_SENSORS_DEF, M200_BINARY_SENSORS_DEF, M3_BINARY_SENSORS_DEF
+from .binary_sensors import ALL_BINARY_SENSORS_DEF, G410_BINARY_SENSORS_DEF, G4_BINARY_SENSORS_DEF, M100_BINARY_SENSORS_DEF, M200_BINARY_SENSORS_DEF, M3_BINARY_SENSORS_DEF
 from .const import (
     DOMAIN,
     FP2_DEVICE_LABEL,
@@ -21,6 +21,7 @@ from .const import (
     FP300_DEVICE_LABEL,
     FP300_MODEL,
     G410_DEVICE_LABEL,
+    G4_DEVICE_LABEL,
     G3_DEVICE_LABEL,
     G3_MODEL,
     M100_DEVICE_LABEL,
@@ -39,12 +40,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     api = data["api"]
     cameras: list[dict] = data["cameras"]
     g410_doorbells: list[dict] = data.get("g410_doorbells", [])
+    g4_doorbells: list[dict] = data.get("g4_doorbells", [])
     hubs_m3: list[dict] = data.get("hubs_m3", [])
     hubs_m100: list[dict] = data.get("hubs_m100", [])
     hubs_m200: list[dict] = data.get("hubs_m200", [])
     presence_devices: list[dict] = data.get("presence_devices", [])
     camera_coordinators: dict[str, DataUpdateCoordinator] = data.get("camera_coordinators", {})
     g410_coordinators: dict[str, DataUpdateCoordinator] = data.get("g410_coordinators", {})
+    g4_coordinators: dict[str, DataUpdateCoordinator] = data.get("g4_coordinators", {})
     m3_coordinators: dict[str, DataUpdateCoordinator] = data.get("m3_coordinators", {})
     m100_coordinators: dict[str, DataUpdateCoordinator] = data.get("m100_coordinators", {})
     m200_coordinators: dict[str, DataUpdateCoordinator] = data.get("m200_coordinators", {})
@@ -91,6 +94,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                     binary_sensor_def,
                     model,
                     G410_DEVICE_LABEL,
+                )
+            )
+
+    for doorbell in g4_doorbells:
+        did = doorbell["did"]
+        name = doorbell["deviceName"]
+        model = doorbell["model"]
+        coordinator = g4_coordinators.get(did)
+        if coordinator is None:
+            continue
+
+        for binary_sensor_def in G4_BINARY_SENSORS_DEF:
+            entities.append(
+                AqaraBinarySensor(
+                    coordinator,
+                    did,
+                    name,
+                    api,
+                    binary_sensor_def,
+                    model,
+                    G4_DEVICE_LABEL,
                 )
             )
 
@@ -213,10 +237,13 @@ class AqaraBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._model = model
         self._device_label = device_label
 
-        self._attr_name = spec["name"]
+        translation_key = spec.get("translation_key")
+        if translation_key:
+            self._attr_translation_key = translation_key
+        elif "name" in spec:
+            self._attr_name = spec["name"]
         self._attr_icon = spec["icon"]
         self._attr_unique_id = f"{did}_{spec['inApp']}"
-        self._attr_translation_key = spec.get("translation_key")
         self._value_type = spec.get("value_type")
         self._hold_seconds = spec.get("hold_seconds", 5)
         self._clear_listener: Callable[[], None] | None = None
@@ -371,7 +398,14 @@ class AqaraFP2BinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._key = spec["key"]
         self._fallback_key = spec.get("fallback_key")
         self._on_values = {str(v) for v in spec.get("on_values", set())}
-        self._attr_name = spec["name"]
+        translation_key = spec.get("translation_key")
+        if translation_key:
+            self._attr_translation_key = translation_key
+            placeholders = spec.get("translation_placeholders")
+            if placeholders:
+                self._attr_translation_placeholders = placeholders
+        elif "name" in spec:
+            self._attr_name = spec["name"]
         self._attr_icon = spec.get("icon")
         self._attr_unique_id = f"{did}_fp2_{self._key}"
         self._attr_entity_registry_enabled_default = spec.get("enabled_default", True)

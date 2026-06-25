@@ -12,19 +12,27 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
+    A100_PRO_DEVICE_LABEL,
     DOMAIN,
     FP2_DEVICE_LABEL,
     FP2_MODEL,
     FP300_DEVICE_LABEL,
     FP300_MODEL,
     G410_DEVICE_LABEL,
+    G4_DEVICE_LABEL,
     M100_DEVICE_LABEL,
     M3_DEVICE_LABEL,
 )
 from .device_info import build_device_info
 from .fp300 import FP300_SENSOR_SPECS
 from .fp2 import FP2_SENSOR_SPECS
-from .sensors import G410_SENSORS_DEF, M100_SENSORS_DEF, M3_SENSORS_DEF
+from .sensors import (
+    A100_PRO_SENSORS_DEF,
+    G410_SENSORS_DEF,
+    G4_SENSORS_DEF,
+    M100_SENSORS_DEF,
+    M3_SENSORS_DEF,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,12 +40,16 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     data = hass.data[DOMAIN][entry.entry_id]
     g410_doorbells: list[dict] = data.get("g410_doorbells", [])
+    g4_doorbells: list[dict] = data.get("g4_doorbells", [])
     hubs_m3: list[dict] = data.get("hubs_m3", [])
     hubs_m100: list[dict] = data.get("hubs_m100", [])
+    a100_pro_locks: list[dict] = data.get("a100_pro_locks", [])
     presence_devices: list[dict] = data.get("presence_devices", [])
     g410_coordinators: dict[str, DataUpdateCoordinator] = data.get("g410_coordinators", {})
+    g4_coordinators: dict[str, DataUpdateCoordinator] = data.get("g4_coordinators", {})
     m3_coordinators: dict[str, DataUpdateCoordinator] = data.get("m3_coordinators", {})
     m100_coordinators: dict[str, DataUpdateCoordinator] = data.get("m100_coordinators", {})
+    a100_pro_coordinators: dict[str, DataUpdateCoordinator] = data.get("a100_pro_coordinators", {})
     presence_coordinators: dict[str, dict[str, DataUpdateCoordinator]] = data.get("presence_coordinators", {})
 
     entities: list[SensorEntity] = []
@@ -59,6 +71,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                     sensor_def,
                     model,
                     G410_DEVICE_LABEL,
+                )
+            )
+
+    for doorbell in g4_doorbells:
+        did = doorbell["did"]
+        name = doorbell["deviceName"]
+        model = doorbell["model"]
+        coordinator = g4_coordinators.get(did)
+        if coordinator is None:
+            continue
+
+        for sensor_def in G4_SENSORS_DEF:
+            entities.append(
+                AqaraSensor(
+                    coordinator,
+                    did,
+                    name,
+                    sensor_def,
+                    model,
+                    G4_DEVICE_LABEL,
                 )
             )
 
@@ -99,6 +131,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                     sensor_def,
                     model,
                     M100_DEVICE_LABEL,
+                )
+            )
+
+    for lock in a100_pro_locks:
+        did = lock["did"]
+        name = lock["deviceName"]
+        model = lock["model"]
+        coordinator = a100_pro_coordinators.get(did)
+        if coordinator is None:
+            continue
+
+        for sensor_def in A100_PRO_SENSORS_DEF:
+            entities.append(
+                AqaraSensor(
+                    coordinator,
+                    did,
+                    name,
+                    sensor_def,
+                    model,
+                    A100_PRO_DEVICE_LABEL,
                 )
             )
 
@@ -157,9 +209,16 @@ class AqaraSensor(CoordinatorEntity, SensorEntity):
         self._device_label = device_label
 
         self._attr_unique_id = f"{did}_{spec['inApp']}"
-        self._attr_name = spec["name"]
+        translation_key = spec.get("translation_key")
+        if translation_key:
+            self._attr_translation_key = translation_key
+        elif "name" in spec:
+            self._attr_name = spec["name"]
         self._attr_icon = spec.get("icon")
         self._attr_native_unit_of_measurement = spec.get("unit")
+        options = spec.get("options")
+        if options is not None:
+            self._attr_options = options
 
         device_class = spec.get("device_class")
         if isinstance(device_class, SensorDeviceClass):
@@ -180,6 +239,7 @@ class AqaraSensor(CoordinatorEntity, SensorEntity):
                 self._attr_state_class = None
 
         self._attr_native_value = None
+        self._value_map = spec.get("value_map") or {}
 
     @property
     def device_info(self):
@@ -190,7 +250,10 @@ class AqaraSensor(CoordinatorEntity, SensorEntity):
         raw = data.get(self._spec["inApp"])
         if raw is None:
             return
-        self._attr_native_value = raw
+        value = self._value_map.get(str(raw), raw)
+        if self._attr_options is not None and value not in self._attr_options:
+            value = None
+        self._attr_native_value = value
         self.async_write_ha_state()
 
 
@@ -214,7 +277,14 @@ class AqaraFP2Sensor(CoordinatorEntity, SensorEntity):
         self._device_label = device_label
         self._key = spec["key"]
 
-        self._attr_name = spec["name"]
+        translation_key = spec.get("translation_key")
+        if translation_key:
+            self._attr_translation_key = translation_key
+            placeholders = spec.get("translation_placeholders")
+            if placeholders:
+                self._attr_translation_placeholders = placeholders
+        elif "name" in spec:
+            self._attr_name = spec["name"]
         self._attr_icon = spec.get("icon")
         self._attr_unique_id = f"{did}_fp2_sensor_{self._key}"
         self._value_type = spec.get("value_type")
@@ -223,6 +293,9 @@ class AqaraFP2Sensor(CoordinatorEntity, SensorEntity):
         self._attr_native_unit_of_measurement = spec.get("unit")
         self._attr_device_class = spec.get("device_class")
         self._attr_state_class = spec.get("state_class")
+        options = spec.get("options")
+        if options is not None:
+            self._attr_options = options
         self._attr_entity_registry_enabled_default = spec.get("enabled_default", True)
 
     @property
@@ -236,7 +309,10 @@ class AqaraFP2Sensor(CoordinatorEntity, SensorEntity):
         if raw is None:
             return None
         if self._value_map:
-            return self._value_map.get(str(raw), raw)
+            value = self._value_map.get(str(raw), raw)
+            if self._attr_options is not None and value not in self._attr_options:
+                return None
+            return value
 
         def _apply_scale(value: int | float):
             if self._scale is None:
