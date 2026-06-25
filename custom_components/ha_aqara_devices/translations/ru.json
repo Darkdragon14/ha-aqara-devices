@@ -148,6 +148,19 @@
             "user_id_temporary_password": {
                 "name": "ID пользователя временного пароля"
             },
+            "lock_exception_alert": {
+                "name": "Предупреждение о неисправности замка"
+            },
+            "device_online_status": {
+                "name": "Статус устройства в сети",
+                "state": {
+                    "offline": "Не в сети",
+                    "online": "В сети"
+                }
+            },
+            "zigbee_signal_strength": {
+                "name": "Уровень сигнала Zigbee"
+            },
             "people_counting": {
                 "name": "Подсчёт людей"
             },

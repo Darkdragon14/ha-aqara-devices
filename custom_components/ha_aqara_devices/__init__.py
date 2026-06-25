@@ -16,6 +16,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     A100_PRO_MODELS,
+    ACN002_MODELS,
     BRIDGE_SANITY_INTERVAL_SECONDS,
     BRIDGE_UNAVAILABLE_AFTER_FAILURES,
     CONF_APP_ID,
@@ -109,6 +110,28 @@ def _create_resilient_coordinator(
     )
     hass.async_create_task(coordinator.async_refresh())
     return coordinator
+
+
+async def _async_refresh_coordinators_after_setup(
+    label: str,
+    coordinators: list[DataUpdateCoordinator],
+    delay_seconds: int = 5,
+) -> None:
+    """Refresh coordinators once after entities have subscribed to updates."""
+    if not coordinators:
+        return
+
+    await asyncio.sleep(delay_seconds)
+    for coordinator in coordinators:
+        try:
+            await coordinator.async_request_refresh()
+        except Exception as err:
+            _LOGGER.debug(
+                "Delayed Aqara %s refresh failed for %s: %s",
+                label,
+                coordinator.name,
+                err,
+            )
 
 
 def _setup_device_state_coordinators(
@@ -262,6 +285,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     from .api import AqaraApi, AqaraAuthError
     from .bridge_specs import (
         A100_PRO_STATE_SPECS,
+        ACN002_STATE_SPECS,
         G2H_PRO_STATE_SPECS,
         G410_STATE_SPECS,
         G4_STATE_SPECS,
@@ -313,6 +337,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hubs_m100 = [device for device in devices if device.get("model") in M100_MODELS]
         hubs_m200 = [device for device in devices if device.get("model") in M200_MODELS]
         a100_pro_locks = [device for device in devices if device.get("model") in A100_PRO_MODELS]
+        acn002_locks = [device for device in devices if device.get("model") in ACN002_MODELS]
         presence_devices = [device for device in devices if device.get("model") in PRESENCE_MODELS]
 
         if (
@@ -324,9 +349,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             and not hubs_m100
             and not hubs_m200
             and not a100_pro_locks
+            and not acn002_locks
             and not presence_devices
         ):
-            raise ConfigEntryNotReady("No Aqara G2H Pro, G3, G410, G4, M3, M100, M200, A100 Pro, FP2, or FP300 devices found")
+            raise ConfigEntryNotReady("No Aqara G2H Pro, G3, G410, G4, M3, M100, M200, A100 Pro, ACN002, FP2, or FP300 devices found")
 
     except (ConfigEntryAuthFailed, AqaraAuthError) as err:
         if isinstance(err, AqaraAuthError):
@@ -369,6 +395,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "a100-pro-state",
         A100_PRO_STATE_SPECS,
     )
+    acn002_coordinators = _setup_device_state_coordinators(
+        hass,
+        api,
+        acn002_locks,
+        "acn002-state",
+        ACN002_STATE_SPECS,
+    )
     presence_coordinators = _setup_presence_coordinators(hass, api, presence_devices)
 
     bridge_url = _entry_bridge_value(entry, CONF_BRIDGE_URL, DEFAULT_BRIDGE_URL)
@@ -386,6 +419,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "hubs_m100": hubs_m100,
         "hubs_m200": hubs_m200,
         "a100_pro_locks": a100_pro_locks,
+        "acn002_locks": acn002_locks,
         "presence_devices": presence_devices,
         "camera_coordinators": camera_coordinators,
         "g2h_pro_coordinators": g2h_pro_coordinators,
@@ -395,9 +429,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "m100_coordinators": m100_coordinators,
         "m200_coordinators": m200_coordinators,
         "a100_pro_coordinators": a100_pro_coordinators,
+        "acn002_coordinators": acn002_coordinators,
         "presence_coordinators": presence_coordinators,
         "bridge_manager": None,
         "bridge_task": None,
+        "warmup_tasks": [],
         "active_subscriptions": [],
     }
     hass.data[DOMAIN][entry.entry_id] = entry_data
@@ -420,6 +456,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hubs_m100,
         hubs_m200,
         a100_pro_locks,
+        acn002_locks,
         presence_devices,
     )
     entry_data["active_subscriptions"] = active_subscriptions
@@ -438,6 +475,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hubs_m100,
         hubs_m200,
         a100_pro_locks,
+        acn002_locks,
         presence_devices,
         camera_coordinators,
         g2h_pro_coordinators,
@@ -447,6 +485,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         m100_coordinators,
         m200_coordinators,
         a100_pro_coordinators,
+        acn002_coordinators,
         presence_coordinators,
         active_subscriptions,
     )
@@ -456,6 +495,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _async_start_bridge_with_retry(entry, bridge_manager),
         f"{DOMAIN} bridge startup",
     )
+    if acn002_coordinators:
+        entry_data["warmup_tasks"].append(
+            hass.async_create_background_task(
+                _async_refresh_coordinators_after_setup(
+                    "acn002-state",
+                    list(acn002_coordinators.values()),
+                ),
+                f"{DOMAIN} ACN002 delayed refresh",
+            )
+        )
 
     total_resources = sum(len(subscription["resourceIds"]) for subscription in active_subscriptions)
     _LOGGER.info(
@@ -497,6 +546,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         bridge_task.cancel()
         with suppress(asyncio.CancelledError):
             await bridge_task
+    warmup_tasks = [] if entry_data is None else entry_data.get("warmup_tasks", [])
+    for task in warmup_tasks:
+        task.cancel()
+        with suppress(asyncio.CancelledError):
+            await task
 
     bridge_manager = None if entry_data is None else entry_data.get("bridge_manager")
     if bridge_manager is not None:

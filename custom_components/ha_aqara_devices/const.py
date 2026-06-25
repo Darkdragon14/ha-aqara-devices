@@ -35,6 +35,7 @@ G3_MODEL = "lumi.camera.gwpgl1"
 FP2_MODEL = "lumi.motion.agl001"
 FP300_MODEL = "lumi.sensor_occupy.agl8"
 A100_PRO_MODEL = "aqara.lock.acn001"
+ACN002_MODEL = "aqara.lock.acn002"
 G4_MODEL = "aqara.lock.agl002"
 G3_MODELS = {"lumi.camera.gwpgl1", "lumi.camera.gwpagl01"}
 G2H_PRO_MODELS = {"lumi.camera.agl001", "lumi.camera.acn003"}
@@ -43,6 +44,7 @@ M3_MODELS = {"lumi.gateway.acn012", "lumi.gateway.agl004"}
 M100_MODELS = {"lumi.gateway.agl008", "lumi.gateway.agl010"}
 M200_MODELS = {"lumi.gateway.agl011"}
 A100_PRO_MODELS = {A100_PRO_MODEL}
+ACN002_MODELS = {ACN002_MODEL}
 G4_MODELS = {G4_MODEL, "lumi.camera.acn005"}
 PRESENCE_MODELS = {FP2_MODEL, FP300_MODEL}
 
@@ -55,6 +57,7 @@ M200_DEVICE_LABEL = "Aqara Hub M200"
 FP2_DEVICE_LABEL = "Aqara FP2"
 FP300_DEVICE_LABEL = "Presence Multi-Sensor FP300"
 A100_PRO_DEVICE_LABEL = "Aqara A100 Pro"
+ACN002_DEVICE_LABEL = "Aqara Smart Video Door Lock Xingyao"
 G4_DEVICE_LABEL = "Aqara G4"
 
 FP2_FAST_INTERVAL_SECONDS = 2

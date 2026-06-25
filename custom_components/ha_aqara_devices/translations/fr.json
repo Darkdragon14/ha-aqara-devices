@@ -175,6 +175,19 @@
             "user_id_temporary_password": {
                 "name": "ID utilisateur mot de passe temporaire"
             },
+            "lock_exception_alert": {
+                "name": "Alerte d'anomalie de serrure"
+            },
+            "device_online_status": {
+                "name": "État de connexion de l'appareil",
+                "state": {
+                    "offline": "Hors ligne",
+                    "online": "En ligne"
+                }
+            },
+            "zigbee_signal_strength": {
+                "name": "Puissance du signal Zigbee"
+            },
             "people_counting": {
                 "name": "Comptage de personnes"
             },

@@ -148,6 +148,19 @@
             "user_id_temporary_password": {
                 "name": "ID utente password temporanea"
             },
+            "lock_exception_alert": {
+                "name": "Avviso anomalia serratura"
+            },
+            "device_online_status": {
+                "name": "Stato online dispositivo",
+                "state": {
+                    "offline": "Offline",
+                    "online": "Online"
+                }
+            },
+            "zigbee_signal_strength": {
+                "name": "Intensità segnale Zigbee"
+            },
             "people_counting": {
                 "name": "Conteggio persone"
             },

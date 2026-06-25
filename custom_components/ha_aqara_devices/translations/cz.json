@@ -175,6 +175,19 @@
             "user_id_temporary_password": {
                 "name": "ID uživatele dočasného hesla"
             },
+            "lock_exception_alert": {
+                "name": "Upozornění na chybu zámku"
+            },
+            "device_online_status": {
+                "name": "Online stav zařízení",
+                "state": {
+                    "offline": "Offline",
+                    "online": "Online"
+                }
+            },
+            "zigbee_signal_strength": {
+                "name": "Síla signálu Zigbee"
+            },
             "people_counting": {
                 "name": "Počítání osob"
             },
