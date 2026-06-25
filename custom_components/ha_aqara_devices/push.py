@@ -16,6 +16,7 @@ from .const import BRIDGE_SANITY_INTERVAL_SECONDS
 from .api import AqaraApi, AqaraAuthError
 from .bridge_specs import (
     A100_PRO_RESOURCE_SPEC_MAP,
+    ACN002_RESOURCE_SPEC_MAP,
     FP2_GROUP_SPEC_MAPS,
     FP300_GROUP_SPEC_MAPS,
     G2H_PRO_RESOURCE_SPEC_MAP,
@@ -53,6 +54,7 @@ class AqaraBridgePushManager:
         hubs_m3: list[dict[str, Any]],
         hubs_m100: list[dict[str, Any]],
         a100_pro_locks: list[dict[str, Any]],
+        acn002_locks: list[dict[str, Any]],
         presence_devices: list[dict[str, Any]],
         camera_coordinators: dict[str, DataUpdateCoordinator],
         g2h_pro_coordinators: dict[str, DataUpdateCoordinator],
@@ -61,6 +63,7 @@ class AqaraBridgePushManager:
         m3_coordinators: dict[str, DataUpdateCoordinator],
         m100_coordinators: dict[str, DataUpdateCoordinator],
         a100_pro_coordinators: dict[str, DataUpdateCoordinator],
+        acn002_coordinators: dict[str, DataUpdateCoordinator],
         presence_coordinators: dict[str, dict[str, DataUpdateCoordinator]],
         subscriptions: list[dict[str, Any]],
     ) -> None:
@@ -76,6 +79,7 @@ class AqaraBridgePushManager:
         self._m3_coordinators = m3_coordinators
         self._m100_coordinators = m100_coordinators
         self._a100_pro_coordinators = a100_pro_coordinators
+        self._acn002_coordinators = acn002_coordinators
         self._presence_coordinators = presence_coordinators
         self._cameras = {device["did"]: device for device in cameras}
         self._g2h_pro_cameras = {device["did"]: device for device in g2h_pro_cameras}
@@ -84,6 +88,7 @@ class AqaraBridgePushManager:
         self._hubs_m3 = {device["did"]: device for device in hubs_m3}
         self._hubs_m100 = {device["did"]: device for device in hubs_m100}
         self._a100_pro_locks = {device["did"]: device for device in a100_pro_locks}
+        self._acn002_locks = {device["did"]: device for device in acn002_locks}
         self._presence_devices = {device["did"]: device for device in presence_devices}
         self._camera_state: dict[str, dict[str, Any]] = {did: {} for did in self._cameras}
         self._g2h_pro_state: dict[str, dict[str, Any]] = {did: {} for did in self._g2h_pro_cameras}
@@ -92,6 +97,7 @@ class AqaraBridgePushManager:
         self._m3_state: dict[str, dict[str, Any]] = {did: {} for did in self._hubs_m3}
         self._m100_state: dict[str, dict[str, Any]] = {did: {} for did in self._hubs_m100}
         self._a100_pro_state: dict[str, dict[str, Any]] = {did: {} for did in self._a100_pro_locks}
+        self._acn002_state: dict[str, dict[str, Any]] = {did: {} for did in self._acn002_locks}
         self._presence_state: dict[str, dict[str, dict[str, Any]]] = {
             did: {group: {} for group in coordinators}
             for did, coordinators in presence_coordinators.items()
@@ -134,6 +140,7 @@ class AqaraBridgePushManager:
         yield from self._m3_coordinators.values()
         yield from self._m100_coordinators.values()
         yield from self._a100_pro_coordinators.values()
+        yield from self._acn002_coordinators.values()
         for groups in self._presence_coordinators.values():
             yield from groups.values()
 
@@ -465,6 +472,20 @@ class AqaraBridgePushManager:
             )
             return
 
+        if did in self._acn002_locks:
+            self._handle_shared_device_message(
+                payload_type,
+                did,
+                resource_id,
+                payload.get("value"),
+                self._acn002_coordinators,
+                self._acn002_state,
+                ACN002_RESOURCE_SPEC_MAP,
+                pending_updates,
+                apply_scale=True,
+            )
+            return
+
         device = self._presence_devices.get(did)
         if device is None:
             return
@@ -509,8 +530,9 @@ class AqaraBridgePushManager:
         if pending is not None:
             _, pending_state = pending
             return dict(pending_state)
-        if payload_type == "snapshot":
-            return {}
+        # The local bridge's SSE "snapshot" is a replay of recent events, not a
+        # complete state dump. Merge it into the existing coordinator data so
+        # fields missing from the replay do not regress to unknown.
         return dict(cached_state or coordinator.data or {})
 
     def _handle_g3_message(
