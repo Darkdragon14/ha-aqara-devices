@@ -103,6 +103,12 @@
             },
             "detection_area": {
                 "name": "Zone de détection {index}"
+            },
+            "reachable": {
+                "name": "Joignable"
+            },
+            "battery_replacement_needed": {
+                "name": "Remplacement de batterie nécessaire"
             }
         },
         "sensor": {
@@ -174,6 +180,12 @@
             },
             "user_id_temporary_password": {
                 "name": "ID utilisateur mot de passe temporaire"
+            },
+            "battery": {
+                "name": "Batterie"
+            },
+            "battery_voltage": {
+                "name": "Tension de la batterie"
             },
             "lock_exception_alert": {
                 "name": "Alerte d'anomalie de serrure"
@@ -525,6 +537,11 @@
             },
             "restart_coordinator": {
                 "name": "Redémarrer le coordinateur"
+            }
+        },
+        "lock": {
+            "lock": {
+                "name": "Verrou"
             }
         }
     }

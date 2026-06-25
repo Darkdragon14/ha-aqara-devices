@@ -103,6 +103,12 @@
             },
             "detection_area": {
                 "name": "Detection Area {index}"
+            },
+            "reachable": {
+                "name": "Reachable"
+            },
+            "battery_replacement_needed": {
+                "name": "Battery Replacement Needed"
             }
         },
         "sensor": {
@@ -174,6 +180,12 @@
             },
             "user_id_temporary_password": {
                 "name": "Temporary Password User ID"
+            },
+            "battery": {
+                "name": "Battery"
+            },
+            "battery_voltage": {
+                "name": "Battery Voltage"
             },
             "lock_exception_alert": {
                 "name": "Lock Exception Alert"
@@ -525,6 +537,11 @@
             },
             "restart_coordinator": {
                 "name": "Restart Coordinator"
+            }
+        },
+        "lock": {
+            "lock": {
+                "name": "Lock"
             }
         }
     }

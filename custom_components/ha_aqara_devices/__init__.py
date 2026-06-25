@@ -38,6 +38,8 @@ from .const import (
     PLATFORMS,
     PRESENCE_MODELS,
     TOKEN_REFRESH_STARTUP_MARGIN_SECONDS,
+    U200_INTERVAL_SECONDS,
+    U200_MODELS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -235,6 +237,25 @@ def _setup_presence_coordinators(
     return coordinators
 
 
+def _setup_u200_coordinators(
+    hass: HomeAssistant,
+    api,
+    u200_locks: list[dict[str, Any]],
+) -> dict[str, DataUpdateCoordinator]:
+    coordinators: dict[str, DataUpdateCoordinator] = {}
+    for lock in u200_locks:
+        did = lock["did"]
+        coordinators[did] = _create_resilient_coordinator(
+            hass,
+            did,
+            "u200-lock-state",
+            partial(api.get_u200_state, did),
+            U200_INTERVAL_SECONDS,
+            BRIDGE_UNAVAILABLE_AFTER_FAILURES,
+        )
+    return coordinators
+
+
 def _entry_bridge_value(entry: ConfigEntry, key: str, default: str = "") -> str:
     return str(entry.options.get(key) or entry.data.get(key) or default).strip()
 
@@ -339,6 +360,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         a100_pro_locks = [device for device in devices if device.get("model") in A100_PRO_MODELS]
         acn002_locks = [device for device in devices if device.get("model") in ACN002_MODELS]
         presence_devices = [device for device in devices if device.get("model") in PRESENCE_MODELS]
+        u200_locks = [device for device in devices if device.get("model") in U200_MODELS]
 
         if (
             not cameras
@@ -351,8 +373,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             and not a100_pro_locks
             and not acn002_locks
             and not presence_devices
+            and not u200_locks
         ):
-            raise ConfigEntryNotReady("No Aqara G2H Pro, G3, G410, G4, M3, M100, M200, A100 Pro, ACN002, FP2, or FP300 devices found")
+            raise ConfigEntryNotReady(
+                "No Aqara G2H Pro, G3, G410, G4, M3, M100, M200, A100 Pro, ACN002, FP2, FP300, or U200 devices found"
+            )
 
     except (ConfigEntryAuthFailed, AqaraAuthError) as err:
         if isinstance(err, AqaraAuthError):
@@ -403,6 +428,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ACN002_STATE_SPECS,
     )
     presence_coordinators = _setup_presence_coordinators(hass, api, presence_devices)
+    u200_coordinators = _setup_u200_coordinators(hass, api, u200_locks)
 
     bridge_url = _entry_bridge_value(entry, CONF_BRIDGE_URL, DEFAULT_BRIDGE_URL)
     bridge_token = _entry_bridge_value(entry, CONF_BRIDGE_TOKEN)
@@ -421,6 +447,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "a100_pro_locks": a100_pro_locks,
         "acn002_locks": acn002_locks,
         "presence_devices": presence_devices,
+        "u200_locks": u200_locks,
         "camera_coordinators": camera_coordinators,
         "g2h_pro_coordinators": g2h_pro_coordinators,
         "g410_coordinators": g410_coordinators,
@@ -431,6 +458,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "a100_pro_coordinators": a100_pro_coordinators,
         "acn002_coordinators": acn002_coordinators,
         "presence_coordinators": presence_coordinators,
+        "u200_coordinators": u200_coordinators,
         "bridge_manager": None,
         "bridge_task": None,
         "warmup_tasks": [],

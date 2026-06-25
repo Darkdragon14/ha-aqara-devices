@@ -25,6 +25,14 @@ from .const import (
     OPEN_API_PATH,
     TOKEN_REFRESH_REQUEST_MARGIN_SECONDS,
 )
+from .u200 import (
+    U200_LOCK_ENDPOINT_ID,
+    U200_LOCK_FUNCTION,
+    U200_LOCK_STATE_LOCKED,
+    U200_STATE_TRAITS,
+    U200_TRAIT_SPEC_MAP,
+    u200_trait_request,
+)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -467,6 +475,15 @@ class AqaraApi:
         data = {"resources": subscriptions}
         return await self._open_request("config.resource.unsubscribe", data, authenticated=True)
 
+    async def query_matter_device_config(self, dids: Iterable[str]) -> Any:
+        return await self._open_request("spec.query.specdevice.config", {"dids": list(dids)}, authenticated=True)
+
+    async def query_traits(self, traits: Iterable[dict[str, Any]]) -> Any:
+        return await self._open_request("spec.query.trait", {"traits": list(traits)}, authenticated=True)
+
+    async def write_traits(self, traits: Iterable[dict[str, Any]]) -> Any:
+        return await self._open_request("spec.write.trait", {"traits": list(traits)}, authenticated=True)
+
     @staticmethod
     def _flatten_result_items(data: Any) -> list[dict]:
         raw_result = data.get("result", []) if isinstance(data, dict) else []
@@ -485,6 +502,103 @@ class AqaraApi:
         if isinstance(value, dict) and "value" in value:
             return value.get("value")
         return value
+
+    @staticmethod
+    def _parse_endpoint_id(value: Any) -> int | None:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _coerce_u200_trait_value(spec: dict[str, Any], value: Any) -> Any:
+        if value is None:
+            return spec.get("default")
+
+        value_type = spec.get("value_type")
+        if value_type == "bool":
+            if isinstance(value, bool):
+                return value
+            normalized = str(value).strip().lower()
+            if normalized in {"1", "true", "on", "yes"}:
+                return True
+            if normalized in {"0", "false", "off", "no"}:
+                return False
+            return bool(value)
+        if value_type == "float":
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return spec.get("default")
+        if value_type == "int":
+            try:
+                return int(float(value))
+            except (TypeError, ValueError):
+                return spec.get("default")
+        return str(value)
+
+    @staticmethod
+    def _iter_matter_config_traits(data: Any) -> list[dict[str, Any]]:
+        result = data.get("result") if isinstance(data, dict) else None
+        devices = result.get("data") if isinstance(result, dict) else []
+        if not isinstance(devices, list):
+            return []
+
+        items: list[dict[str, Any]] = []
+        for device in devices:
+            if not isinstance(device, dict):
+                continue
+            device_id = device.get("deviceId")
+            for endpoint in device.get("endpoints") or []:
+                if not isinstance(endpoint, dict):
+                    continue
+                endpoint_id = endpoint.get("endpointId")
+                for function in endpoint.get("functions") or []:
+                    if not isinstance(function, dict):
+                        continue
+                    function_code = function.get("functionCode")
+                    for trait in function.get("traits") or []:
+                        if not isinstance(trait, dict):
+                            continue
+                        items.append(
+                            {
+                                "deviceId": device_id,
+                                "endpointId": endpoint_id,
+                                "functionCode": function_code,
+                                "traitCode": trait.get("traitCode"),
+                                "value": trait.get("value"),
+                                "time": trait.get("time"),
+                            }
+                        )
+        return items
+
+    def _map_u200_trait_items(self, did: str, items: Iterable[dict[str, Any]]) -> dict[str, Any]:
+        state: dict[str, Any] = {spec["key"]: spec.get("default") for spec in U200_STATE_TRAITS}
+        for item in items:
+            device_id = item.get("deviceId")
+            if device_id is not None and str(device_id) != did:
+                continue
+
+            endpoint_id = self._parse_endpoint_id(item.get("endpointId"))
+            if endpoint_id is None:
+                continue
+
+            function_code = str(item.get("functionCode") or "")
+            trait_code = str(item.get("traitCode") or "")
+            spec = U200_TRAIT_SPEC_MAP.get((endpoint_id, function_code, trait_code))
+            if spec is None:
+                continue
+            state[spec["key"]] = self._coerce_u200_trait_value(spec, self._attr_value_from_item(item))
+        return state
+
+    @staticmethod
+    def _trait_write_success(data: Any) -> bool:
+        if not isinstance(data, dict) or str(data.get("code")) != "0":
+            return False
+        items = AqaraApi._flatten_result_items(data)
+        if not items:
+            return True
+        return all(str(item.get("code", 0)) == "0" for item in items)
 
     async def get_device_states(
         self,
@@ -528,6 +642,45 @@ class AqaraApi:
             result_map.update(await self._history_states(did, history_defs))
 
         return result_map
+
+    async def get_u200_state(self, did: str) -> dict[str, Any]:
+        traits = [u200_trait_request(did, spec) for spec in U200_STATE_TRAITS]
+        data = await self.query_traits(traits)
+        if str(data.get("code")) != "0":
+            raise RuntimeError(f"Failed to query U200 traits: {data}")
+
+        items = self._flatten_result_items(data)
+        if not items:
+            config = await self.query_matter_device_config([did])
+            if str(config.get("code")) != "0":
+                raise RuntimeError(f"Failed to query U200 config: {config}")
+            items = self._iter_matter_config_traits(config)
+
+        return self._map_u200_trait_items(did, items)
+
+    async def set_u200_locked(self, did: str, locked: bool) -> Any:
+        lock_state_trait = {
+            "endpoint_id": U200_LOCK_ENDPOINT_ID,
+            "function_code": U200_LOCK_FUNCTION,
+            "trait_code": "LockState",
+        }
+        target_value = U200_LOCK_STATE_LOCKED if locked else "2"
+        response = await self.write_traits([u200_trait_request(did, lock_state_trait, target_value)])
+        if self._trait_write_success(response):
+            return response
+
+        if not locked:
+            remote_unlock_trait = {
+                "endpoint_id": U200_LOCK_ENDPOINT_ID,
+                "function_code": U200_LOCK_FUNCTION,
+                "trait_code": "RemoteUnlock",
+            }
+            fallback = await self.write_traits([u200_trait_request(did, remote_unlock_trait, True)])
+            if self._trait_write_success(fallback):
+                return fallback
+            raise RuntimeError(f"Failed to unlock U200: {fallback}")
+
+        raise RuntimeError(f"Failed to lock U200: {response}")
 
     async def _history_states(self, did: str, specs: Iterable[Dict[str, Any]]) -> Dict[str, float]:
         spec_list = list(specs)

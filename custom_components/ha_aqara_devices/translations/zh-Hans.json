@@ -103,6 +103,12 @@
             },
             "detection_area": {
                 "name": "检测区域 {index}"
+            },
+            "reachable": {
+                "name": "可连接"
+            },
+            "battery_replacement_needed": {
+                "name": "需要更换电池"
             }
         },
         "sensor": {
@@ -174,6 +180,12 @@
             },
             "user_id_temporary_password": {
                 "name": "临时密码用户 ID"
+            },
+            "battery": {
+                "name": "电池"
+            },
+            "battery_voltage": {
+                "name": "电池电压"
             },
             "lock_exception_alert": {
                 "name": "锁异常告警"
@@ -525,6 +537,11 @@
             },
             "restart_coordinator": {
                 "name": "重启协调器"
+            }
+        },
+        "lock": {
+            "lock": {
+                "name": "门锁"
             }
         }
     }

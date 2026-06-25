@@ -76,6 +76,12 @@
             },
             "detection_area": {
                 "name": "Detectiezone {index}"
+            },
+            "reachable": {
+                "name": "Bereikbaar"
+            },
+            "battery_replacement_needed": {
+                "name": "Batterij vervangen nodig"
             }
         },
         "sensor": {
@@ -147,6 +153,12 @@
             },
             "user_id_temporary_password": {
                 "name": "Gebruikers-ID tijdelijk wachtwoord"
+            },
+            "battery": {
+                "name": "Batterij"
+            },
+            "battery_voltage": {
+                "name": "Batterijspanning"
             },
             "lock_exception_alert": {
                 "name": "Waarschuwing slotafwijking"
@@ -498,6 +510,11 @@
             },
             "restart_coordinator": {
                 "name": "Coördinator herstarten"
+            }
+        },
+        "lock": {
+            "lock": {
+                "name": "Slot"
             }
         }
     }

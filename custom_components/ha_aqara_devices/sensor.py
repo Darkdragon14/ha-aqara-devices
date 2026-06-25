@@ -23,6 +23,7 @@ from .const import (
     G4_DEVICE_LABEL,
     M100_DEVICE_LABEL,
     M3_DEVICE_LABEL,
+    U200_DEVICE_LABEL,
 )
 from .device_info import build_device_info
 from .fp300 import FP300_SENSOR_SPECS
@@ -35,6 +36,7 @@ from .sensors import (
     M100_SENSORS_DEF,
     M3_SENSORS_DEF,
 )
+from .u200 import U200_SENSORS_DEF
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     a100_pro_locks: list[dict] = data.get("a100_pro_locks", [])
     acn002_locks: list[dict] = data.get("acn002_locks", [])
     presence_devices: list[dict] = data.get("presence_devices", [])
+    u200_locks: list[dict] = data.get("u200_locks", [])
     g410_coordinators: dict[str, DataUpdateCoordinator] = data.get("g410_coordinators", {})
     g4_coordinators: dict[str, DataUpdateCoordinator] = data.get("g4_coordinators", {})
     m3_coordinators: dict[str, DataUpdateCoordinator] = data.get("m3_coordinators", {})
@@ -55,6 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     a100_pro_coordinators: dict[str, DataUpdateCoordinator] = data.get("a100_pro_coordinators", {})
     acn002_coordinators: dict[str, DataUpdateCoordinator] = data.get("acn002_coordinators", {})
     presence_coordinators: dict[str, dict[str, DataUpdateCoordinator]] = data.get("presence_coordinators", {})
+    u200_coordinators: dict[str, DataUpdateCoordinator] = data.get("u200_coordinators", {})
 
     entities: list[SensorEntity] = []
 
@@ -207,6 +211,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                     spec,
                     model,
                     device_label,
+                )
+            )
+
+    for lock in u200_locks:
+        did = lock["did"]
+        name = lock["deviceName"]
+        model = lock["model"]
+        coordinator = u200_coordinators.get(did)
+        if coordinator is None:
+            continue
+
+        for sensor_def in U200_SENSORS_DEF:
+            entities.append(
+                AqaraSensor(
+                    coordinator,
+                    did,
+                    name,
+                    sensor_def,
+                    model,
+                    U200_DEVICE_LABEL,
                 )
             )
 

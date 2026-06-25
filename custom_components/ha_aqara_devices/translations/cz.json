@@ -103,6 +103,12 @@
             },
             "detection_area": {
                 "name": "Detekční zóna {index}"
+            },
+            "reachable": {
+                "name": "Dostupné"
+            },
+            "battery_replacement_needed": {
+                "name": "Je nutná výměna baterie"
             }
         },
         "sensor": {
@@ -174,6 +180,12 @@
             },
             "user_id_temporary_password": {
                 "name": "ID uživatele dočasného hesla"
+            },
+            "battery": {
+                "name": "Baterie"
+            },
+            "battery_voltage": {
+                "name": "Napětí baterie"
             },
             "lock_exception_alert": {
                 "name": "Upozornění na chybu zámku"
@@ -525,6 +537,11 @@
             },
             "restart_coordinator": {
                 "name": "Restartovat koordinátor"
+            }
+        },
+        "lock": {
+            "lock": {
+                "name": "Zámek"
             }
         }
     }

@@ -76,6 +76,12 @@
             },
             "detection_area": {
                 "name": "Зона обнаружения {index}"
+            },
+            "reachable": {
+                "name": "Доступен"
+            },
+            "battery_replacement_needed": {
+                "name": "Требуется замена батареи"
             }
         },
         "sensor": {
@@ -147,6 +153,12 @@
             },
             "user_id_temporary_password": {
                 "name": "ID пользователя временного пароля"
+            },
+            "battery": {
+                "name": "Батарея"
+            },
+            "battery_voltage": {
+                "name": "Напряжение батареи"
             },
             "lock_exception_alert": {
                 "name": "Предупреждение о неисправности замка"
@@ -498,6 +510,11 @@
             },
             "restart_coordinator": {
                 "name": "Перезапустить координатор"
+            }
+        },
+        "lock": {
+            "lock": {
+                "name": "Замок"
             }
         }
     }

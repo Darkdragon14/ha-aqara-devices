@@ -76,6 +76,12 @@
             },
             "detection_area": {
                 "name": "Area di rilevamento {index}"
+            },
+            "reachable": {
+                "name": "Raggiungibile"
+            },
+            "battery_replacement_needed": {
+                "name": "Sostituzione batteria necessaria"
             }
         },
         "sensor": {
@@ -147,6 +153,12 @@
             },
             "user_id_temporary_password": {
                 "name": "ID utente password temporanea"
+            },
+            "battery": {
+                "name": "Batteria"
+            },
+            "battery_voltage": {
+                "name": "Tensione batteria"
             },
             "lock_exception_alert": {
                 "name": "Avviso anomalia serratura"
@@ -498,6 +510,11 @@
             },
             "restart_coordinator": {
                 "name": "Riavvia coordinatore"
+            }
+        },
+        "lock": {
+            "lock": {
+                "name": "Serratura"
             }
         }
     }
