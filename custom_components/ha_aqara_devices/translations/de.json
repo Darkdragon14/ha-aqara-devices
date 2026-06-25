@@ -73,6 +73,12 @@
             },
             "detection_area": {
                 "name": "Erkennungsbereich {index}"
+            },
+            "reachable": {
+                "name": "Erreichbar"
+            },
+            "battery_replacement_needed": {
+                "name": "Batteriewechsel erforderlich"
             }
         },
         "sensor": {
@@ -144,6 +150,12 @@
             },
             "user_id_temporary_password": {
                 "name": "Benutzer-ID temporäres Passwort"
+            },
+            "battery": {
+                "name": "Batterie"
+            },
+            "battery_voltage": {
+                "name": "Batteriespannung"
             },
             "people_counting": {
                 "name": "Personenzählung"
@@ -472,6 +484,11 @@
             },
             "restart_coordinator": {
                 "name": "Koordinator neu starten"
+            }
+        },
+        "lock": {
+            "lock": {
+                "name": "Schloss"
             }
         }
     }

@@ -100,6 +100,12 @@
             },
             "detection_area": {
                 "name": "偵測區域 {index}"
+            },
+            "reachable": {
+                "name": "可連線"
+            },
+            "battery_replacement_needed": {
+                "name": "需要更換電池"
             }
         },
         "sensor": {
@@ -171,6 +177,12 @@
             },
             "user_id_temporary_password": {
                 "name": "臨時密碼使用者 ID"
+            },
+            "battery": {
+                "name": "電池"
+            },
+            "battery_voltage": {
+                "name": "電池電壓"
             },
             "people_counting": {
                 "name": "人數統計"
@@ -499,6 +511,11 @@
             },
             "restart_coordinator": {
                 "name": "重新啟動協調器"
+            }
+        },
+        "lock": {
+            "lock": {
+                "name": "門鎖"
             }
         }
     }

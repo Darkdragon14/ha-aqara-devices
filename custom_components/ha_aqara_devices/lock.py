@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
 class AqaraU200Lock(CoordinatorEntity, LockEntity):
     _attr_has_entity_name = True
-    _attr_name = "Lock"
+    _attr_translation_key = "lock"
 
     def __init__(
         self,

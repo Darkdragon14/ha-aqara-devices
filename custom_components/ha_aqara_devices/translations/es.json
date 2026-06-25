@@ -73,6 +73,12 @@
             },
             "detection_area": {
                 "name": "Área de detección {index}"
+            },
+            "reachable": {
+                "name": "Accesible"
+            },
+            "battery_replacement_needed": {
+                "name": "Cambio de batería necesario"
             }
         },
         "sensor": {
@@ -144,6 +150,12 @@
             },
             "user_id_temporary_password": {
                 "name": "ID de usuario de contraseña temporal"
+            },
+            "battery": {
+                "name": "Batería"
+            },
+            "battery_voltage": {
+                "name": "Voltaje de la batería"
             },
             "people_counting": {
                 "name": "Recuento de personas"
@@ -472,6 +484,11 @@
             },
             "restart_coordinator": {
                 "name": "Reiniciar coordinador"
+            }
+        },
+        "lock": {
+            "lock": {
+                "name": "Cerradura"
             }
         }
     }

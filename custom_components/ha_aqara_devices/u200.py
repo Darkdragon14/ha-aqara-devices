@@ -29,6 +29,7 @@ U200_DOOR_STATE_LABELS = {
 
 U200_REACHABLE = {
     "name": "Reachable",
+    "translation_key": "reachable",
     "icon": "mdi:lan-connect",
     "inApp": "reachable",
     "device_class": "connectivity",
@@ -37,6 +38,7 @@ U200_REACHABLE = {
 
 U200_BATTERY_REPLACEMENT_NEEDED = {
     "name": "Battery Replacement Needed",
+    "translation_key": "battery_replacement_needed",
     "icon": "mdi:battery-alert",
     "inApp": "battery_replacement_needed",
     "device_class": "problem",
@@ -50,6 +52,7 @@ U200_BINARY_SENSORS_DEF = [
 
 U200_BATTERY_PERCENTAGE = {
     "name": "Battery",
+    "translation_key": "battery",
     "icon": "mdi:battery",
     "inApp": "battery_percentage",
     "device_class": "battery",
@@ -60,6 +63,7 @@ U200_BATTERY_PERCENTAGE = {
 
 U200_CURRENT_VOLTAGE = {
     "name": "Battery Voltage",
+    "translation_key": "battery_voltage",
     "icon": "mdi:sine-wave",
     "inApp": "current_voltage",
     "device_class": "voltage",

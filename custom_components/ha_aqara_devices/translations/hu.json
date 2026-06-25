@@ -73,6 +73,12 @@
             },
             "detection_area": {
                 "name": "Érzékelési terület {index}"
+            },
+            "reachable": {
+                "name": "Elérhető"
+            },
+            "battery_replacement_needed": {
+                "name": "Elemcsere szükséges"
             }
         },
         "sensor": {
@@ -144,6 +150,12 @@
             },
             "user_id_temporary_password": {
                 "name": "Ideiglenes jelszó felhasználói azonosító"
+            },
+            "battery": {
+                "name": "Akkumulátor"
+            },
+            "battery_voltage": {
+                "name": "Akkumulátor feszültsége"
             },
             "people_counting": {
                 "name": "Emberszámlálás"
@@ -472,6 +484,11 @@
             },
             "restart_coordinator": {
                 "name": "Koordinátor újraindítása"
+            }
+        },
+        "lock": {
+            "lock": {
+                "name": "Zár"
             }
         }
     }

@@ -73,6 +73,12 @@
             },
             "detection_area": {
                 "name": "Detectiezone {index}"
+            },
+            "reachable": {
+                "name": "Bereikbaar"
+            },
+            "battery_replacement_needed": {
+                "name": "Batterij vervangen nodig"
             }
         },
         "sensor": {
@@ -144,6 +150,12 @@
             },
             "user_id_temporary_password": {
                 "name": "Gebruikers-ID tijdelijk wachtwoord"
+            },
+            "battery": {
+                "name": "Batterij"
+            },
+            "battery_voltage": {
+                "name": "Batterijspanning"
             },
             "people_counting": {
                 "name": "Personen tellen"
@@ -472,6 +484,11 @@
             },
             "restart_coordinator": {
                 "name": "Coördinator herstarten"
+            }
+        },
+        "lock": {
+            "lock": {
+                "name": "Slot"
             }
         }
     }
