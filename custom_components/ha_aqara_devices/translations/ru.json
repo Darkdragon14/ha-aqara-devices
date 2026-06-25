@@ -71,6 +71,9 @@
             "doorbell_ring": {
                 "name": "Звонок в дверь"
             },
+            "ac_on_off_status": {
+                "name": "Статус включения/выключения кондиционера"
+            },
             "detection_area": {
                 "name": "Зона обнаружения {index}"
             }
@@ -461,6 +464,16 @@
                     "radar_infrared": "Радар + Инфракрасный",
                     "radar_only": "Только радар",
                     "infrared_only": "Только инфракрасный"
+                }
+            },
+            "ac_mode": {
+                "name": "Режим кондиционера",
+                "state": {
+                    "unconfigured": "Режим не настроен",
+                    "air_conditioner_with_socket": "Кондиционер подключён к розетке",
+                    "air_conditioner_without_socket": "Кондиционер не подключён к розетке",
+                    "infrared_water_heater": "Режим инфракрасного водонагревателя",
+                    "16a_socket": "Режим розетки 16 А"
                 }
             }
         },

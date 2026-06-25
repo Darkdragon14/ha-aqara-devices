@@ -71,6 +71,9 @@
             "doorbell_ring": {
                 "name": "Timbre"
             },
+            "ac_on_off_status": {
+                "name": "Estado de encendido/apagado del aire acondicionado"
+            },
             "detection_area": {
                 "name": "Área de detección {index}"
             }
@@ -461,6 +464,16 @@
                     "radar_infrared": "Radar + Infrarrojo",
                     "radar_only": "Solo radar",
                     "infrared_only": "Solo infrarrojo"
+                }
+            },
+            "ac_mode": {
+                "name": "Modo de aire acondicionado",
+                "state": {
+                    "unconfigured": "Modo no configurado",
+                    "air_conditioner_with_socket": "Aire acondicionado enchufado a la toma",
+                    "air_conditioner_without_socket": "Aire acondicionado no enchufado a la toma",
+                    "infrared_water_heater": "Modo calentador de agua por infrarrojos",
+                    "16a_socket": "Modo toma de 16 A"
                 }
             }
         },
