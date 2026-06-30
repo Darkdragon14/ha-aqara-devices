@@ -376,7 +376,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             and not u200_locks
         ):
             raise ConfigEntryNotReady(
-                "No Aqara G2H Pro, G3, G410, G4, M3, M100, M200, A100 Pro, ACN002, FP2, FP300, or U200 devices found"
+                "No Aqara G2H Pro, G3, G410, G4, M3, M100, M200, A100, A100 Pro, ACN002, FP2, FP300, or U200 devices found"
             )
 
     except (ConfigEntryAuthFailed, AqaraAuthError) as err:

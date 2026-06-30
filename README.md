@@ -4,7 +4,7 @@
 [![HACS Action](https://github.com/Darkdragon14/ha-aqara-devices/actions/workflows/hacs_action.yml/badge.svg)](https://github.com/Darkdragon14/ha-aqara-devices/actions/workflows/hacs_action.yml)
 [![release](https://img.shields.io/github/v/release/Darkdragon14/ha-aqara-devices.svg)](https://github.com/Darkdragon14/ha-aqara-devices/releases)
 
-`Aqara Devices (G3, G2H Pro, G410, G4, M3, M100, M200, FP2, FP300, A100 Pro, Xingyao/ACN002 locks, and U200)` connects supported Aqara cameras, doorbells, hubs, presence sensors, and locks to Home Assistant with Aqara Open API v3 and `aqara-rocketmq-bridge`.
+`Aqara Devices (G3, G2H Pro, G410, G4, M3, M100, M200, FP2, FP300, A100, A100 Pro, Xingyao/ACN002 locks, and U200)` connects supported Aqara cameras, doorbells, hubs, presence sensors, and locks to Home Assistant with Aqara Open API v3 and `aqara-rocketmq-bridge`.
 
 Instead of relying only on periodic polling, the integration now uses Aqara Message Push -> RocketMQ -> bridge -> Server-Sent Events (SSE) so Home Assistant receives live updates while the integration keeps Aqara authentication, token refresh, and resource subscriptions in sync.
 
@@ -107,11 +107,12 @@ After the first step, Aqara sends a verification code to your email address or p
 | `Hub G3` | `lumi.camera.gwpgl1`, `lumi.camera.gwpagl01` |
 | `Camera Hub G2H Pro` | `lumi.camera.agl001`, `lumi.camera.acn003` |
 | `Doorbell G410` | `lumi.camera.acn017`, `lumi.camera.agl006` |
-| `Doorbell G4` | `aqara.lock.agl002`, `lumi.camera.acn005` |
+| `Doorbell G4` | `lumi.camera.agl002`, `lumi.camera.acn005` |
 | `Hub M3` | `lumi.gateway.acn012`, `lumi.gateway.agl004` |
 | `Hub M100` | `lumi.gateway.agl008`, `lumi.gateway.agl010` |
 | `Presence Sensor FP2` | `lumi.motion.agl001` |
 | `Presence Multi-Sensor FP300` | `lumi.sensor_occupy.agl8` |
+| `Door Lock A100` | `aqara.lock.agl002` |
 | `Door Lock A100 Pro` | `aqara.lock.acn001` |
 | `Smart Lock U200` | `aqara.matter.4447_10242` |
 | `Smart Video Door Lock Xingyao` (`全自动智能猫眼门锁 星耀`) | `aqara.lock.acn002` |
