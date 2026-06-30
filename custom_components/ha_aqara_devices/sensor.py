@@ -12,6 +12,8 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
+    A100_DEVICE_LABEL,
+    A100_MODEL,
     A100_PRO_DEVICE_LABEL,
     ACN002_DEVICE_LABEL,
     DOMAIN,
@@ -150,6 +152,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         if coordinator is None:
             continue
 
+        device_label = A100_DEVICE_LABEL if model == A100_MODEL else A100_PRO_DEVICE_LABEL
+
         for sensor_def in A100_PRO_SENSORS_DEF:
             entities.append(
                 AqaraSensor(
@@ -158,7 +162,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                     name,
                     sensor_def,
                     model,
-                    A100_PRO_DEVICE_LABEL,
+                    device_label,
                 )
             )
 
