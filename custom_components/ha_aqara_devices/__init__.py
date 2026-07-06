@@ -7,13 +7,21 @@ from functools import partial
 import logging
 from typing import Any, Awaitable, Callable
 
+import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_validation as cv, entity_registry as er
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistantError
+from homeassistant.helpers import aiohttp_client, config_validation as cv, device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.helpers.typing import ConfigType
 
+from .child_devices import (
+    build_child_active_subscriptions,
+    build_child_entity_specs,
+    child_enabled_resource_ids,
+    child_resource_spec_maps,
+    child_specs_by_did,
+)
 from .const import (
     A100_PRO_MODELS,
     ACN002_MODELS,
@@ -46,11 +54,59 @@ _LOGGER = logging.getLogger(__name__)
 
 BRIDGE_START_RETRY_INITIAL_SECONDS = 5
 BRIDGE_START_RETRY_MAX_SECONDS = 30
+SERVICE_OPEN_PAIRING_MODE = "open_pairing_mode"
+SERVICE_CLOSE_PAIRING_MODE = "close_pairing_mode"
+ATTR_DID = "did"
+ATTR_DURATION = "duration"
+PAIRING_PARENT_DEVICE_KEYS = (
+    "cameras",
+    "g2h_pro_cameras",
+    "hubs_m3",
+    "hubs_m100",
+    "hubs_m200",
+)
+
+PAIRING_OPEN_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DID): cv.string,
+        vol.Optional(ATTR_DURATION, default=60): vol.All(vol.Coerce(int), vol.Range(min=1, max=600)),
+    }
+)
+PAIRING_CLOSE_SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_DID): cv.string})
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    async def _handle_open_pairing_mode(call: ServiceCall) -> None:
+        did = str(call.data[ATTR_DID]).strip()
+        duration = int(call.data[ATTR_DURATION])
+        api = _api_for_pairing_hub(hass, did)
+        response = await api.open_device_connect(did, duration)
+        if str(response.get("code")) != "0":
+            raise HomeAssistantError(f"Failed to open Aqara pairing mode for {did}: {response}")
+        _LOGGER.info("Opened Aqara pairing mode for %s during %s seconds", did, duration)
+
+    async def _handle_close_pairing_mode(call: ServiceCall) -> None:
+        did = str(call.data[ATTR_DID]).strip()
+        api = _api_for_pairing_hub(hass, did)
+        response = await api.close_device_connect(did)
+        if str(response.get("code")) != "0":
+            raise HomeAssistantError(f"Failed to close Aqara pairing mode for {did}: {response}")
+        _LOGGER.info("Closed Aqara pairing mode for %s", did)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_OPEN_PAIRING_MODE,
+        _handle_open_pairing_mode,
+        schema=PAIRING_OPEN_SERVICE_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CLOSE_PAIRING_MODE,
+        _handle_close_pairing_mode,
+        schema=PAIRING_CLOSE_SERVICE_SCHEMA,
+    )
     return True
 
 
@@ -109,6 +165,21 @@ def _create_resilient_coordinator(
             unavailable_after_failures,
         ),
         update_interval=timedelta(seconds=interval_seconds),
+    )
+    hass.async_create_task(coordinator.async_refresh())
+    return coordinator
+
+
+def _create_noop_coordinator(hass: HomeAssistant, did: str, label: str) -> DataUpdateCoordinator:
+    async def _async_update() -> dict[str, Any]:
+        return {}
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"{DOMAIN}-{label}-{did}",
+        update_method=_async_update,
+        update_interval=None,
     )
     hass.async_create_task(coordinator.async_refresh())
     return coordinator
@@ -256,8 +327,209 @@ def _setup_u200_coordinators(
     return coordinators
 
 
+def _setup_child_coordinators(
+    hass: HomeAssistant,
+    api,
+    child_entity_specs: list[dict[str, Any]],
+    enabled_unique_ids: set[str],
+    known_unique_ids: set[str],
+) -> dict[str, DataUpdateCoordinator]:
+    coordinators: dict[str, DataUpdateCoordinator] = {}
+    for did, specs in child_specs_by_did(child_entity_specs).items():
+        resource_ids = child_enabled_resource_ids(enabled_unique_ids, specs, known_unique_ids=known_unique_ids)
+        if not resource_ids:
+            coordinators[did] = _create_noop_coordinator(hass, did, "child-state")
+            continue
+        coordinators[did] = _create_resilient_coordinator(
+            hass,
+            did,
+            "child-state",
+            partial(api.get_resource_values, did, resource_ids),
+            BRIDGE_SANITY_INTERVAL_SECONDS,
+            BRIDGE_UNAVAILABLE_AFTER_FAILURES,
+        )
+    return coordinators
+
+
+def _api_for_pairing_hub(hass: HomeAssistant, did: str):
+    if not did:
+        raise HomeAssistantError("Aqara hub DID is required")
+
+    domain_data = hass.data.get(DOMAIN, {})
+    for entry_data in domain_data.values():
+        if not isinstance(entry_data, dict):
+            continue
+        for key in PAIRING_PARENT_DEVICE_KEYS:
+            for device in entry_data.get(key, []):
+                if str(device.get("did") or "").strip() == did:
+                    return entry_data["api"]
+
+    raise HomeAssistantError(
+        f"Aqara hub DID {did} was not found among loaded pairing-capable hubs"
+    )
+
+
 def _entry_bridge_value(entry: ConfigEntry, key: str, default: str = "") -> str:
     return str(entry.options.get(key) or entry.data.get(key) or default).strip()
+
+
+def _has_aqara_value(value: Any) -> bool:
+    return value is not None and str(value).strip() != ""
+
+
+def _first_aqara_value(data: dict[str, Any], keys: tuple[str, ...]) -> Any:
+    for key in keys:
+        value = data.get(key)
+        if _has_aqara_value(value):
+            return value
+    return None
+
+
+def _flatten_aqara_items(data: Any) -> list[dict[str, Any]]:
+    raw_result = data.get("result", []) if isinstance(data, dict) else data
+    if isinstance(raw_result, list):
+        return [item for item in raw_result if isinstance(item, dict)]
+    if isinstance(raw_result, dict):
+        for key in ("data", "items", "list", "devices", "result"):
+            maybe = raw_result.get(key)
+            if isinstance(maybe, list):
+                return [item for item in maybe if isinstance(item, dict)]
+        if raw_result:
+            return [raw_result]
+    return []
+
+
+def _normalize_child_device(raw: dict[str, Any], fallback_parent_did: str | None = None) -> dict[str, Any] | None:
+    did = str(_first_aqara_value(raw, ("did", "deviceId", "subjectId")) or "").strip()
+    parent_did = str(_first_aqara_value(raw, ("parentDid", "parentDeviceId", "gatewayDid")) or fallback_parent_did or "").strip()
+    model = str(_first_aqara_value(raw, ("model", "modelId", "modelID", "deviceModel", "modelName")) or "").strip()
+    if not did or not parent_did:
+        _LOGGER.debug(
+            "Ignoring Aqara child device with missing identifiers: did=%s parentDid=%s raw=%s",
+            did,
+            parent_did,
+            raw,
+        )
+        return None
+    if did == parent_did:
+        _LOGGER.debug("Ignoring Aqara child device with matching did and parentDid: %s", raw)
+        return None
+
+    device_name = str(
+        _first_aqara_value(raw, ("deviceName", "name", "nickName", "nickname", "displayName")) or model or did
+    ).strip()
+    normalized = {
+        "did": did,
+        "parentDid": parent_did,
+        "modelType": raw.get("modelType"),
+        "state": raw.get("state"),
+        "model": model,
+        "deviceName": device_name,
+        "firmwareVersion": raw.get("firmwareVersion"),
+        "positionId": raw.get("positionId"),
+    }
+    for key, value in raw.items():
+        normalized.setdefault(key, value)
+    return normalized
+
+
+def _merge_child_device(existing: dict[str, Any] | None, new: dict[str, Any]) -> dict[str, Any]:
+    if existing is None:
+        return new
+    merged = dict(existing)
+    for key, value in new.items():
+        if key in {"did", "parentDid", "model"}:
+            if not _has_aqara_value(merged.get(key)) and _has_aqara_value(value):
+                merged[key] = value
+            continue
+        if _has_aqara_value(value) or not _has_aqara_value(merged.get(key)):
+            merged[key] = value
+    return merged
+
+
+async def _discover_child_devices(api, parent_devices: list[dict[str, Any]], all_devices: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    children_by_did: dict[str, dict[str, Any]] = {}
+    parent_dids = {str(device.get("did") or "").strip() for device in parent_devices if device.get("did")}
+
+    for device in all_devices:
+        parent_did = str(device.get("parentDid") or "").strip()
+        if not parent_did or parent_did not in parent_dids:
+            continue
+        child = _normalize_child_device(device)
+        if child is not None:
+            children_by_did[child["did"]] = _merge_child_device(children_by_did.get(child["did"]), child)
+
+    for parent in parent_devices:
+        parent_did = str(parent.get("did") or "").strip()
+        if not parent_did:
+            continue
+        try:
+            data = await api.query_device_sub_info(parent_did)
+        except Exception as err:
+            _LOGGER.debug("Failed to query Aqara child devices for parent %s: %s", parent_did, err)
+            continue
+        if str(data.get("code")) != "0":
+            _LOGGER.debug("Aqara child device query failed for parent %s: %s", parent_did, data)
+            continue
+        _LOGGER.debug("Aqara child device payload for parent %s: %s", parent_did, data.get("result"))
+        for raw_child in _flatten_aqara_items(data):
+            child = _normalize_child_device(raw_child, parent_did)
+            if child is not None:
+                children_by_did[child["did"]] = _merge_child_device(children_by_did.get(child["did"]), child)
+
+    return list(children_by_did.values())
+
+
+async def _query_child_resource_info(api, child_devices: list[dict[str, Any]]) -> dict[str, Any]:
+    resource_info: dict[str, Any] = {}
+    models = sorted({str(device.get("model") or "").strip() for device in child_devices if device.get("model")})
+    for model in models:
+        try:
+            data = await api.query_resource_info(model)
+        except Exception as err:
+            _LOGGER.debug("Failed to query Aqara child resource info for model %s: %s", model, err)
+            continue
+        if str(data.get("code")) != "0":
+            _LOGGER.debug("Aqara child resource info query failed for model %s: %s", model, data)
+            continue
+        resource_info[model] = data.get("result")
+        _LOGGER.debug("Aqara child resource info for model %s: %s", model, data.get("result"))
+    return resource_info
+
+
+def _group_child_devices_by_parent(child_devices: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for child in child_devices:
+        grouped.setdefault(str(child["parentDid"]), []).append(child)
+    return grouped
+
+
+def _register_child_devices(hass: HomeAssistant, entry: ConfigEntry, child_devices: list[dict[str, Any]]) -> None:
+    device_registry = dr.async_get(hass)
+    for child in child_devices:
+        did = str(child.get("did") or "").strip()
+        parent_did = str(child.get("parentDid") or "").strip()
+        if not did or not parent_did:
+            _LOGGER.debug("Skipping Aqara child registry entry with missing did or parentDid: %s", child)
+            continue
+
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, did)},
+            manufacturer="Aqara",
+            name=str(child.get("deviceName") or did),
+            model=str(child.get("model") or "Aqara child device"),
+            model_id=str(child.get("model") or did),
+            sw_version=None if child.get("firmwareVersion") is None else str(child.get("firmwareVersion")),
+            via_device=(DOMAIN, parent_did),
+        )
+        _LOGGER.debug(
+            "Registered Aqara child device: did=%s parentDid=%s model=%s name=%s",
+            did,
+            parent_did,
+            child.get("model"),
+            child.get("deviceName"),
+        )
 
 
 def _enabled_unique_ids_for_entry(hass: HomeAssistant, entry: ConfigEntry) -> set[str]:
@@ -266,6 +538,15 @@ def _enabled_unique_ids_for_entry(hass: HomeAssistant, entry: ConfigEntry) -> se
         str(registry_entry.unique_id)
         for registry_entry in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
         if registry_entry.unique_id and registry_entry.disabled_by is None
+    }
+
+
+def _known_unique_ids_for_entry(hass: HomeAssistant, entry: ConfigEntry) -> set[str]:
+    entity_registry = er.async_get(hass)
+    return {
+        str(registry_entry.unique_id)
+        for registry_entry in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+        if registry_entry.unique_id
     }
 
 
@@ -362,6 +643,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         presence_devices = [device for device in devices if device.get("model") in PRESENCE_MODELS]
         u200_locks = [device for device in devices if device.get("model") in U200_MODELS]
 
+        hub_parent_devices = [
+            *cameras,
+            *g2h_pro_cameras,
+            *hubs_m3,
+            *hubs_m100,
+            *hubs_m200,
+        ]
+        child_devices = await _discover_child_devices(api, hub_parent_devices, devices)
+        child_devices_by_parent = _group_child_devices_by_parent(child_devices)
+        child_resource_info = await _query_child_resource_info(api, child_devices)
+        supported_dids = {
+            str(device.get("did") or "")
+            for device in (
+                cameras
+                + g2h_pro_cameras
+                + g410_doorbells
+                + g4_doorbells
+                + hubs_m3
+                + hubs_m100
+                + hubs_m200
+                + a100_pro_locks
+                + acn002_locks
+                + presence_devices
+                + u200_locks
+            )
+            if device.get("did")
+        }
+        child_entity_specs = build_child_entity_specs(child_devices, child_resource_info, supported_dids)
+        child_resource_specs = child_resource_spec_maps(child_entity_specs)
+
         if (
             not cameras
             and not g2h_pro_cameras
@@ -429,6 +740,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     presence_coordinators = _setup_presence_coordinators(hass, api, presence_devices)
     u200_coordinators = _setup_u200_coordinators(hass, api, u200_locks)
+    enabled_unique_ids = _enabled_unique_ids_for_entry(hass, entry)
+    known_unique_ids = _known_unique_ids_for_entry(hass, entry)
+    child_coordinators = _setup_child_coordinators(
+        hass,
+        api,
+        child_entity_specs,
+        enabled_unique_ids,
+        known_unique_ids,
+    )
 
     bridge_url = _entry_bridge_value(entry, CONF_BRIDGE_URL, DEFAULT_BRIDGE_URL)
     bridge_token = _entry_bridge_value(entry, CONF_BRIDGE_TOKEN)
@@ -448,6 +768,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "acn002_locks": acn002_locks,
         "presence_devices": presence_devices,
         "u200_locks": u200_locks,
+        "child_devices": child_devices,
+        "child_devices_by_parent": child_devices_by_parent,
+        "child_resource_info": child_resource_info,
+        "child_entity_specs": child_entity_specs,
+        "child_resource_specs": child_resource_specs,
+        "child_coordinators": child_coordinators,
         "camera_coordinators": camera_coordinators,
         "g2h_pro_coordinators": g2h_pro_coordinators,
         "g410_coordinators": g410_coordinators,
@@ -473,6 +799,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id, None)
         raise
 
+    _register_child_devices(hass, entry, child_devices)
+
     enabled_unique_ids = _enabled_unique_ids_for_entry(hass, entry)
     active_subscriptions = build_active_subscriptions(
         enabled_unique_ids,
@@ -487,6 +815,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         acn002_locks,
         presence_devices,
     )
+    active_subscriptions.extend(build_child_active_subscriptions(enabled_unique_ids, child_entity_specs))
     entry_data["active_subscriptions"] = active_subscriptions
 
     bridge_manager = AqaraBridgePushManager(
@@ -505,6 +834,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         a100_pro_locks,
         acn002_locks,
         presence_devices,
+        child_devices,
         camera_coordinators,
         g2h_pro_coordinators,
         g410_coordinators,
@@ -515,6 +845,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         a100_pro_coordinators,
         acn002_coordinators,
         presence_coordinators,
+        child_coordinators,
+        child_resource_specs,
         active_subscriptions,
     )
 

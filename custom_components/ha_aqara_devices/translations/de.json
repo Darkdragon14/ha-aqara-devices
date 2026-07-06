@@ -30,6 +30,33 @@
             "already_configured": "Dieses Gerat ist bereits konfiguriert."
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Aqara FP2",
+                "description": "Aktualisieren Sie Ihre Aqara Open API-Kontodaten oder Bridge-Verbindungseinstellungen.",
+                "data": {
+                    "account": "Aqara-Konto (E-Mail oder Telefon)",
+                    "area": "Region",
+                    "bridge_url": "Bridge-URL",
+                    "bridge_token": "Bridge-Token",
+                    "app_id": "App-ID",
+                    "key_id": "Key ID",
+                    "app_key": "App-Key"
+                }
+            },
+            "auth_code": {
+                "title": "Autorisierungscode",
+                "description": "Geben Sie den Bestatigungscode ein, den Aqara an Ihre E-Mail-Adresse oder Telefonnummer gesendet hat.",
+                "data": {
+                    "auth_code": "Autorisierungscode"
+                }
+            }
+        },
+        "error": {
+            "auth": "Authentifizierung fehlgeschlagen. Bitte prufen Sie Konto, Region und Autorisierungscode."
+        }
+    },
     "entity": {
         "binary_sensor": {
             "night_vision": {

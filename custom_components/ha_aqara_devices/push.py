@@ -58,6 +58,7 @@ class AqaraBridgePushManager:
         a100_pro_locks: list[dict[str, Any]],
         acn002_locks: list[dict[str, Any]],
         presence_devices: list[dict[str, Any]],
+        child_devices: list[dict[str, Any]],
         camera_coordinators: dict[str, DataUpdateCoordinator],
         g2h_pro_coordinators: dict[str, DataUpdateCoordinator],
         g410_coordinators: dict[str, DataUpdateCoordinator],
@@ -68,6 +69,8 @@ class AqaraBridgePushManager:
         a100_pro_coordinators: dict[str, DataUpdateCoordinator],
         acn002_coordinators: dict[str, DataUpdateCoordinator],
         presence_coordinators: dict[str, dict[str, DataUpdateCoordinator]],
+        child_coordinators: dict[str, DataUpdateCoordinator],
+        child_resource_specs: dict[str, dict[str, dict[str, Any]]],
         subscriptions: list[dict[str, Any]],
     ) -> None:
         self._hass = hass
@@ -85,6 +88,8 @@ class AqaraBridgePushManager:
         self._a100_pro_coordinators = a100_pro_coordinators
         self._acn002_coordinators = acn002_coordinators
         self._presence_coordinators = presence_coordinators
+        self._child_coordinators = child_coordinators
+        self._child_resource_specs = child_resource_specs
         self._cameras = {device["did"]: device for device in cameras}
         self._g2h_pro_cameras = {device["did"]: device for device in g2h_pro_cameras}
         self._g410_doorbells = {device["did"]: device for device in g410_doorbells}
@@ -95,6 +100,7 @@ class AqaraBridgePushManager:
         self._a100_pro_locks = {device["did"]: device for device in a100_pro_locks}
         self._acn002_locks = {device["did"]: device for device in acn002_locks}
         self._presence_devices = {device["did"]: device for device in presence_devices}
+        self._child_devices = {device["did"]: device for device in child_devices}
         self._camera_state: dict[str, dict[str, Any]] = {did: {} for did in self._cameras}
         self._g2h_pro_state: dict[str, dict[str, Any]] = {did: {} for did in self._g2h_pro_cameras}
         self._g410_state: dict[str, dict[str, Any]] = {did: {} for did in self._g410_doorbells}
@@ -108,6 +114,7 @@ class AqaraBridgePushManager:
             did: {group: {} for group in coordinators}
             for did, coordinators in presence_coordinators.items()
         }
+        self._child_state: dict[str, dict[str, Any]] = {did: {} for did in self._child_devices}
         self._subscriptions = self._normalize_subscriptions(subscriptions)
         self._listen_task: asyncio.Task[None] | None = None
         self._stop_event = asyncio.Event()
@@ -148,6 +155,7 @@ class AqaraBridgePushManager:
         yield from self._m200_coordinators.values()
         yield from self._a100_pro_coordinators.values()
         yield from self._acn002_coordinators.values()
+        yield from self._child_coordinators.values()
         for groups in self._presence_coordinators.values():
             yield from groups.values()
 
@@ -504,6 +512,20 @@ class AqaraBridgePushManager:
                 ACN002_RESOURCE_SPEC_MAP,
                 pending_updates,
                 apply_scale=True,
+            )
+            return
+
+        if did in self._child_devices and did in self._child_resource_specs:
+            self._handle_shared_device_message(
+                payload_type,
+                did,
+                resource_id,
+                payload.get("value"),
+                self._child_coordinators,
+                self._child_state,
+                self._child_resource_specs.get(did, {}),
+                pending_updates,
+                apply_scale=False,
             )
             return
 

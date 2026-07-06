@@ -30,6 +30,33 @@
             "already_configured": "Questo dispositivo e gia configurato."
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Aqara FP2",
+                "description": "Aggiorna i dettagli dell'account Aqara Open API o le impostazioni di connessione del bridge.",
+                "data": {
+                    "account": "Account Aqara (email o telefono)",
+                    "area": "Regione",
+                    "bridge_url": "URL bridge",
+                    "bridge_token": "Token bridge",
+                    "app_id": "App ID",
+                    "key_id": "Key ID",
+                    "app_key": "App key"
+                }
+            },
+            "auth_code": {
+                "title": "Codice di autorizzazione",
+                "description": "Inserisci il codice di verifica inviato da Aqara alla tua email o al tuo telefono.",
+                "data": {
+                    "auth_code": "Codice di autorizzazione"
+                }
+            }
+        },
+        "error": {
+            "auth": "Autenticazione non riuscita. Verifica account, regione e codice di autorizzazione."
+        }
+    },
     "entity": {
         "binary_sensor": {
             "night_vision": {

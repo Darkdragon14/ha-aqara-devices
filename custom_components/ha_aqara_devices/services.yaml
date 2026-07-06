@@ -19,3 +19,38 @@ set_video:
           options:
             - "off"
             - "on"
+
+open_pairing_mode:
+  name: Open pairing mode
+  description: Open Aqara child-device pairing mode on a supported hub.
+  fields:
+    did:
+      name: Hub DID
+      description: Aqara DID of the hub that should accept new child devices.
+      required: true
+      example: "lumi1.xxxxxx"
+      selector:
+        text:
+    duration:
+      name: Duration
+      description: Number of seconds to keep pairing mode open.
+      required: false
+      default: 60
+      example: 60
+      selector:
+        number:
+          min: 1
+          max: 600
+          mode: box
+
+close_pairing_mode:
+  name: Close pairing mode
+  description: Close Aqara child-device pairing mode on a supported hub.
+  fields:
+    did:
+      name: Hub DID
+      description: Aqara DID of the hub that should stop accepting new child devices.
+      required: true
+      example: "lumi1.xxxxxx"
+      selector:
+        text:
