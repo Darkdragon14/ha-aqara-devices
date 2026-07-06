@@ -510,6 +510,9 @@
             },
             "restart_coordinator": {
                 "name": "Riavvia coordinatore"
+            },
+            "set_no_presence": {
+                "name": "Imposta assenza"
             }
         },
         "lock": {

@@ -537,6 +537,9 @@
             },
             "restart_coordinator": {
                 "name": "重启协调器"
+            },
+            "set_no_presence": {
+                "name": "设为无人"
             }
         },
         "lock": {

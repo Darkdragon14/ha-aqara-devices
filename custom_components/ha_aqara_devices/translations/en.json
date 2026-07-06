@@ -537,6 +537,9 @@
             },
             "restart_coordinator": {
                 "name": "Restart Coordinator"
+            },
+            "set_no_presence": {
+                "name": "Set to No Presence"
             }
         },
         "lock": {
