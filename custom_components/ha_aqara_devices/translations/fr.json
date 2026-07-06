@@ -537,6 +537,9 @@
             },
             "restart_coordinator": {
                 "name": "Redémarrer le coordinateur"
+            },
+            "set_no_presence": {
+                "name": "Définir comme absence"
             }
         },
         "lock": {

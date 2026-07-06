@@ -510,6 +510,9 @@
             },
             "restart_coordinator": {
                 "name": "Coördinator herstarten"
+            },
+            "set_no_presence": {
+                "name": "Instellen op geen aanwezigheid"
             }
         },
         "lock": {

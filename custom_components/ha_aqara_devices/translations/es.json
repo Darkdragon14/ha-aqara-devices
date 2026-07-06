@@ -510,6 +510,9 @@
             },
             "restart_coordinator": {
                 "name": "Reiniciar coordinador"
+            },
+            "set_no_presence": {
+                "name": "Establecer sin presencia"
             }
         },
         "lock": {

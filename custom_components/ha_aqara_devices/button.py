@@ -5,7 +5,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 
 from .api import AqaraApi
-from .const import DOMAIN, G2H_PRO_DEVICE_LABEL, G410_DEVICE_LABEL, G4_DEVICE_LABEL, G3_MODEL, G3_DEVICE_LABEL
+from .const import (
+    DOMAIN,
+    FP2_DEVICE_LABEL,
+    FP2_MODEL,
+    G2H_PRO_DEVICE_LABEL,
+    G410_DEVICE_LABEL,
+    G4_DEVICE_LABEL,
+    G3_MODEL,
+    G3_DEVICE_LABEL,
+)
 from .device_info import build_device_info
 
 PTZ_ACTIONS: dict[str, str] = {
@@ -23,6 +32,7 @@ ICONS: dict[str, str] = {
     "ring_alarm_bell": "mdi:bell-alert",
     "restart_device": "mdi:restart",
     "restart_coordinator": "mdi:zigbee",
+    "set_no_presence": "mdi:account-off",
 }
 
 RING_ALARM_BELL = "14.1.111"
@@ -34,6 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     g2h_pro_cameras: list[dict] = data.get("g2h_pro_cameras", [])
     g410_doorbells: list[dict] = data.get("g410_doorbells", [])
     g4_doorbells: list[dict] = data.get("g4_doorbells", [])
+    presence_devices: list[dict] = data.get("presence_devices", [])
 
     entities: list[ButtonEntity] = []
     for cam in cameras:
@@ -133,6 +144,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                 "Restart Coordinator",
                 "restart_coordinator",
                 "8.0.2108",
+                1,
+            )
+        )
+
+    for presence in presence_devices:
+        model = presence.get("model") or ""
+        if model != FP2_MODEL:
+            continue
+
+        did = presence["did"]
+        name = presence["deviceName"]
+        entities.append(
+            AqaraResourceButton(
+                api,
+                did,
+                name,
+                model,
+                FP2_DEVICE_LABEL,
+                "Set to No Presence",
+                "set_no_presence",
+                "4.66.85",
                 1,
             )
         )

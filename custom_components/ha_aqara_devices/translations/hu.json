@@ -510,6 +510,9 @@
             },
             "restart_coordinator": {
                 "name": "Koordinátor újraindítása"
+            },
+            "set_no_presence": {
+                "name": "Jelenlét nélküli állapotra állítás"
             }
         },
         "lock": {
