@@ -33,6 +33,8 @@ from .selects import (
 
 _LOGGER = logging.getLogger(__name__)
 
+_RINGTONE_SELECTS = {"alarm_bell_index", "doorbell_bell_index"}
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     data = hass.data[DOMAIN][entry.entry_id]
@@ -237,13 +239,36 @@ class AqaraSelect(CoordinatorEntity, SelectEntity):
         value = self._value_by_option.get(option)
         if value is None:
             return
+        in_app = self._spec["inApp"]
+        resource_id = self._spec["api"]
+        is_ringtone_select = in_app in _RINGTONE_SELECTS
         payload = {
             "data": {
-                self._spec["api"]: value
+                resource_id: value
             },
             "subjectId": self._did,
         }
+        if is_ringtone_select:
+            _LOGGER.debug(
+                "Writing Aqara ringtone select: did=%s in_app=%s resource_id=%s option=%s value=%s",
+                self._did,
+                in_app,
+                resource_id,
+                option,
+                value,
+            )
         resp = await self._api.res_write(payload)
+        if is_ringtone_select:
+            _LOGGER.debug(
+                "Aqara ringtone select write response: "
+                "did=%s in_app=%s resource_id=%s option=%s value=%s response=%s",
+                self._did,
+                in_app,
+                resource_id,
+                option,
+                value,
+                AqaraApi._summarize_response(resp),
+            )
         if str(resp.get("code")) != "0":
             raise Exception(f"Aqara API error: {resp}")
         await self.coordinator.async_request_refresh()
