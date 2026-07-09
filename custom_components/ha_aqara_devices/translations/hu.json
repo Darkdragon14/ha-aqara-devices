@@ -519,6 +519,58 @@
             "lock": {
                 "name": "Zár"
             }
+        },
+        "camera": {
+            "live_stream": {
+                "name": "Live stream"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "account_bridge": {},
+            "init": {
+                "title": "Aqara Devices",
+                "description": "Choose which Aqara settings you want to update.",
+                "menu_options": {
+                    "account_bridge": "Account and bridge",
+                    "camera_streams": "Camera streams"
+                }
+            },
+            "camera_streams": {
+                "title": "Camera streams",
+                "description": "Select a discovered camera and choose whether to add, edit, or remove its RTSP stream settings.",
+                "data": {
+                    "camera_did": "Camera",
+                    "action": "Action"
+                }
+            },
+            "camera_edit": {
+                "title": "Camera stream",
+                "description": "Configure the LAN RTSP stream for this camera. Leave the password empty to keep the existing saved password.",
+                "data": {
+                    "enabled": "Enabled",
+                    "host": "RTSP host",
+                    "port": "RTSP port",
+                    "username": "RTSP username",
+                    "password": "RTSP password",
+                    "path": "RTSP path"
+                }
+            },
+            "camera_remove": {
+                "title": "Remove camera stream",
+                "description": "Remove the saved RTSP stream settings for the selected camera.",
+                "data": {
+                    "confirm_remove": "Remove stream settings"
+                }
+            }
+        },
+        "error": {
+            "auth": "Authentication failed, please verify the account, region, and authorization code.",
+            "integration_not_loaded": "The integration must be loaded before camera streams can be configured.",
+            "no_camera_devices": "No supported Aqara camera devices are currently discovered.",
+            "camera_not_found": "The selected camera is no longer available.",
+            "invalid_rtsp": "The RTSP stream settings are incomplete or invalid."
         }
     }
 }

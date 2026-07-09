@@ -92,6 +92,21 @@ The config flow asks for:
 
 After the first step, Aqara sends a verification code to your email address or phone number. Enter that authorization code to finish setup.
 
+### Optional camera live streams
+
+G3, G2H Pro, G410, and G4 devices can expose a Home Assistant `camera` entity when you manually configure a LAN RTSP stream for each device.
+
+Open the integration options and choose:
+
+| Menu | Purpose |
+| --- | --- |
+| `Account and bridge` | Update Aqara Open API account details, developer keys, or bridge connection settings |
+| `Camera streams` | Add, edit, or remove RTSP settings for discovered camera devices |
+
+For each camera stream, configure the RTSP host, port, username, password, path, and enabled state. The default port is `8554` and the default path is `ch1`; some firmware or model variants may use paths such as `720p` or `1080p`.
+
+The RTSP username and password are the camera stream credentials, not the Aqara Open API account or bridge token. The integration does not enable telnet/root access, does not configure go2rtc automatically, and continues to load normally when no RTSP stream is configured.
+
 ## How It Works
 
 `Aqara RocketMQ -> aqara-rocketmq-bridge -> SSE -> ha_aqara_devices -> Home Assistant`
@@ -129,6 +144,11 @@ The U200 is exposed by Aqara as Matter model `aqara.matter.4447_10242`, so this 
 
 - [Full setup and troubleshooting guide](https://darkdragon14.github.io/aqara-rocketmq-bridge/)
 - [Issues and feature requests](https://github.com/Darkdragon14/ha-aqara-devices/issues)
+
+## Credits / Acknowledgements
+
+Camera RTSP support was inspired by [niceboygithub/AqaraCamera](https://github.com/niceboygithub/AqaraCamera).
+Thanks also to Aqara support for their help and information; this project is community-maintained and is not officially affiliated with or endorsed by Aqara.
 
 ## Missing translation
 

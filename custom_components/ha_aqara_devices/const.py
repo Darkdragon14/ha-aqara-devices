@@ -1,14 +1,24 @@
 from __future__ import annotations
 
 DOMAIN = "ha_aqara_devices"
-PLATFORMS: list[str] = ["switch", "button", "binary_sensor", "number", "sensor", "select", "lock"]
+PLATFORMS: list[str] = ["switch", "button", "binary_sensor", "number", "sensor", "select", "lock", "camera"]
 
 CONF_BRIDGE_URL = "bridge_url"
 CONF_BRIDGE_TOKEN = "bridge_token"
 CONF_APP_ID = "app_id"
 CONF_APP_KEY = "app_key"
 CONF_KEY_ID = "key_id"
+CONF_RTSP_CAMERAS = "rtsp_cameras"
+CONF_RTSP_ENABLED = "enabled"
+CONF_RTSP_HOST = "host"
+CONF_RTSP_PORT = "port"
+CONF_RTSP_USERNAME = "username"
+CONF_RTSP_PASSWORD = "password"
+CONF_RTSP_PATH = "path"
 DEFAULT_BRIDGE_URL = "http://aqara-rocketmq-bridge:8080"
+DEFAULT_RTSP_PORT = 8554
+DEFAULT_RTSP_PATH = "ch1"
+DATA_RTSP_CANDIDATE_CAMERAS = "rtsp_candidate_cameras"
 BRIDGE_SANITY_INTERVAL_SECONDS = 300
 BRIDGE_UNAVAILABLE_AFTER_FAILURES = 3
 
@@ -64,6 +74,13 @@ A100_DEVICE_LABEL = "Aqara A100"
 A100_PRO_DEVICE_LABEL = "Aqara A100 Pro"
 ACN002_DEVICE_LABEL = "Aqara Smart Video Door Lock Xingyao"
 G4_DEVICE_LABEL = "Aqara G4"
+
+RTSP_CAMERA_MODEL_LABELS: dict[str, str] = {
+    **dict.fromkeys(G3_MODELS, G3_DEVICE_LABEL),
+    **dict.fromkeys(G2H_PRO_MODELS, G2H_PRO_DEVICE_LABEL),
+    **dict.fromkeys(G410_MODELS, G410_DEVICE_LABEL),
+    **dict.fromkeys(G4_MODELS, G4_DEVICE_LABEL),
+}
 
 FP2_FAST_INTERVAL_SECONDS = 2
 FP2_PRESENCE_INTERVAL_SECONDS = 5
