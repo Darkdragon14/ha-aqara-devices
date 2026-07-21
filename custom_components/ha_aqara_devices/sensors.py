@@ -72,6 +72,8 @@ G410_FACE_RECOGNITION_EVENT = {
     "api": "13.95.85",
     "value_type": "string",
     "default": None,
+    "event_occurrence": True,
+    "queryable": False,
 }
 
 G410_STRANGER_FACE_EVENT = {
@@ -82,6 +84,8 @@ G410_STRANGER_FACE_EVENT = {
     "api": "13.108.85",
     "value_type": "string",
     "default": None,
+    "event_occurrence": True,
+    "queryable": False,
 }
 
 G410_SENSORS_DEF = [
