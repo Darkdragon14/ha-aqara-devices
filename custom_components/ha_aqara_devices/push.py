@@ -29,6 +29,7 @@ from .bridge_specs import (
     M200_RESOURCE_SPEC_MAP,
     M3_RESOURCE_SPEC_MAP,
     coerce_spec_value,
+    spec_event_token_key,
     spec_state_key,
 )
 from .const import FP2_MODEL, FP300_MODEL
@@ -115,6 +116,7 @@ class AqaraBridgePushManager:
         self._subscribed = False
         self._started = False
         self._polling_enabled: bool | None = None
+        self._event_id = 0
 
     @staticmethod
     def _normalize_subscriptions(subscriptions: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -371,9 +373,33 @@ class AqaraBridgePushManager:
         for raw_event in events:
             if isinstance(raw_event, dict):
                 self._handle_message(payload_type, raw_event, pending_updates)
+                if self._is_event_occurrence(raw_event):
+                    self._flush_pending_updates(pending_updates)
 
+        self._flush_pending_updates(pending_updates)
+
+    @staticmethod
+    def _flush_pending_updates(
+        pending_updates: dict[tuple[str, ...], tuple[DataUpdateCoordinator, dict[str, Any]]],
+    ) -> None:
         for coordinator, state in pending_updates.values():
             coordinator.async_set_updated_data(dict(state))
+        pending_updates.clear()
+
+    def _is_event_occurrence(self, payload: dict[str, Any]) -> bool:
+        did = str(payload.get("subjectId") or "")
+        resource_id = str(payload.get("resourceId") or "")
+        if did in self._cameras and resource_id == GESTURE_RESOURCE_ID:
+            return True
+        if did in self._cameras:
+            spec = G3_RESOURCE_SPEC_MAP.get(resource_id)
+        elif did in self._g410_doorbells:
+            spec = G410_RESOURCE_SPEC_MAP.get(resource_id)
+        elif did in self._g4_doorbells:
+            spec = G4_RESOURCE_SPEC_MAP.get(resource_id)
+        else:
+            return False
+        return bool(spec and (spec.get("value_type") == "event" or spec.get("event_occurrence")))
 
     def _handle_message(
         self,
@@ -410,6 +436,14 @@ class AqaraBridgePushManager:
             return
 
         if did in self._g410_doorbells:
+            if resource_id not in G410_RESOURCE_SPEC_MAP:
+                _LOGGER.debug(
+                    "Unknown G410 event: subjectId=%s resourceId=%s value=%r",
+                    did,
+                    resource_id,
+                    payload.get("value"),
+                )
+                return
             self._handle_shared_device_message(
                 payload_type,
                 did,
@@ -539,6 +573,10 @@ class AqaraBridgePushManager:
     ) -> None:
         pending_updates[flush_key] = (coordinator, state)
 
+    def _next_event_id(self) -> int:
+        self._event_id = max(self._event_id + 1, time.time_ns())
+        return self._event_id
+
     def _base_state(
         self,
         payload_type: str,
@@ -632,9 +670,23 @@ class AqaraBridgePushManager:
             pending_updates,
         )
         new_value = coerce_spec_value(spec, value, apply_scale=apply_scale)
-        if spec.get("value_type") != "event" and key in state and state[key] == new_value:
+
+        is_binary_event = spec.get("value_type") == "event"
+        is_event_occurrence = is_binary_event or spec.get("event_occurrence", False)
+        if is_event_occurrence and payload_type == "snapshot":
             return
-        state[key] = new_value
+
+        if is_binary_event:
+            if new_value != 1:
+                return
+            state[key] = self._next_event_id()
+        elif spec.get("event_occurrence", False):
+            state[key] = new_value
+            state[spec_event_token_key(spec)] = self._next_event_id()
+        elif key in state and state[key] == new_value:
+            return
+        else:
+            state[key] = new_value
         cache[did] = state
         self._queue_state_update(flush_key, coordinator, state, pending_updates)
 

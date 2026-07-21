@@ -11,6 +11,7 @@ CONF_KEY_ID = "key_id"
 DEFAULT_BRIDGE_URL = "http://aqara-rocketmq-bridge:8080"
 BRIDGE_SANITY_INTERVAL_SECONDS = 300
 BRIDGE_UNAVAILABLE_AFTER_FAILURES = 3
+EVENT_ID_SUFFIX = "__event_id"
 
 OPEN_API_PATH = "/v3.0/open/api"
 AQARA_MQ_SERVER = "3rd-subscription.aqara.cn:9876"

@@ -12,7 +12,7 @@ from .binary_sensors import (
     M200_BINARY_SENSORS_DEF,
     M3_BINARY_SENSORS_DEF,
 )
-from .const import FP2_MODEL, FP300_MODEL
+from .const import EVENT_ID_SUFFIX, FP2_MODEL, FP300_MODEL
 from .fp2 import FP2_BINARY_SENSORS_DEF, FP2_SENSOR_SPECS
 from .fp300 import FP300_BINARY_SENSORS_DEF, FP300_SENSOR_SPECS
 from .numbers import ALL_NUMBERS_DEF, G2H_PRO_NUMBERS_DEF, G410_NUMBERS_DEF, G4_NUMBERS_DEF, M100_NUMBERS_DEF, M200_NUMBERS_DEF, M3_NUMBERS_DEF
@@ -23,6 +23,11 @@ from .switches import ALL_SWITCHES_DEF, G2H_PRO_SWITCHES_DEF, G410_SWITCHES_DEF,
 
 def spec_state_key(spec: dict[str, Any]) -> str:
     return str(spec.get("key") or spec.get("inApp") or "")
+
+
+def spec_event_token_key(spec: dict[str, Any]) -> str:
+    key = spec_state_key(spec)
+    return f"{key}{EVENT_ID_SUFFIX}" if key else ""
 
 
 def build_api_spec_map(specs: Iterable[dict[str, Any]]) -> dict[str, dict[str, Any]]:
