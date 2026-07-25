@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 from types import ModuleType
 import unittest
 from unittest.mock import Mock, patch
@@ -27,6 +28,13 @@ class _EnumLike(metaclass=_EnumLikeMeta):
 class _Entity:
     def async_write_ha_state(self):
         self._write_count = getattr(self, "_write_count", 0) + 1
+
+
+class _EventEntity(_Entity):
+    def _trigger_event(self, event_type, event_attributes=None):
+        events = getattr(self, "_triggered_events", [])
+        events.append((event_type, event_attributes or {}))
+        self._triggered_events = events
 
 
 class _CoordinatorEntity(_Entity):
@@ -77,6 +85,7 @@ def _import_test_modules():
         SensorEntity=_Entity,
         SensorStateClass=_EnumLike,
     )
+    stub("homeassistant.components.event", EventEntity=_EventEntity)
     stub("homeassistant.config_entries", ConfigEntry=object)
     stub(
         "homeassistant.const",
@@ -84,7 +93,13 @@ def _import_test_modules():
         UnitOfTemperature=_EnumLike,
     )
     stub("homeassistant.core", HomeAssistant=object, callback=lambda func: func)
-    stub("homeassistant.helpers")
+    helpers = stub("homeassistant.helpers")
+    entity_registry = stub(
+        "homeassistant.helpers.entity_registry",
+        async_entries_for_config_entry=lambda *args: [],
+        async_get=lambda *args: None,
+    )
+    helpers.entity_registry = entity_registry
     stub("homeassistant.helpers.event", async_call_later=lambda *args: lambda: None)
     stub(
         "homeassistant.helpers.update_coordinator",
@@ -108,8 +123,11 @@ def _import_test_modules():
             importlib.import_module(f"{PACKAGE}.binary_sensor"),
             importlib.import_module(f"{PACKAGE}.push"),
             importlib.import_module(f"{PACKAGE}.sensor"),
+            importlib.import_module(f"{PACKAGE}.event"),
             importlib.import_module(f"{PACKAGE}.binary_sensors"),
             importlib.import_module(f"{PACKAGE}.sensors"),
+            importlib.import_module(f"{PACKAGE}.events"),
+            importlib.import_module(f"{PACKAGE}.entity_migration"),
         )
     return modules
 
@@ -119,8 +137,11 @@ def _import_test_modules():
     binary_sensor_module,
     push_module,
     sensor_module,
+    event_module,
     binary_sensors,
     sensors,
+    events,
+    entity_migration,
 ) = _import_test_modules()
 
 
@@ -140,6 +161,7 @@ class _Coordinator:
 def _manager(coordinator: _Coordinator):
     manager = push_module.AqaraBridgePushManager.__new__(push_module.AqaraBridgePushManager)
     manager._event_id = 0
+    manager._seen_event_ids = {}
     manager._cameras = {}
     manager._g2h_pro_cameras = {}
     manager._g410_doorbells = {"g410": {"did": "g410"}}
@@ -155,13 +177,15 @@ def _manager(coordinator: _Coordinator):
     return manager
 
 
-def _event(resource_id: str, value: str):
-    return {
+def _event(resource_id: str, value: str, **metadata):
+    event = {
         "subjectId": "g410",
         "resourceId": resource_id,
         "value": value,
         "statusCode": 0,
     }
+    event.update(metadata)
+    return event
 
 
 def _ring_entity(coordinator: _Coordinator, *, mock_schedule: bool = True):
@@ -187,6 +211,16 @@ def _face_entity(coordinator: _Coordinator):
         sensors.G410_FACE_RECOGNITION_EVENT,
         "lumi.camera.agl006",
         "Aqara G410",
+    )
+
+
+def _face_event_entity(coordinator: _Coordinator):
+    return event_module.AqaraG410Event(
+        coordinator,
+        "g410",
+        "Doorbell",
+        "lumi.camera.agl006",
+        events.G410_FACE_RECOGNITION_EVENT,
     )
 
 
@@ -286,20 +320,225 @@ class G410EventTests(unittest.TestCase):
         self.assertNotEqual(first_event_id, second_event_id)
         self.assertEqual(2, entity._write_count)
 
+    def test_two_identical_face_recognitions_trigger_two_events(self):
+        coordinator = _Coordinator()
+        manager = _manager(coordinator)
+        entity = _face_event_entity(coordinator)
+
+        manager._apply_events(
+            "batch",
+            [_event("13.95.85", "member-7", msgId="first", time=1710000000000)],
+        )
+        entity._handle_coordinator_update()
+        manager._apply_events(
+            "batch",
+            [_event("13.95.85", "member-7", msgId="second", time=1710000001000)],
+        )
+        entity._handle_coordinator_update()
+
+        self.assertEqual(
+            [
+                ("recognized", {"member_id": "member-7", "time": 1710000000000}),
+                ("recognized", {"member_id": "member-7", "time": 1710000001000}),
+            ],
+            entity._triggered_events,
+        )
+
+    def test_face_recognitions_without_msg_id_get_unique_events(self):
+        coordinator = _Coordinator()
+        manager = _manager(coordinator)
+        entity = _face_event_entity(coordinator)
+
+        for _ in range(2):
+            manager._apply_events(
+                "batch",
+                [_event("13.95.85", "member-7", time=1710000000000)],
+            )
+            entity._handle_coordinator_update()
+
+        self.assertEqual(2, len(entity._triggered_events))
+
+    def test_different_members_without_msg_id_get_unique_events(self):
+        coordinator = _Coordinator()
+        manager = _manager(coordinator)
+        entity = _face_event_entity(coordinator)
+
+        for member_id in ("member-7", "member-8"):
+            manager._apply_events(
+                "batch",
+                [_event("13.95.85", member_id, time=1710000000000)],
+            )
+            entity._handle_coordinator_update()
+
+        self.assertEqual(
+            ["member-7", "member-8"],
+            [event_data["member_id"] for _, event_data in entity._triggered_events],
+        )
+
+    def test_replayed_msg_id_is_handled_once(self):
+        coordinator = _Coordinator()
+        manager = _manager(coordinator)
+        entity = _face_event_entity(coordinator)
+        payload = _event(
+            "13.95.85",
+            "member-7",
+            msgId="same-message",
+            time=1710000000000,
+        )
+
+        for _ in range(2):
+            manager._apply_events("batch", [payload])
+            entity._handle_coordinator_update()
+
+        self.assertEqual(1, len(entity._triggered_events))
+
+    def test_delayed_replayed_msg_id_is_handled_once(self):
+        coordinator = _Coordinator()
+        manager = _manager(coordinator)
+        entity = _face_event_entity(coordinator)
+        first = _event(
+            "13.95.85",
+            "member-7",
+            msgId="first-message",
+            time=1710000000000,
+        )
+        second = _event(
+            "13.95.85",
+            "member-8",
+            msgId="second-message",
+            time=1710000001000,
+        )
+
+        for payload in (first, second, first):
+            manager._apply_events("batch", [payload])
+            entity._handle_coordinator_update()
+
+        self.assertEqual(
+            ["member-7", "member-8"],
+            [event_data["member_id"] for _, event_data in entity._triggered_events],
+        )
+
+    def test_face_event_without_time_does_not_reuse_previous_time(self):
+        coordinator = _Coordinator()
+        manager = _manager(coordinator)
+        entity = _face_event_entity(coordinator)
+
+        manager._apply_events(
+            "batch",
+            [_event("13.95.85", "member-7", msgId="first", time=1710000000000)],
+        )
+        entity._handle_coordinator_update()
+        manager._apply_events(
+            "batch",
+            [_event("13.95.85", "member-7", msgId="second")],
+        )
+        entity._handle_coordinator_update()
+
+        self.assertEqual(
+            ("recognized", {"member_id": "member-7"}),
+            entity._triggered_events[-1],
+        )
+
+    def test_known_g410_log_hashes_member_id(self):
+        coordinator = _Coordinator()
+        manager = _manager(coordinator)
+
+        with self.assertLogs(push_module._LOGGER, level="DEBUG") as logs:
+            manager._apply_events(
+                "batch",
+                [_event("13.95.85", "private-member-id", msgId="first", time=1710000000000)],
+            )
+
+        self.assertTrue(any("valueHash=" in line for line in logs.output))
+        self.assertFalse(any("private-member-id" in line for line in logs.output))
+
     def test_event_resources_are_not_queryable(self):
         self.assertFalse(binary_sensors.G410_DOORBELL_RING["queryable"])
         self.assertFalse(sensors.G410_FACE_RECOGNITION_EVENT["queryable"])
-        self.assertFalse(sensors.G410_STRANGER_FACE_EVENT["queryable"])
+
+    def test_stranger_face_resource_is_not_mapped_or_subscribed(self):
+        g410_subscriptions = bridge_specs.build_active_subscriptions(
+            enabled_unique_ids={"g410_face_recognition"},
+            cameras=[],
+            g2h_pro_cameras=[],
+            g410_doorbells=[{"did": "g410"}],
+            g4_doorbells=[],
+            hubs_m3=[],
+            hubs_m100=[],
+            hubs_m200=[],
+            a100_pro_locks=[],
+            acn002_locks=[],
+            presence_devices=[],
+        )
+        g4_subscriptions = bridge_specs.build_active_subscriptions(
+            enabled_unique_ids={"g4_detect_stranger_face_event"},
+            cameras=[],
+            g2h_pro_cameras=[],
+            g410_doorbells=[],
+            g4_doorbells=[{"did": "g4"}],
+            hubs_m3=[],
+            hubs_m100=[],
+            hubs_m200=[],
+            a100_pro_locks=[],
+            acn002_locks=[],
+            presence_devices=[],
+        )
+
+        self.assertNotIn("13.108.85", bridge_specs.G410_RESOURCE_SPEC_MAP)
+        self.assertIn("13.108.85", bridge_specs.G4_RESOURCE_SPEC_MAP)
+        self.assertEqual(
+            [{"subjectId": "g410", "resourceIds": ["13.95.85"]}],
+            g410_subscriptions,
+        )
+        self.assertEqual(
+            [{"subjectId": "g4", "resourceIds": ["13.108.85"]}],
+            g4_subscriptions,
+        )
+
+    def test_registry_cleanup_removes_only_obsolete_g410_entity(self):
+        registry = SimpleNamespace(async_remove=Mock())
+        entries = [
+            SimpleNamespace(
+                entity_id="sensor.g410_stranger_face",
+                unique_id="g410_detect_stranger_face_event",
+            ),
+            SimpleNamespace(
+                entity_id="sensor.g4_stranger_face",
+                unique_id="g4_detect_stranger_face_event",
+            ),
+        ]
+
+        with (
+            patch.object(entity_migration.er, "async_get", return_value=registry),
+            patch.object(
+                entity_migration.er,
+                "async_entries_for_config_entry",
+                return_value=entries,
+            ),
+        ):
+            entity_migration.remove_obsolete_g410_entities(
+                object(),
+                "entry-id",
+                [{"did": "g410"}],
+            )
+
+        registry.async_remove.assert_called_once_with("sensor.g410_stranger_face")
 
     def test_unknown_g410_resource_is_logged_without_state_update(self):
         coordinator = _Coordinator()
         manager = _manager(coordinator)
 
         with self.assertLogs(push_module._LOGGER, level="DEBUG") as logs:
-            manager._apply_events("batch", [_event("13.999.85", "Lingerer")])
+            manager._apply_events("batch", [_event("13.108.85", "Lingerer")])
 
         self.assertEqual([], coordinator.updates)
-        self.assertIn("subjectId=g410 resourceId=13.999.85 value='Lingerer'", logs.output[0])
+        self.assertTrue(
+            any(
+                "subjectId=g410 resourceId=13.108.85 valueHash=" in line
+                for line in logs.output
+            )
+        )
+        self.assertFalse(any("Lingerer" in line for line in logs.output))
 
 
 if __name__ == "__main__":

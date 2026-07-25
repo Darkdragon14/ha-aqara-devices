@@ -111,6 +111,11 @@
                 "name": "Je nutná výměna baterie"
             }
         },
+        "event": {
+            "face_recognition_event": {
+                "name": "Událost rozpoznání obličeje"
+            }
+        },
         "sensor": {
             "gateway_time_zone": {
                 "name": "Časové pásmo brány"

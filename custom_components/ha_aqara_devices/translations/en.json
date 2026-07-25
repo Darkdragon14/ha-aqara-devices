@@ -111,6 +111,11 @@
                 "name": "Battery Replacement Needed"
             }
         },
+        "event": {
+            "face_recognition_event": {
+                "name": "Face Recognition Event"
+            }
+        },
         "sensor": {
             "gateway_time_zone": {
                 "name": "Gateway Time Zone"
