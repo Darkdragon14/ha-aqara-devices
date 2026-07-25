@@ -84,6 +84,11 @@
                 "name": "Batteriewechsel erforderlich"
             }
         },
+        "event": {
+            "face_recognition_event": {
+                "name": "Gesichtserkennungsereignis"
+            }
+        },
         "sensor": {
             "gateway_time_zone": {
                 "name": "Gateway-Zeitzone"

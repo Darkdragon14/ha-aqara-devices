@@ -84,6 +84,11 @@
                 "name": "Требуется замена батареи"
             }
         },
+        "event": {
+            "face_recognition_event": {
+                "name": "Событие распознавания лица"
+            }
+        },
         "sensor": {
             "gateway_time_zone": {
                 "name": "Часовой пояс шлюза"

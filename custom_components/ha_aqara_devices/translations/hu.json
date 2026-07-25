@@ -84,6 +84,11 @@
                 "name": "Elemcsere szükséges"
             }
         },
+        "event": {
+            "face_recognition_event": {
+                "name": "Arcfelismerési esemény"
+            }
+        },
         "sensor": {
             "gateway_time_zone": {
                 "name": "Átjáró időzónája"

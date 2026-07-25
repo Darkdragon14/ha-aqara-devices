@@ -41,6 +41,7 @@ from .const import (
     U200_INTERVAL_SECONDS,
     U200_MODELS,
 )
+from .entity_migration import remove_obsolete_g410_entities
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -361,6 +362,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         acn002_locks = [device for device in devices if device.get("model") in ACN002_MODELS]
         presence_devices = [device for device in devices if device.get("model") in PRESENCE_MODELS]
         u200_locks = [device for device in devices if device.get("model") in U200_MODELS]
+        remove_obsolete_g410_entities(hass, entry.entry_id, g410_doorbells)
 
         if (
             not cameras
