@@ -8,17 +8,18 @@ CONF_BRIDGE_TOKEN = "bridge_token"
 CONF_APP_ID = "app_id"
 CONF_APP_KEY = "app_key"
 CONF_KEY_ID = "key_id"
-CONF_RTSP_CAMERAS = "rtsp_cameras"
-CONF_RTSP_ENABLED = "enabled"
-CONF_RTSP_HOST = "host"
-CONF_RTSP_PORT = "port"
-CONF_RTSP_USERNAME = "username"
-CONF_RTSP_PASSWORD = "password"
-CONF_RTSP_PATH = "path"
+CONF_CAMERA_STREAMS = "camera_streams"
+CONF_GO2RTC_URL = "go2rtc_url"
+CONF_GO2RTC_USERNAME = "go2rtc_username"
+CONF_GO2RTC_PASSWORD = "go2rtc_password"
+CONF_GO2RTC_RTSP_URL = "go2rtc_rtsp_url"
+CONF_STREAM_NAME = "stream_name"
+CONF_HOMEKIT_ID = "homekit_id"
+CONF_MANAGED_HOMEKIT = "managed_homekit"
 DEFAULT_BRIDGE_URL = "http://aqara-rocketmq-bridge:8080"
-DEFAULT_RTSP_PORT = 8554
-DEFAULT_RTSP_PATH = "ch1"
-DATA_RTSP_CANDIDATE_CAMERAS = "rtsp_candidate_cameras"
+DEFAULT_GO2RTC_URL = "http://127.0.0.1:1984"
+DEFAULT_GO2RTC_RTSP_URL = "rtsp://127.0.0.1:8554"
+DATA_CAMERA_CANDIDATES = "camera_candidates"
 BRIDGE_SANITY_INTERVAL_SECONDS = 300
 BRIDGE_UNAVAILABLE_AFTER_FAILURES = 3
 
@@ -75,7 +76,7 @@ A100_PRO_DEVICE_LABEL = "Aqara A100 Pro"
 ACN002_DEVICE_LABEL = "Aqara Smart Video Door Lock Xingyao"
 G4_DEVICE_LABEL = "Aqara G4"
 
-RTSP_CAMERA_MODEL_LABELS: dict[str, str] = {
+CAMERA_MODEL_LABELS: dict[str, str] = {
     **dict.fromkeys(G3_MODELS, G3_DEVICE_LABEL),
     **dict.fromkeys(G2H_PRO_MODELS, G2H_PRO_DEVICE_LABEL),
     **dict.fromkeys(G410_MODELS, G410_DEVICE_LABEL),

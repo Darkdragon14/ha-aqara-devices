@@ -24,7 +24,7 @@ from .const import (
     CONF_BRIDGE_TOKEN,
     CONF_BRIDGE_URL,
     CONF_KEY_ID,
-    DATA_RTSP_CANDIDATE_CAMERAS,
+    DATA_CAMERA_CANDIDATES,
     DOMAIN,
     DEFAULT_BRIDGE_URL,
     FP2_MODEL,
@@ -317,7 +317,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         M3_STATE_SPECS,
         build_active_subscriptions,
     )
-    from .camera_config import build_rtsp_candidate_cameras
+    from .camera_config import build_camera_candidates
     from .push import AqaraBridgePushManager
 
     session = aiohttp_client.async_get_clientsession(hass)
@@ -363,7 +363,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         acn002_locks = [device for device in devices if device.get("model") in ACN002_MODELS]
         presence_devices = [device for device in devices if device.get("model") in PRESENCE_MODELS]
         u200_locks = [device for device in devices if device.get("model") in U200_MODELS]
-        rtsp_candidate_cameras = build_rtsp_candidate_cameras(
+        camera_candidates = build_camera_candidates(
             cameras,
             g2h_pro_cameras,
             g410_doorbells,
@@ -449,7 +449,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "g2h_pro_cameras": g2h_pro_cameras,
         "g410_doorbells": g410_doorbells,
         "g4_doorbells": g4_doorbells,
-        DATA_RTSP_CANDIDATE_CAMERAS: rtsp_candidate_cameras,
+        DATA_CAMERA_CANDIDATES: camera_candidates,
         "hubs_m3": hubs_m3,
         "hubs_m100": hubs_m100,
         "hubs_m200": hubs_m200,

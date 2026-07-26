@@ -37,6 +37,7 @@
                 "description": "Choose which Aqara settings you want to update.",
                 "menu_options": {
                     "account_bridge": "Account and bridge",
+                    "go2rtc": "go2rtc",
                     "camera_streams": "Camera streams"
                 }
             },
@@ -62,29 +63,10 @@
             },
             "camera_streams": {
                 "title": "Camera streams",
-                "description": "Select a discovered camera and choose whether to add, edit, or remove its RTSP stream settings.",
+                "description": "Select an Aqara camera and add, replace, or remove its go2rtc stream.",
                 "data": {
                     "camera_did": "Camera",
                     "action": "Action"
-                }
-            },
-            "camera_edit": {
-                "title": "Camera stream",
-                "description": "Configure the LAN RTSP stream for this camera. Leave the password empty to keep the existing saved password.",
-                "data": {
-                    "enabled": "Enabled",
-                    "host": "RTSP host",
-                    "port": "RTSP port",
-                    "username": "RTSP username",
-                    "password": "RTSP password",
-                    "path": "RTSP path"
-                }
-            },
-            "camera_remove": {
-                "title": "Remove camera stream",
-                "description": "Remove the saved RTSP stream settings for the selected camera.",
-                "data": {
-                    "confirm_remove": "Remove stream settings"
                 }
             }
         },
@@ -93,7 +75,7 @@
             "integration_not_loaded": "The integration must be loaded before camera streams can be configured.",
             "no_camera_devices": "No supported Aqara camera devices are currently discovered.",
             "camera_not_found": "The selected camera is no longer available.",
-            "invalid_rtsp": "The RTSP stream settings are incomplete or invalid."
+            "go2rtc_not_configured": "Configure the go2rtc connection before adding camera streams."
         }
     },
     "entity": {

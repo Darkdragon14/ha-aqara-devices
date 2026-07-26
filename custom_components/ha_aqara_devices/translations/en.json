@@ -37,6 +37,7 @@
                 "description": "Choose which Aqara settings you want to update.",
                 "menu_options": {
                     "account_bridge": "Account and bridge",
+                    "go2rtc": "go2rtc",
                     "camera_streams": "Camera streams"
                 }
             },
@@ -62,29 +63,51 @@
             },
             "camera_streams": {
                 "title": "Camera streams",
-                "description": "Select a discovered camera and choose whether to add, edit, or remove its RTSP stream settings.",
+                "description": "Select an Aqara camera and add, replace, or remove its go2rtc stream.",
                 "data": {
                     "camera_did": "Camera",
                     "action": "Action"
                 }
             },
-            "camera_edit": {
-                "title": "Camera stream",
-                "description": "Configure the LAN RTSP stream for this camera. Leave the password empty to keep the existing saved password.",
+            "go2rtc": {
+                "title": "go2rtc connection",
+                "description": "Connect to the separate go2rtc instance used for optional camera video. The RTSP URL must be reachable from Home Assistant.",
                 "data": {
-                    "enabled": "Enabled",
-                    "host": "RTSP host",
-                    "port": "RTSP port",
-                    "username": "RTSP username",
-                    "password": "RTSP password",
-                    "path": "RTSP path"
+                    "go2rtc_url": "go2rtc API URL",
+                    "go2rtc_username": "API username",
+                    "go2rtc_password": "API password",
+                    "clear_go2rtc_credentials": "Clear saved API credentials",
+                    "go2rtc_rtsp_url": "go2rtc RTSP URL"
+                }
+            },
+            "camera_source": {
+                "title": "Camera stream source",
+                "description": "Pair a local HomeKit camera through go2rtc or use a stream that already exists.",
+                "data": {
+                    "source_mode": "Source"
+                }
+            },
+            "camera_pair": {
+                "title": "Pair camera",
+                "description": "Select the camera discovered by go2rtc and enter its HomeKit pairing code. The code is sent to go2rtc and is not saved by this integration.",
+                "data": {
+                    "homekit_source": "Discovered camera",
+                    "homekit_pin": "HomeKit pairing code"
+                }
+            },
+            "camera_existing": {
+                "title": "Existing go2rtc stream",
+                "description": "Associate this Aqara camera with a stream already managed by go2rtc.",
+                "data": {
+                    "stream_name": "Stream"
                 }
             },
             "camera_remove": {
                 "title": "Remove camera stream",
-                "description": "Remove the saved RTSP stream settings for the selected camera.",
+                "description": "Remove the association. Streams paired by this integration can also be unpaired from go2rtc.",
                 "data": {
-                    "confirm_remove": "Remove stream settings"
+                    "confirm_remove": "Remove stream association",
+                    "unpair_homekit": "Also unpair the camera from go2rtc"
                 }
             }
         },
@@ -93,7 +116,15 @@
             "integration_not_loaded": "The integration must be loaded before camera streams can be configured.",
             "no_camera_devices": "No supported Aqara camera devices are currently discovered.",
             "camera_not_found": "The selected camera is no longer available.",
-            "invalid_rtsp": "The RTSP stream settings are incomplete or invalid."
+            "go2rtc_not_configured": "Configure the go2rtc connection before adding camera streams.",
+            "go2rtc_connection": "Unable to connect to a compatible go2rtc instance.",
+            "invalid_go2rtc_rtsp_url": "Enter a valid go2rtc RTSP URL, for example rtsp://127.0.0.1:8554.",
+            "remove_managed_streams_before_go2rtc_change": "Remove and unpair all camera streams managed by this integration before changing the go2rtc API URL.",
+            "no_homekit_cameras": "go2rtc did not discover any HomeKit cameras ready to pair.",
+            "homekit_pairing": "HomeKit pairing failed. Check the pairing code and any existing HomeKit association.",
+            "homekit_unpairing": "Unable to unpair the HomeKit camera from go2rtc.",
+            "no_go2rtc_streams": "No existing go2rtc streams are available.",
+            "remove_managed_stream_first": "Remove and unpair the current managed stream before pairing or selecting a replacement."
         }
     },
     "entity": {
