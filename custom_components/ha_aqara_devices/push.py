@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 from contextlib import suppress
 from datetime import timedelta
+import hashlib
 import json
 import logging
 import time
@@ -29,11 +30,14 @@ from .bridge_specs import (
     M200_RESOURCE_SPEC_MAP,
     M3_RESOURCE_SPEC_MAP,
     coerce_spec_value,
+    spec_event_time_key,
+    spec_event_token_key,
     spec_state_key,
 )
 from .const import FP2_MODEL, FP300_MODEL
 
 _LOGGER = logging.getLogger(__name__)
+_EVENT_DEDUP_CACHE_SIZE = 256
 
 
 class AqaraBridgeNotReady(RuntimeError):
@@ -115,6 +119,8 @@ class AqaraBridgePushManager:
         self._subscribed = False
         self._started = False
         self._polling_enabled: bool | None = None
+        self._event_id = 0
+        self._seen_event_ids: dict[tuple[str, str], dict[int, None]] = {}
 
     @staticmethod
     def _normalize_subscriptions(subscriptions: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -371,9 +377,33 @@ class AqaraBridgePushManager:
         for raw_event in events:
             if isinstance(raw_event, dict):
                 self._handle_message(payload_type, raw_event, pending_updates)
+                if self._is_event_occurrence(raw_event):
+                    self._flush_pending_updates(pending_updates)
 
+        self._flush_pending_updates(pending_updates)
+
+    @staticmethod
+    def _flush_pending_updates(
+        pending_updates: dict[tuple[str, ...], tuple[DataUpdateCoordinator, dict[str, Any]]],
+    ) -> None:
         for coordinator, state in pending_updates.values():
             coordinator.async_set_updated_data(dict(state))
+        pending_updates.clear()
+
+    def _is_event_occurrence(self, payload: dict[str, Any]) -> bool:
+        did = str(payload.get("subjectId") or "")
+        resource_id = str(payload.get("resourceId") or "")
+        if did in self._cameras and resource_id == GESTURE_RESOURCE_ID:
+            return True
+        if did in self._cameras:
+            spec = G3_RESOURCE_SPEC_MAP.get(resource_id)
+        elif did in self._g410_doorbells:
+            spec = G410_RESOURCE_SPEC_MAP.get(resource_id)
+        elif did in self._g4_doorbells:
+            spec = G4_RESOURCE_SPEC_MAP.get(resource_id)
+        else:
+            return False
+        return bool(spec and (spec.get("value_type") == "event" or spec.get("event_occurrence")))
 
     def _handle_message(
         self,
@@ -410,6 +440,24 @@ class AqaraBridgePushManager:
             return
 
         if did in self._g410_doorbells:
+            value_hash = hashlib.sha256(str(payload.get("value")).encode()).hexdigest()[:12]
+            _LOGGER.debug(
+                "G410 bridge event: payloadType=%s subjectId=%s resourceId=%s valueHash=%s time=%r hasMsgId=%s",
+                payload_type,
+                did,
+                resource_id,
+                value_hash,
+                payload.get("time"),
+                bool(payload.get("msgId")),
+            )
+            if resource_id not in G410_RESOURCE_SPEC_MAP:
+                _LOGGER.debug(
+                    "Unknown G410 event: subjectId=%s resourceId=%s valueHash=%s",
+                    did,
+                    resource_id,
+                    value_hash,
+                )
+                return
             self._handle_shared_device_message(
                 payload_type,
                 did,
@@ -420,6 +468,7 @@ class AqaraBridgePushManager:
                 G410_RESOURCE_SPEC_MAP,
                 pending_updates,
                 apply_scale=True,
+                event_payload=payload,
             )
             return
 
@@ -539,6 +588,31 @@ class AqaraBridgePushManager:
     ) -> None:
         pending_updates[flush_key] = (coordinator, state)
 
+    def _next_event_id(self) -> int:
+        self._event_id = max(self._event_id + 1, time.time_ns())
+        return self._event_id
+
+    def _event_occurrence_id(
+        self,
+        payload: dict[str, Any] | None,
+        did: str,
+        resource_id: str,
+    ) -> int | None:
+        if payload is not None:
+            msg_id = str(payload.get("msgId") or "")
+            if msg_id:
+                event_time = str(payload.get("time") or "")
+                digest = hashlib.sha256(f"{msg_id}|{event_time}|{resource_id}".encode()).digest()
+                event_id = int.from_bytes(digest[:8], "big") or 1
+                seen_ids = self._seen_event_ids.setdefault((did, resource_id), {})
+                if event_id in seen_ids:
+                    return None
+                seen_ids[event_id] = None
+                if len(seen_ids) > _EVENT_DEDUP_CACHE_SIZE:
+                    seen_ids.pop(next(iter(seen_ids)))
+                return event_id
+        return self._next_event_id()
+
     def _base_state(
         self,
         payload_type: str,
@@ -610,6 +684,7 @@ class AqaraBridgePushManager:
         pending_updates: dict[tuple[str, ...], tuple[DataUpdateCoordinator, dict[str, Any]]],
         *,
         apply_scale: bool,
+        event_payload: dict[str, Any] | None = None,
     ) -> None:
         spec = resource_specs.get(resource_id)
         if spec is None:
@@ -632,9 +707,34 @@ class AqaraBridgePushManager:
             pending_updates,
         )
         new_value = coerce_spec_value(spec, value, apply_scale=apply_scale)
-        if spec.get("value_type") != "event" and key in state and state[key] == new_value:
+
+        is_binary_event = spec.get("value_type") == "event"
+        is_event_occurrence = is_binary_event or spec.get("event_occurrence", False)
+        if is_event_occurrence and payload_type == "snapshot":
             return
-        state[key] = new_value
+
+        if is_binary_event:
+            if new_value != 1:
+                return
+            event_id = self._event_occurrence_id(event_payload, did, resource_id)
+            if event_id is None:
+                return
+            state[key] = event_id
+        elif spec.get("event_occurrence", False):
+            event_id = self._event_occurrence_id(event_payload, did, resource_id)
+            if event_id is None:
+                return
+            state[key] = new_value
+            state[spec_event_token_key(spec)] = event_id
+            event_time_key = spec_event_time_key(spec)
+            if event_payload is not None and event_payload.get("time") is not None:
+                state[event_time_key] = event_payload["time"]
+            else:
+                state.pop(event_time_key, None)
+        elif key in state and state[key] == new_value:
+            return
+        else:
+            state[key] = new_value
         cache[did] = state
         self._queue_state_update(flush_key, coordinator, state, pending_updates)
 

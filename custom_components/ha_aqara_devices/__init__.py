@@ -42,6 +42,7 @@ from .const import (
     U200_INTERVAL_SECONDS,
     U200_MODELS,
 )
+from .entity_migration import remove_obsolete_g410_entities
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -369,6 +370,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             g410_doorbells,
             g4_doorbells,
         )
+        remove_obsolete_g410_entities(hass, entry.entry_id, g410_doorbells)
 
         if (
             not cameras

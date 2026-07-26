@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 DOMAIN = "ha_aqara_devices"
-PLATFORMS: list[str] = ["switch", "button", "binary_sensor", "number", "sensor", "select", "lock", "camera"]
+PLATFORMS: list[str] = ["switch", "button", "binary_sensor", "number", "sensor", "select", "lock", "event", "camera"]
 
 CONF_BRIDGE_URL = "bridge_url"
 CONF_BRIDGE_TOKEN = "bridge_token"
@@ -22,6 +22,8 @@ DEFAULT_GO2RTC_RTSP_URL = "rtsp://127.0.0.1:8554"
 DATA_CAMERA_CANDIDATES = "camera_candidates"
 BRIDGE_SANITY_INTERVAL_SECONDS = 300
 BRIDGE_UNAVAILABLE_AFTER_FAILURES = 3
+EVENT_ID_SUFFIX = "__event_id"
+EVENT_TIME_SUFFIX = "__event_time"
 
 OPEN_API_PATH = "/v3.0/open/api"
 AQARA_MQ_SERVER = "3rd-subscription.aqara.cn:9876"
