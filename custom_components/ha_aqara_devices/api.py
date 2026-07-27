@@ -497,29 +497,34 @@ class AqaraApi:
             data["resourceId"] = resource_id
         return await self._open_request("query.resource.info", data, authenticated=True)
 
-    async def query_resource_name(self, model: str, resource_id: str | None = None) -> Any:
-        data: dict[str, Any] = {"model": model}
-        if resource_id:
-            data["resourceId"] = resource_id
-        return await self._open_request("query.resource.name", data, authenticated=True)
+    async def query_resource_name(self, subject_ids: Iterable[str]) -> Any:
+        return await self._open_request(
+            "query.resource.name",
+            {"subjectIds": list(subject_ids)},
+            authenticated=True,
+        )
 
-    async def open_device_connect(self, did: str, time_seconds: int | None = None) -> Any:
-        data: dict[str, Any] = {"did": did}
-        if time_seconds is not None:
-            data["time"] = time_seconds
-        return await self._open_request("write.device.openConnect", data, authenticated=True)
+    async def open_device_connect(self, did: str) -> Any:
+        return await self._open_request("write.device.openConnect", {"did": did}, authenticated=True)
 
     async def close_device_connect(self, did: str) -> Any:
         return await self._open_request("write.device.closeConnect", {"did": did}, authenticated=True)
 
-    async def query_device_support_gateway(self, model: str | None = None) -> Any:
-        data: dict[str, Any] = {}
-        if model:
-            data["model"] = model
-        return await self._open_request("query.device.supportGateway", data, authenticated=True)
+    async def query_device_support_gateway(self, model: str) -> Any:
+        return await self._open_request("query.device.supportGateway", {"model": model}, authenticated=True)
 
-    async def query_position_support_gateway(self, position_id: str | None = None) -> Any:
-        data: dict[str, Any] = {}
+    async def query_position_support_gateway(
+        self,
+        model: str,
+        position_id: str | None = None,
+        page_num: int = 1,
+        page_size: int = 30,
+    ) -> Any:
+        data: dict[str, Any] = {
+            "model": model,
+            "pageNum": str(page_num),
+            "pageSize": str(page_size),
+        }
         if position_id:
             data["positionId"] = position_id
         return await self._open_request("query.position.supportGateway", data, authenticated=True)

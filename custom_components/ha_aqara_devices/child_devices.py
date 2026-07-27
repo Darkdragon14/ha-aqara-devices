@@ -8,6 +8,16 @@ _LOGGER = logging.getLogger(__name__)
 
 CHILD_SENSOR_PLATFORM = "sensor"
 CHILD_BINARY_SENSOR_PLATFORM = "binary_sensor"
+CHILD_SUBSCRIPTION_ATTACH = "ha_aqara_devices"
+AQARA_ACCESS_FLAGS = {
+    1: (True, False, False),
+    2: (False, False, True),
+    3: (True, False, True),
+    4: (False, True, False),
+    5: (True, True, False),
+    6: (False, True, True),
+    7: (True, True, True),
+}
 SAFE_DEFAULT_NAME_MARKERS = {
     "battery",
     "temperature",
@@ -104,6 +114,9 @@ def _access_flags(resource: dict[str, Any]) -> tuple[bool, bool, bool]:
     else:
         text = str(access).lower()
 
+    if text.isdigit():
+        return AQARA_ACCESS_FLAGS.get(int(text), (False, False, False))
+
     tokens = {token for token in re.split(r"[^a-z0-9]+", text) if token}
     readable = bool(tokens & {"r", "read", "readable", "query", "queryable"}) or "read" in text
     writable = bool(tokens & {"w", "write", "writable", "set", "settable"}) or "write" in text
@@ -115,18 +128,26 @@ def _access_flags(resource: dict[str, Any]) -> tuple[bool, bool, bool]:
         if short_access in {"w", "rw", "wr"}:
             writable = True
 
-    if text.isdigit():
-        value = int(text)
-        readable = readable or bool(value & 1)
-        writable = writable or bool(value & 2)
-        reportable = reportable or bool(value & 4)
-
     return readable, writable, reportable
 
 
 def _enum_value_map(enums: Any) -> dict[str, str]:
     if isinstance(enums, dict):
         return {str(key): str(value) for key, value in enums.items()}
+
+    if isinstance(enums, str):
+        values: dict[str, str] = {}
+        for raw_item in enums.split(","):
+            item = raw_item.strip()
+            if not item:
+                continue
+            key, separator, label = item.partition(":")
+            if not separator:
+                key, separator, label = item.partition("=")
+            key = key.strip()
+            if key:
+                values[key] = label.strip() if separator and label.strip() else key
+        return values
 
     if not isinstance(enums, list):
         return {}
@@ -148,6 +169,14 @@ def _resource_name(resource: dict[str, Any], resource_id: str) -> str:
     if name is None:
         return f"Resource {resource_id}"
     return str(name).strip()
+
+
+def _native_unit(resource: dict[str, Any]) -> str | None:
+    unit = resource.get("unit")
+    if not isinstance(unit, str):
+        return None
+    normalized = unit.strip()
+    return normalized if normalized and not normalized.isdigit() else None
 
 
 def _enabled_by_default(
@@ -223,7 +252,7 @@ def _resource_to_spec(child: dict[str, Any], resource: dict[str, Any]) -> dict[s
         "resource_id": resource_id,
         "name": _resource_name(resource, resource_id),
         "description": resource.get("description") or resource.get("desc"),
-        "unit": resource.get("unit"),
+        "unit": _native_unit(resource),
         "platform": platform,
         "did": str(child["did"]),
         "parent_did": str(child["parentDid"]),
@@ -295,9 +324,12 @@ def child_enabled_resource_ids(
     child_entity_specs: Iterable[dict[str, Any]],
     *,
     known_unique_ids: set[str] | None = None,
+    reportable: bool | None = None,
 ) -> list[str]:
     resource_ids: dict[str, None] = {}
     for spec in child_entity_specs:
+        if reportable is not None and bool(spec.get("reportable")) != reportable:
+            continue
         unique_id = str(spec.get("unique_id") or "")
         if unique_id in enabled_unique_ids or (
             known_unique_ids is not None
@@ -311,11 +343,42 @@ def child_enabled_resource_ids(
 def build_child_active_subscriptions(
     enabled_unique_ids: set[str],
     child_entity_specs: Iterable[dict[str, Any]],
+    *,
+    known_unique_ids: set[str] | None = None,
 ) -> list[dict[str, Any]]:
     specs_by_did = child_specs_by_did(child_entity_specs)
     subscriptions: list[dict[str, Any]] = []
     for did, specs in specs_by_did.items():
-        resource_ids = child_enabled_resource_ids(enabled_unique_ids, specs)
+        resource_ids = child_enabled_resource_ids(
+            enabled_unique_ids,
+            specs,
+            known_unique_ids=known_unique_ids,
+            reportable=True,
+        )
         if resource_ids:
-            subscriptions.append({"subjectId": did, "resourceIds": resource_ids})
+            subscriptions.append(
+                {
+                    "subjectId": did,
+                    "resourceIds": resource_ids,
+                    "attach": CHILD_SUBSCRIPTION_ATTACH,
+                }
+            )
     return subscriptions
+
+
+def child_polling_required_dids(
+    enabled_unique_ids: set[str],
+    child_entity_specs: Iterable[dict[str, Any]],
+    *,
+    known_unique_ids: set[str] | None = None,
+) -> set[str]:
+    required: set[str] = set()
+    for did, specs in child_specs_by_did(child_entity_specs).items():
+        if child_enabled_resource_ids(
+            enabled_unique_ids,
+            specs,
+            known_unique_ids=known_unique_ids,
+            reportable=False,
+        ):
+            required.add(did)
+    return required

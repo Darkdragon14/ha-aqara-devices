@@ -19,6 +19,7 @@ from .child_devices import (
     build_child_active_subscriptions,
     build_child_entity_specs,
     child_enabled_resource_ids,
+    child_polling_required_dids,
     child_resource_spec_maps,
     child_specs_by_did,
 )
@@ -58,7 +59,6 @@ BRIDGE_START_RETRY_MAX_SECONDS = 30
 SERVICE_OPEN_PAIRING_MODE = "open_pairing_mode"
 SERVICE_CLOSE_PAIRING_MODE = "close_pairing_mode"
 ATTR_DID = "did"
-ATTR_DURATION = "duration"
 PAIRING_PARENT_DEVICE_KEYS = (
     "cameras",
     "g2h_pro_cameras",
@@ -67,12 +67,7 @@ PAIRING_PARENT_DEVICE_KEYS = (
     "hubs_m200",
 )
 
-PAIRING_OPEN_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DID): cv.string,
-        vol.Optional(ATTR_DURATION, default=60): vol.All(vol.Coerce(int), vol.Range(min=1, max=600)),
-    }
-)
+PAIRING_OPEN_SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_DID): cv.string})
 PAIRING_CLOSE_SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_DID): cv.string})
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -81,12 +76,11 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def _handle_open_pairing_mode(call: ServiceCall) -> None:
         did = str(call.data[ATTR_DID]).strip()
-        duration = int(call.data[ATTR_DURATION])
         api = _api_for_pairing_hub(hass, did)
-        response = await api.open_device_connect(did, duration)
+        response = await api.open_device_connect(did)
         if str(response.get("code")) != "0":
             raise HomeAssistantError(f"Failed to open Aqara pairing mode for {did}: {response}")
-        _LOGGER.info("Opened Aqara pairing mode for %s during %s seconds", did, duration)
+        _LOGGER.info("Opened Aqara pairing mode for %s", did)
 
     async def _handle_close_pairing_mode(call: ServiceCall) -> None:
         did = str(call.data[ATTR_DID]).strip()
@@ -166,21 +160,6 @@ def _create_resilient_coordinator(
             unavailable_after_failures,
         ),
         update_interval=timedelta(seconds=interval_seconds),
-    )
-    hass.async_create_task(coordinator.async_refresh())
-    return coordinator
-
-
-def _create_noop_coordinator(hass: HomeAssistant, did: str, label: str) -> DataUpdateCoordinator:
-    async def _async_update() -> dict[str, Any]:
-        return {}
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"{DOMAIN}-{label}-{did}",
-        update_method=_async_update,
-        update_interval=None,
     )
     hass.async_create_task(coordinator.async_refresh())
     return coordinator
@@ -334,13 +313,12 @@ def _setup_child_coordinators(
     child_entity_specs: list[dict[str, Any]],
     enabled_unique_ids: set[str],
     known_unique_ids: set[str],
-) -> dict[str, DataUpdateCoordinator]:
+) -> tuple[dict[str, DataUpdateCoordinator], dict[str, list[str]]]:
     coordinators: dict[str, DataUpdateCoordinator] = {}
+    resource_ids_by_did: dict[str, list[str]] = {}
     for did, specs in child_specs_by_did(child_entity_specs).items():
         resource_ids = child_enabled_resource_ids(enabled_unique_ids, specs, known_unique_ids=known_unique_ids)
-        if not resource_ids:
-            coordinators[did] = _create_noop_coordinator(hass, did, "child-state")
-            continue
+        resource_ids_by_did[did] = resource_ids
         coordinators[did] = _create_resilient_coordinator(
             hass,
             did,
@@ -349,7 +327,22 @@ def _setup_child_coordinators(
             BRIDGE_SANITY_INTERVAL_SECONDS,
             BRIDGE_UNAVAILABLE_AFTER_FAILURES,
         )
-    return coordinators
+    return coordinators, resource_ids_by_did
+
+
+def _sync_child_coordinator_resources(
+    child_entity_specs: list[dict[str, Any]],
+    enabled_unique_ids: set[str],
+    known_unique_ids: set[str],
+    resource_ids_by_did: dict[str, list[str]],
+) -> None:
+    for did, specs in child_specs_by_did(child_entity_specs).items():
+        resource_ids = child_enabled_resource_ids(
+            enabled_unique_ids,
+            specs,
+            known_unique_ids=known_unique_ids,
+        )
+        resource_ids_by_did.setdefault(did, [])[:] = resource_ids
 
 
 def _api_for_pairing_hub(hass: HomeAssistant, did: str):
@@ -744,7 +737,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     u200_coordinators = _setup_u200_coordinators(hass, api, u200_locks)
     enabled_unique_ids = _enabled_unique_ids_for_entry(hass, entry)
     known_unique_ids = _known_unique_ids_for_entry(hass, entry)
-    child_coordinators = _setup_child_coordinators(
+    child_coordinators, child_coordinator_resources = _setup_child_coordinators(
         hass,
         api,
         child_entity_specs,
@@ -776,6 +769,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "child_entity_specs": child_entity_specs,
         "child_resource_specs": child_resource_specs,
         "child_coordinators": child_coordinators,
+        "child_coordinator_resources": child_coordinator_resources,
         "camera_coordinators": camera_coordinators,
         "g2h_pro_coordinators": g2h_pro_coordinators,
         "g410_coordinators": g410_coordinators,
@@ -794,6 +788,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
     hass.data[DOMAIN][entry.entry_id] = entry_data
 
+    @callback
+    def _handle_entity_registry_update(event) -> None:
+        if event.data.get("action") != "update":
+            return
+
+        changes = event.data.get("changes") or {}
+        if "disabled_by" not in changes:
+            return
+
+        entity_id = event.data.get("entity_id")
+        if not entity_id:
+            return
+
+        registry_entry = er.async_get(hass).async_get(entity_id)
+        if registry_entry is None or registry_entry.config_entry_id != entry.entry_id:
+            return
+
+        change_label = "enabled" if changes["disabled_by"] is None else "disabled"
+        _LOGGER.info("Aqara entity %s was %s; scheduling integration reload", entity_id, change_label)
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+
+    entry.async_on_unload(hass.bus.async_listen(er.EVENT_ENTITY_REGISTRY_UPDATED, _handle_entity_registry_update))
+
     try:
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     except Exception:
@@ -804,6 +821,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _register_child_devices(hass, entry, child_devices)
 
     enabled_unique_ids = _enabled_unique_ids_for_entry(hass, entry)
+    known_unique_ids = _known_unique_ids_for_entry(hass, entry)
+    _sync_child_coordinator_resources(
+        child_entity_specs,
+        enabled_unique_ids,
+        known_unique_ids,
+        child_coordinator_resources,
+    )
     active_subscriptions = build_active_subscriptions(
         enabled_unique_ids,
         cameras,
@@ -817,7 +841,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         acn002_locks,
         presence_devices,
     )
-    active_subscriptions.extend(build_child_active_subscriptions(enabled_unique_ids, child_entity_specs))
+    active_subscriptions.extend(
+        build_child_active_subscriptions(
+            enabled_unique_ids,
+            child_entity_specs,
+            known_unique_ids=known_unique_ids,
+        )
+    )
+    child_polling_dids = child_polling_required_dids(
+        enabled_unique_ids,
+        child_entity_specs,
+        known_unique_ids=known_unique_ids,
+    )
     entry_data["active_subscriptions"] = active_subscriptions
 
     bridge_manager = AqaraBridgePushManager(
@@ -849,6 +884,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         presence_coordinators,
         child_coordinators,
         child_resource_specs,
+        child_polling_dids,
         active_subscriptions,
     )
 
@@ -874,35 +910,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         len(active_subscriptions),
         total_resources,
     )
+    _LOGGER.debug(
+        "Aqara child resources requiring polling fallback: %s",
+        sorted(child_polling_dids),
+    )
 
-    @callback
-    def _handle_entity_registry_update(event) -> None:
-        if event.data.get("action") != "update":
-            return
-
-        changes = event.data.get("changes") or {}
-        if "disabled_by" not in changes:
-            return
-
-        entity_id = event.data.get("entity_id")
-        if not entity_id:
-            return
-
-        registry_entry = er.async_get(hass).async_get(entity_id)
-        if registry_entry is None or registry_entry.config_entry_id != entry.entry_id:
-            return
-
-        change_label = "enabled" if changes["disabled_by"] is None else "disabled"
-        _LOGGER.info("Aqara entity %s was %s; scheduling integration reload", entity_id, change_label)
-        hass.config_entries.async_schedule_reload(entry.entry_id)
-
-    entry.async_on_unload(hass.bus.async_listen(er.EVENT_ENTITY_REGISTRY_UPDATED, _handle_entity_registry_update))
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     domain_data = hass.data.get(DOMAIN, {})
     entry_data = domain_data.get(entry.entry_id)
+
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if not unload_ok:
+        return False
+
     bridge_task = None if entry_data is None else entry_data.get("bridge_task")
     if bridge_task is not None:
         bridge_task.cancel()
@@ -918,7 +941,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if bridge_manager is not None:
         await bridge_manager.async_stop()
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        domain_data.pop(entry.entry_id, None)
-    return unload_ok
+    domain_data.pop(entry.entry_id, None)
+    return True

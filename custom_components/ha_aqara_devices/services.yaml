@@ -31,18 +31,6 @@ open_pairing_mode:
       example: "lumi1.xxxxxx"
       selector:
         text:
-    duration:
-      name: Duration
-      description: Number of seconds to keep pairing mode open.
-      required: false
-      default: 60
-      example: 60
-      selector:
-        number:
-          min: 1
-          max: 600
-          mode: box
-
 close_pairing_mode:
   name: Close pairing mode
   description: Close Aqara child-device pairing mode on a supported hub.
