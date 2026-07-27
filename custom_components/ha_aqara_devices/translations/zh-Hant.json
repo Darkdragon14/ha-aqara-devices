@@ -111,6 +111,11 @@
                 "name": "需要更換電池"
             }
         },
+        "event": {
+            "face_recognition_event": {
+                "name": "人臉辨識事件"
+            }
+        },
         "sensor": {
             "gateway_time_zone": {
                 "name": "閘道時區"
@@ -537,6 +542,9 @@
             },
             "restart_coordinator": {
                 "name": "重新啟動協調器"
+            },
+            "set_no_presence": {
+                "name": "設為無人"
             }
         },
         "lock": {

@@ -284,6 +284,7 @@ class AqaraBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._hold_seconds = spec.get("hold_seconds", 5)
         self._clear_listener: Callable[[], None] | None = None
         self._last_timestamp: float | None = None
+        self._last_event_id: Any = None
         self._event_active_until: float | None = None
 
         device_class = spec.get("device_class")
@@ -305,8 +306,8 @@ class AqaraBinarySensor(CoordinatorEntity, BinarySensorEntity):
         await super().async_added_to_hass()
         if self._value_type == "timestamp":
             self._schedule_auto_clear(self.coordinator.data or {})
-        elif self._value_type == "event" and self._truthy((self.coordinator.data or {}).get(self._spec["inApp"])):
-            self._schedule_event_clear()
+        elif self._value_type == "event":
+            self._last_event_id = (self.coordinator.data or {}).get(self._spec["inApp"])
 
     async def async_will_remove_from_hass(self) -> None:
         self._cancel_auto_clear()
@@ -387,7 +388,9 @@ class AqaraBinarySensor(CoordinatorEntity, BinarySensorEntity):
                 self._schedule_auto_clear(data)
         elif self._value_type == "event":
             data = self.coordinator.data or {}
-            if self._truthy(data.get(self._spec["inApp"])):
+            event_id = data.get(self._spec["inApp"])
+            if self._truthy(event_id) and event_id != self._last_event_id:
+                self._last_event_id = event_id
                 self._schedule_event_clear()
         super()._handle_coordinator_update()
 

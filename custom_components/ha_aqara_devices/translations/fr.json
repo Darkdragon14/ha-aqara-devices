@@ -111,6 +111,11 @@
                 "name": "Remplacement de batterie nécessaire"
             }
         },
+        "event": {
+            "face_recognition_event": {
+                "name": "Événement de reconnaissance faciale"
+            }
+        },
         "sensor": {
             "gateway_time_zone": {
                 "name": "Fuseau horaire de la passerelle"
@@ -537,6 +542,9 @@
             },
             "restart_coordinator": {
                 "name": "Redémarrer le coordinateur"
+            },
+            "set_no_presence": {
+                "name": "Définir comme absence"
             }
         },
         "lock": {

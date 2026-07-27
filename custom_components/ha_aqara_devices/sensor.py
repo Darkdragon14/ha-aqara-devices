@@ -18,6 +18,7 @@ from .const import (
     A100_PRO_DEVICE_LABEL,
     ACN002_DEVICE_LABEL,
     DOMAIN,
+    EVENT_ID_SUFFIX,
     FP2_DEVICE_LABEL,
     FP2_MODEL,
     FP300_DEVICE_LABEL,
@@ -304,6 +305,10 @@ class AqaraSensor(CoordinatorEntity, SensorEntity):
 
         self._attr_native_value = None
         self._value_map = spec.get("value_map") or {}
+        self._event_token_key = (
+            f"{spec['inApp']}{EVENT_ID_SUFFIX}" if spec.get("event_occurrence") else None
+        )
+        self._last_event_id: Any = None
 
     @property
     def device_info(self):
@@ -311,6 +316,13 @@ class AqaraSensor(CoordinatorEntity, SensorEntity):
 
     def _handle_coordinator_update(self) -> None:
         data = self.coordinator.data or {}
+        if self._event_token_key is not None:
+            event_id = data.get(self._event_token_key)
+            if event_id is None or event_id == self._last_event_id:
+                super()._handle_coordinator_update()
+                return
+            self._last_event_id = event_id
+            self._attr_extra_state_attributes = {"event_id": event_id}
         raw = data.get(self._spec["inApp"])
         if raw is None:
             return

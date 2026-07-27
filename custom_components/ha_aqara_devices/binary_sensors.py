@@ -112,6 +112,7 @@ G410_DOORBELL_RING = {
     "device_class": "motion",
     "value_type": "event",
     "hold_seconds": 10,
+    "queryable": False,
 }
 
 G410_ALARM_STATUS = {

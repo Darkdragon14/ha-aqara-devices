@@ -3,7 +3,7 @@
   "name": "Aqara Devices (G3, G2H Pro, G410, G4, M3, M100, FP2, FP300, A100, A100 Pro, and U200)",
   "codeowners": ["@Darkdragon14"],
   "config_flow": true,
-  "documentation": "https://github.com/ton-repo/aqara_g3_integration",
+  "documentation": "https://ha-aqara-devices.darkdragon14.dev/",
   "iot_class": "cloud_push",
   "issue_tracker": "https://github.com/Darkdragon14/ha-aqara-devices/issues",
   "requirements": ["pycryptodome>=3.20.0"],

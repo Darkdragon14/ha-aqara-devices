@@ -111,6 +111,11 @@
                 "name": "需要更换电池"
             }
         },
+        "event": {
+            "face_recognition_event": {
+                "name": "人脸识别事件"
+            }
+        },
         "sensor": {
             "gateway_time_zone": {
                 "name": "网关时区"
@@ -537,6 +542,9 @@
             },
             "restart_coordinator": {
                 "name": "重启协调器"
+            },
+            "set_no_presence": {
+                "name": "设为无人"
             }
         },
         "lock": {

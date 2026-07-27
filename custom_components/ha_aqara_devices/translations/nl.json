@@ -111,6 +111,11 @@
                 "name": "Batterij vervangen nodig"
             }
         },
+        "event": {
+            "face_recognition_event": {
+                "name": "Gezichtsherkenningsgebeurtenis"
+            }
+        },
         "sensor": {
             "gateway_time_zone": {
                 "name": "Tijdzone gateway"
@@ -537,6 +542,9 @@
             },
             "restart_coordinator": {
                 "name": "Coördinator herstarten"
+            },
+            "set_no_presence": {
+                "name": "Instellen op geen aanwezigheid"
             }
         },
         "lock": {

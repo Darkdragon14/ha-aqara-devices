@@ -111,6 +111,11 @@
                 "name": "Cambio de batería necesario"
             }
         },
+        "event": {
+            "face_recognition_event": {
+                "name": "Evento de reconocimiento facial"
+            }
+        },
         "sensor": {
             "gateway_time_zone": {
                 "name": "Zona horaria de la puerta de enlace"
@@ -537,6 +542,9 @@
             },
             "restart_coordinator": {
                 "name": "Reiniciar coordinador"
+            },
+            "set_no_presence": {
+                "name": "Establecer sin presencia"
             }
         },
         "lock": {

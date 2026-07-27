@@ -72,9 +72,11 @@ G410_FACE_RECOGNITION_EVENT = {
     "api": "13.95.85",
     "value_type": "string",
     "default": None,
+    "event_occurrence": True,
+    "queryable": False,
 }
 
-G410_STRANGER_FACE_EVENT = {
+G4_STRANGER_FACE_EVENT = {
     "name": "Stranger Face Event",
     "translation_key": "stranger_face_event",
     "icon": "mdi:face-agent",
@@ -82,17 +84,18 @@ G410_STRANGER_FACE_EVENT = {
     "api": "13.108.85",
     "value_type": "string",
     "default": None,
+    "event_occurrence": True,
+    "queryable": False,
 }
 
 G410_SENSORS_DEF = [
     G410_BATTERY_LEVEL,
     G410_FACE_RECOGNITION_EVENT,
-    G410_STRANGER_FACE_EVENT,
 ]
 
 G4_SENSORS_DEF = [
     G410_FACE_RECOGNITION_EVENT,
-    G410_STRANGER_FACE_EVENT,
+    G4_STRANGER_FACE_EVENT,
 ]
 
 A100_PRO_DOOR_EVENT = {

@@ -111,6 +111,11 @@
                 "name": "Batteriewechsel erforderlich"
             }
         },
+        "event": {
+            "face_recognition_event": {
+                "name": "Gesichtserkennungsereignis"
+            }
+        },
         "sensor": {
             "gateway_time_zone": {
                 "name": "Gateway-Zeitzone"
@@ -537,6 +542,9 @@
             },
             "restart_coordinator": {
                 "name": "Koordinator neu starten"
+            },
+            "set_no_presence": {
+                "name": "Auf keine Anwesenheit setzen"
             }
         },
         "lock": {

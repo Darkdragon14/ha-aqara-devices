@@ -111,6 +111,11 @@
                 "name": "Sostituzione batteria necessaria"
             }
         },
+        "event": {
+            "face_recognition_event": {
+                "name": "Evento di riconoscimento facciale"
+            }
+        },
         "sensor": {
             "gateway_time_zone": {
                 "name": "Fuso orario del gateway"
@@ -537,6 +542,9 @@
             },
             "restart_coordinator": {
                 "name": "Riavvia coordinatore"
+            },
+            "set_no_presence": {
+                "name": "Imposta assenza"
             }
         },
         "lock": {

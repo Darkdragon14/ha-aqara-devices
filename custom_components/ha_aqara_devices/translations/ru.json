@@ -111,6 +111,11 @@
                 "name": "Требуется замена батареи"
             }
         },
+        "event": {
+            "face_recognition_event": {
+                "name": "Событие распознавания лица"
+            }
+        },
         "sensor": {
             "gateway_time_zone": {
                 "name": "Часовой пояс шлюза"
@@ -537,6 +542,9 @@
             },
             "restart_coordinator": {
                 "name": "Перезапустить координатор"
+            },
+            "set_no_presence": {
+                "name": "Установить нет присутствия"
             }
         },
         "lock": {

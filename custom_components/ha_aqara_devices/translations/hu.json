@@ -111,6 +111,11 @@
                 "name": "Elemcsere szükséges"
             }
         },
+        "event": {
+            "face_recognition_event": {
+                "name": "Arcfelismerési esemény"
+            }
+        },
         "sensor": {
             "gateway_time_zone": {
                 "name": "Átjáró időzónája"
@@ -537,6 +542,9 @@
             },
             "restart_coordinator": {
                 "name": "Koordinátor újraindítása"
+            },
+            "set_no_presence": {
+                "name": "Jelenlét nélküli állapotra állítás"
             }
         },
         "lock": {
