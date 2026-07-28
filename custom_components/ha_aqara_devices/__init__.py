@@ -143,15 +143,21 @@ def _setup_device_state_coordinators(
     devices: list[dict[str, Any]],
     label: str,
     state_defs: list[dict[str, Any]],
+    state_defs_for_model: Callable[[str], list[dict[str, Any]]] | None = None,
 ) -> dict[str, DataUpdateCoordinator]:
     coordinators: dict[str, DataUpdateCoordinator] = {}
     for device in devices:
         did = device["did"]
+        device_state_defs = (
+            state_defs_for_model(str(device.get("model") or ""))
+            if state_defs_for_model
+            else state_defs
+        )
         coordinators[did] = _create_resilient_coordinator(
             hass,
             did,
             label,
-            partial(api.get_device_states, did, state_defs),
+            partial(api.get_device_states, did, device_state_defs),
             BRIDGE_SANITY_INTERVAL_SECONDS,
             BRIDGE_UNAVAILABLE_AFTER_FAILURES,
         )
@@ -316,6 +322,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         M200_STATE_SPECS,
         M3_STATE_SPECS,
         build_active_subscriptions,
+        g410_state_specs_for_model,
     )
     from .push import AqaraBridgePushManager
 
@@ -404,6 +411,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         g410_doorbells,
         "g410-state",
         G410_STATE_SPECS,
+        g410_state_specs_for_model,
     )
     g4_coordinators = _setup_device_state_coordinators(
         hass,

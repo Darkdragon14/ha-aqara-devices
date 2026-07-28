@@ -28,6 +28,7 @@ from .const import (
     M3_DEVICE_LABEL,
     U200_DEVICE_LABEL,
 )
+from .bridge_specs import g410_specs_for_model
 from .device_info import build_device_info
 from .fp300 import FP300_SENSOR_SPECS
 from .fp2 import FP2_SENSOR_SPECS
@@ -73,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         if coordinator is None:
             continue
 
-        for sensor_def in G410_SENSORS_DEF:
+        for sensor_def in g410_specs_for_model(G410_SENSORS_DEF, model):
             entities.append(
                 AqaraSensor(
                     coordinator,

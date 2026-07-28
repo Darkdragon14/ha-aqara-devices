@@ -14,6 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from .const import DOMAIN, G2H_PRO_DEVICE_LABEL, G410_DEVICE_LABEL, G4_DEVICE_LABEL, G3_MODEL, G3_DEVICE_LABEL, M100_DEVICE_LABEL
 from .switches import ALL_SWITCHES_DEF, G2H_PRO_SWITCHES_DEF, G410_SWITCHES_DEF, G4_SWITCHES_DEF, M100_SWITCHES_DEF
 from .api import AqaraApi
+from .bridge_specs import g410_specs_for_model
 from .device_info import build_device_info
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         if coordinator is None:
             continue
 
-        for switch_def in G410_SWITCHES_DEF:
+        for switch_def in g410_specs_for_model(G410_SWITCHES_DEF, model):
             switch = AqaraResourceSwitch(
                 coordinator,
                 did,

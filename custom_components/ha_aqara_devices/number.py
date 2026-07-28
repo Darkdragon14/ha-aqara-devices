@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.number import NumberEntity
 
 from .const import DOMAIN, G2H_PRO_DEVICE_LABEL, G410_DEVICE_LABEL, G4_DEVICE_LABEL, G3_MODEL, G3_DEVICE_LABEL, M100_DEVICE_LABEL, M200_DEVICE_LABEL, M3_DEVICE_LABEL
+from .bridge_specs import g410_specs_for_model
 from .numbers import ALL_NUMBERS_DEF, G2H_PRO_NUMBERS_DEF, G410_NUMBERS_DEF, G4_NUMBERS_DEF, M100_NUMBERS_DEF, M200_NUMBERS_DEF, M3_NUMBERS_DEF
 from .api import AqaraApi
 from .device_info import build_device_info
@@ -70,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         if coordinator is None:
             continue
 
-        for number_def in G410_NUMBERS_DEF:
+        for number_def in g410_specs_for_model(G410_NUMBERS_DEF, model):
             number = AqaraNumber(coordinator, api, did, name, number_def, model, G410_DEVICE_LABEL)
             entities.append(number)
 

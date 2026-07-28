@@ -1,3 +1,6 @@
+from .const import G410_ACN017_MODEL
+
+
 ALARM_BELL_INDEX_OPTIONS = [
     (10000, "default"),
     (0, "police_car_1"),
@@ -181,6 +184,7 @@ G410_IMAGE_FLIP = {
     ],
     "value_type": "int",
     "default": None,
+    "g410_models": {G410_ACN017_MODEL},
 }
 
 G410_CAMERA_MODE = {
