@@ -1,5 +1,7 @@
 from homeassistant.const import UnitOfTemperature, PERCENTAGE
 
+from .const import G410_ACN017_MODEL
+
 M3_TEMPERATURE = {
     "icon": "mdi:thermometer",
     "inApp": "temperature_value",
@@ -76,7 +78,7 @@ G410_FACE_RECOGNITION_EVENT = {
     "queryable": False,
 }
 
-G4_STRANGER_FACE_EVENT = {
+STRANGER_FACE_EVENT = {
     "name": "Stranger Face Event",
     "translation_key": "stranger_face_event",
     "icon": "mdi:face-agent",
@@ -86,16 +88,18 @@ G4_STRANGER_FACE_EVENT = {
     "default": None,
     "event_occurrence": True,
     "queryable": False,
+    "g410_models": {G410_ACN017_MODEL},
 }
 
 G410_SENSORS_DEF = [
     G410_BATTERY_LEVEL,
     G410_FACE_RECOGNITION_EVENT,
+    STRANGER_FACE_EVENT,
 ]
 
 G4_SENSORS_DEF = [
     G410_FACE_RECOGNITION_EVENT,
-    G4_STRANGER_FACE_EVENT,
+    STRANGER_FACE_EVENT,
 ]
 
 A100_PRO_DOOR_EVENT = {

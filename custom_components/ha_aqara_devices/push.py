@@ -21,7 +21,6 @@ from .bridge_specs import (
     FP2_GROUP_SPEC_MAPS,
     FP300_GROUP_SPEC_MAPS,
     G2H_PRO_RESOURCE_SPEC_MAP,
-    G410_RESOURCE_SPEC_MAP,
     G4_RESOURCE_SPEC_MAP,
     GESTURE_RESOURCE_ID,
     G3_GESTURE_VALUE_MAP,
@@ -30,6 +29,7 @@ from .bridge_specs import (
     M200_RESOURCE_SPEC_MAP,
     M3_RESOURCE_SPEC_MAP,
     coerce_spec_value,
+    g410_resource_spec_map_for_model,
     spec_event_time_key,
     spec_event_token_key,
     spec_state_key,
@@ -398,7 +398,8 @@ class AqaraBridgePushManager:
         if did in self._cameras:
             spec = G3_RESOURCE_SPEC_MAP.get(resource_id)
         elif did in self._g410_doorbells:
-            spec = G410_RESOURCE_SPEC_MAP.get(resource_id)
+            model = str(self._g410_doorbells[did].get("model") or "")
+            spec = g410_resource_spec_map_for_model(model).get(resource_id)
         elif did in self._g4_doorbells:
             spec = G4_RESOURCE_SPEC_MAP.get(resource_id)
         else:
@@ -440,6 +441,8 @@ class AqaraBridgePushManager:
             return
 
         if did in self._g410_doorbells:
+            model = str(self._g410_doorbells[did].get("model") or "")
+            resource_spec_map = g410_resource_spec_map_for_model(model)
             value_hash = hashlib.sha256(str(payload.get("value")).encode()).hexdigest()[:12]
             _LOGGER.debug(
                 "G410 bridge event: payloadType=%s subjectId=%s resourceId=%s valueHash=%s time=%r hasMsgId=%s",
@@ -450,7 +453,7 @@ class AqaraBridgePushManager:
                 payload.get("time"),
                 bool(payload.get("msgId")),
             )
-            if resource_id not in G410_RESOURCE_SPEC_MAP:
+            if resource_id not in resource_spec_map:
                 _LOGGER.debug(
                     "Unknown G410 event: subjectId=%s resourceId=%s valueHash=%s",
                     did,
@@ -465,7 +468,7 @@ class AqaraBridgePushManager:
                 payload.get("value"),
                 self._g410_coordinators,
                 self._g410_state,
-                G410_RESOURCE_SPEC_MAP,
+                resource_spec_map,
                 pending_updates,
                 apply_scale=True,
                 event_payload=payload,

@@ -4,6 +4,20 @@ from typing import Any
 
 from homeassistant.helpers import entity_registry as er
 
+from .const import G410_ACN017_MODEL
+
+
+G410_AGL006_OBSOLETE_ENTITY_KEYS = {
+    "detect_stranger_face_event",
+    "time_sleep_enable",
+    "device_night_tip_light",
+    "doorbell_push_enable",
+    "doorbell_record_enable",
+    "image_flip",
+    "restart_device",
+    "restart_coordinator",
+}
+
 
 def remove_obsolete_g410_entities(
     hass,
@@ -11,8 +25,10 @@ def remove_obsolete_g410_entities(
     g410_doorbells: list[dict[str, Any]],
 ) -> None:
     obsolete_unique_ids = {
-        f"{doorbell['did']}_detect_stranger_face_event"
+        f"{doorbell['did']}_{entity_key}"
         for doorbell in g410_doorbells
+        if doorbell.get("model") != G410_ACN017_MODEL
+        for entity_key in G410_AGL006_OBSOLETE_ENTITY_KEYS
     }
     if not obsolete_unique_ids:
         return

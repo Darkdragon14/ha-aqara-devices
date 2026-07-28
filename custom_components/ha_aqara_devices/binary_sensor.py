@@ -14,6 +14,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .binary_sensors import ALL_BINARY_SENSORS_DEF, G410_BINARY_SENSORS_DEF, G4_BINARY_SENSORS_DEF, M100_BINARY_SENSORS_DEF, M200_BINARY_SENSORS_DEF, M3_BINARY_SENSORS_DEF
+from .bridge_specs import g410_specs_for_model
 from .const import (
     DOMAIN,
     FP2_DEVICE_LABEL,
@@ -88,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         if coordinator is None:
             continue
 
-        for binary_sensor_def in G410_BINARY_SENSORS_DEF:
+        for binary_sensor_def in g410_specs_for_model(G410_BINARY_SENSORS_DEF, model):
             entities.append(
                 AqaraBinarySensor(
                     coordinator,

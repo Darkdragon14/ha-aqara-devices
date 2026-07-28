@@ -158,13 +158,13 @@ class _Coordinator:
         self.updates.append(data)
 
 
-def _manager(coordinator: _Coordinator):
+def _manager(coordinator: _Coordinator, model: str = "lumi.camera.agl006"):
     manager = push_module.AqaraBridgePushManager.__new__(push_module.AqaraBridgePushManager)
     manager._event_id = 0
     manager._seen_event_ids = {}
     manager._cameras = {}
     manager._g2h_pro_cameras = {}
-    manager._g410_doorbells = {"g410": {"did": "g410"}}
+    manager._g410_doorbells = {"g410": {"did": "g410", "model": model}}
     manager._g4_doorbells = {}
     manager._hubs_m3 = {}
     manager._hubs_m100 = {}
@@ -456,12 +456,63 @@ class G410EventTests(unittest.TestCase):
         self.assertFalse(binary_sensors.G410_DOORBELL_RING["queryable"])
         self.assertFalse(sensors.G410_FACE_RECOGNITION_EVENT["queryable"])
 
-    def test_stranger_face_resource_is_not_mapped_or_subscribed(self):
-        g410_subscriptions = bridge_specs.build_active_subscriptions(
-            enabled_unique_ids={"g410_face_recognition"},
+    def test_g410_resources_are_filtered_by_model(self):
+        acn017_resources = set(
+            bridge_specs.g410_resource_spec_map_for_model("lumi.camera.acn017")
+        )
+        agl006_resources = set(
+            bridge_specs.g410_resource_spec_map_for_model("lumi.camera.agl006")
+        )
+
+        common_resources = {
+            "8.0.2001",
+            "14.11.85",
+            "4.67.85",
+            "4.55.85",
+            "14.1.85",
+            "14.110.85",
+            "13.95.85",
+            "13.12.85",
+            "14.1.111",
+            "14.1.1000",
+            "14.65.85",
+            "4.8.85",
+            "4.66.85",
+            "4.54.85",
+            "4.68.85",
+        }
+        acn017_only_resources = {
+            "14.68.85",
+            "14.125.85",
+            "13.108.85",
+            "8.0.2032",
+            "4.154.85",
+            "4.138.85",
+        }
+
+        self.assertEqual(common_resources, agl006_resources)
+        self.assertEqual(common_resources | acn017_only_resources, acn017_resources)
+
+    def test_stranger_face_resource_is_subscribed_only_for_acn017(self):
+        enabled_unique_ids = {"g410_detect_stranger_face_event"}
+        acn017_subscriptions = bridge_specs.build_active_subscriptions(
+            enabled_unique_ids=enabled_unique_ids,
             cameras=[],
             g2h_pro_cameras=[],
-            g410_doorbells=[{"did": "g410"}],
+            g410_doorbells=[{"did": "g410", "model": "lumi.camera.acn017"}],
+            g4_doorbells=[],
+            hubs_m3=[],
+            hubs_m100=[],
+            hubs_m200=[],
+            a100_pro_locks=[],
+            acn002_locks=[],
+            presence_devices=[],
+        )
+        agl006_subscriptions = bridge_specs.build_active_subscriptions(
+            enabled_unique_ids=enabled_unique_ids,
+            cameras=[],
+            g2h_pro_cameras=[],
+            g410_doorbells=[{"did": "g410", "model": "lumi.camera.agl006"}],
             g4_doorbells=[],
             hubs_m3=[],
             hubs_m100=[],
@@ -484,28 +535,45 @@ class G410EventTests(unittest.TestCase):
             presence_devices=[],
         )
 
-        self.assertNotIn("13.108.85", bridge_specs.G410_RESOURCE_SPEC_MAP)
         self.assertIn("13.108.85", bridge_specs.G4_RESOURCE_SPEC_MAP)
         self.assertEqual(
-            [{"subjectId": "g410", "resourceIds": ["13.95.85"]}],
-            g410_subscriptions,
+            [{"subjectId": "g410", "resourceIds": ["13.108.85"]}],
+            acn017_subscriptions,
         )
+        self.assertEqual([], agl006_subscriptions)
         self.assertEqual(
             [{"subjectId": "g4", "resourceIds": ["13.108.85"]}],
             g4_subscriptions,
         )
 
-    def test_registry_cleanup_removes_only_obsolete_g410_entity(self):
+    def test_registry_cleanup_keeps_acn017_and_removes_agl006_entity(self):
         registry = SimpleNamespace(async_remove=Mock())
+        obsolete_keys = {
+            "detect_stranger_face_event",
+            "time_sleep_enable",
+            "device_night_tip_light",
+            "doorbell_push_enable",
+            "doorbell_record_enable",
+            "image_flip",
+            "restart_device",
+            "restart_coordinator",
+        }
         entries = [
             SimpleNamespace(
-                entity_id="sensor.g410_stranger_face",
-                unique_id="g410_detect_stranger_face_event",
+                entity_id="sensor.acn017_stranger_face",
+                unique_id="acn017_detect_stranger_face_event",
             ),
             SimpleNamespace(
                 entity_id="sensor.g4_stranger_face",
                 unique_id="g4_detect_stranger_face_event",
             ),
+            *[
+                SimpleNamespace(
+                    entity_id=f"test.agl006_{key}",
+                    unique_id=f"agl006_{key}",
+                )
+                for key in obsolete_keys
+            ],
         ]
 
         with (
@@ -519,10 +587,28 @@ class G410EventTests(unittest.TestCase):
             entity_migration.remove_obsolete_g410_entities(
                 object(),
                 "entry-id",
-                [{"did": "g410"}],
+                [
+                    {"did": "acn017", "model": "lumi.camera.acn017"},
+                    {"did": "agl006", "model": "lumi.camera.agl006"},
+                ],
             )
 
-        registry.async_remove.assert_called_once_with("sensor.g410_stranger_face")
+        self.assertEqual(
+            {f"test.agl006_{key}" for key in obsolete_keys},
+            {call.args[0] for call in registry.async_remove.call_args_list},
+        )
+
+    def test_stranger_face_push_is_accepted_for_acn017(self):
+        coordinator = _Coordinator()
+        manager = _manager(coordinator, "lumi.camera.acn017")
+
+        manager._apply_events(
+            "batch",
+            [_event("13.108.85", "0", msgId="stranger", time=1710000000000)],
+        )
+
+        self.assertEqual("0", coordinator.data["detect_stranger_face_event"])
+        self.assertEqual(1, len(coordinator.updates))
 
     def test_unknown_g410_resource_is_logged_without_state_update(self):
         coordinator = _Coordinator()
