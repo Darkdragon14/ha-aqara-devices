@@ -117,6 +117,14 @@ HomeKit cameras generally pair with one controller at a time. If discovery or pa
 
 Advanced users can associate an existing go2rtc stream instead of pairing through the integration. Streams created outside this integration are never deleted or unpaired automatically.
 
+### Hub child devices
+
+The integration discovers child devices connected to supported G3, G2H Pro, M3, M100, and M200 hubs and registers each child under its parent hub in Home Assistant. Readable Aqara resources are exposed as generic read-only `sensor` or `binary_sensor` entities.
+
+Only resources considered safe and useful are enabled automatically, including reportable binary states and common measurements with units. Writable, unknown, or less useful resources are disabled by default. To use one of these entities, open the child device in Home Assistant, select its disabled entities, and enable the ones you need. Enabling or disabling a child entity reloads the integration so polling and Aqara subscriptions stay aligned with the active entities.
+
+The `ha_aqara_devices.open_pairing_mode` and `ha_aqara_devices.close_pairing_mode` services can start or stop child-device pairing on a supported hub. Both services require the parent hub's Aqara DID.
+
 ## How It Works
 
 `Aqara RocketMQ -> aqara-rocketmq-bridge -> SSE -> ha_aqara_devices -> Home Assistant`
