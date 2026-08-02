@@ -1,6 +1,6 @@
 {
   "domain": "ha_aqara_devices",
-  "name": "Aqara Devices (G3, G2H Pro, G410, G4, M3, M100, FP2, FP300, A100, A100 Pro, and U200)",
+  "name": "Aqara Devices (G3, G2H Pro, G410, G4, M3, M100, M200, FP2, FP300, A100, A100 Pro, Xingyao, and U200)",
   "codeowners": ["@Darkdragon14"],
   "config_flow": true,
   "dependencies": ["ffmpeg", "stream"],
@@ -8,5 +8,5 @@
   "iot_class": "cloud_push",
   "issue_tracker": "https://github.com/Darkdragon14/ha-aqara-devices/issues",
   "requirements": ["pycryptodome>=3.20.0"],
-  "version": "1.3.0"
+  "version": "1.4.0"
 }
