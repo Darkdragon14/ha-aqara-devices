@@ -11,6 +11,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
+from .child_devices import CHILD_SENSOR_PLATFORM
 from .const import (
     A100_DEVICE_LABEL,
     A100_MODEL,
@@ -29,7 +30,7 @@ from .const import (
     U200_DEVICE_LABEL,
 )
 from .bridge_specs import g410_specs_for_model
-from .device_info import build_device_info
+from .device_info import build_child_device_info, build_device_info
 from .fp300 import FP300_SENSOR_SPECS
 from .fp2 import FP2_SENSOR_SPECS
 from .sensors import (
@@ -63,6 +64,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     acn002_coordinators: dict[str, DataUpdateCoordinator] = data.get("acn002_coordinators", {})
     presence_coordinators: dict[str, dict[str, DataUpdateCoordinator]] = data.get("presence_coordinators", {})
     u200_coordinators: dict[str, DataUpdateCoordinator] = data.get("u200_coordinators", {})
+    child_entity_specs: list[dict[str, Any]] = data.get("child_entity_specs", [])
+    child_coordinators: dict[str, DataUpdateCoordinator] = data.get("child_coordinators", {})
 
     entities: list[SensorEntity] = []
 
@@ -240,6 +243,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                 )
             )
 
+    for spec in child_entity_specs:
+        if spec.get("platform") != CHILD_SENSOR_PLATFORM:
+            continue
+        coordinator = child_coordinators.get(str(spec.get("did") or ""))
+        if coordinator is None:
+            continue
+        entities.append(AqaraGenericChildSensor(coordinator, spec))
+
     async_add_entities(entities)
 
 
@@ -409,3 +420,44 @@ class AqaraFP2Sensor(CoordinatorEntity, SensorEntity):
                 return raw
 
         return raw
+
+
+class AqaraGenericChildSensor(CoordinatorEntity, SensorEntity):
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: DataUpdateCoordinator, spec: dict[str, Any]) -> None:
+        super().__init__(coordinator)
+        self._spec = spec
+        self._resource_id = str(spec["resource_id"])
+        self._value_map = spec.get("value_map") or {}
+
+        self._attr_unique_id = str(spec["unique_id"])
+        self._attr_name = str(spec.get("name") or self._resource_id)
+        self._attr_native_unit_of_measurement = spec.get("unit")
+        self._attr_entity_registry_enabled_default = spec.get("enabled_default", False)
+        self._attr_extra_state_attributes = {
+            "resource_id": self._resource_id,
+            "resource_name": spec.get("name"),
+            "resource_description": spec.get("description"),
+            "parent_did": spec.get("parent_did"),
+            "model": spec.get("model"),
+        }
+
+    @property
+    def device_info(self):
+        firmware_version = self._spec.get("firmware_version")
+        return build_child_device_info(
+            str(self._spec["did"]),
+            str(self._spec["parent_did"]),
+            str(self._spec.get("device_name") or ""),
+            str(self._spec.get("model") or ""),
+            None if firmware_version is None else str(firmware_version),
+        )
+
+    @property
+    def native_value(self):
+        data = self.coordinator.data or {}
+        raw = data.get(self._resource_id)
+        if raw is None:
+            return None
+        return self._value_map.get(str(raw), raw)

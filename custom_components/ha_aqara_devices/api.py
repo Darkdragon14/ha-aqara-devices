@@ -467,6 +467,19 @@ class AqaraApi:
         }
         return await self.res_query(translated)
 
+    async def get_resource_values(self, did: str, resource_ids: Iterable[str]) -> dict[str, Any]:
+        options = list(dict.fromkeys(str(resource_id) for resource_id in resource_ids if resource_id))
+        if not options:
+            return {}
+        data = await self.res_query({"data": [{"options": options, "subjectId": did}]})
+        if str(data.get("code")) != "0":
+            raise RuntimeError(f"Failed to query resource values: {data}")
+        return {
+            str(item.get("resourceId") or item.get("attr") or ""): self._attr_value_from_item(item)
+            for item in self._flatten_result_items(data)
+            if item.get("resourceId") or item.get("attr")
+        }
+
     async def subscribe_resources(self, subscriptions: list[dict[str, Any]]) -> Any:
         data = {"resources": subscriptions}
         return await self._open_request("config.resource.subscribe", data, authenticated=True)
@@ -474,6 +487,47 @@ class AqaraApi:
     async def unsubscribe_resources(self, subscriptions: list[dict[str, Any]]) -> Any:
         data = {"resources": subscriptions}
         return await self._open_request("config.resource.unsubscribe", data, authenticated=True)
+
+    async def query_device_sub_info(self, did: str) -> Any:
+        return await self._open_request("query.device.subInfo", {"did": did}, authenticated=True)
+
+    async def query_resource_info(self, model: str, resource_id: str | None = None) -> Any:
+        data: dict[str, Any] = {"model": model}
+        if resource_id:
+            data["resourceId"] = resource_id
+        return await self._open_request("query.resource.info", data, authenticated=True)
+
+    async def query_resource_name(self, subject_ids: Iterable[str]) -> Any:
+        return await self._open_request(
+            "query.resource.name",
+            {"subjectIds": list(subject_ids)},
+            authenticated=True,
+        )
+
+    async def open_device_connect(self, did: str) -> Any:
+        return await self._open_request("write.device.openConnect", {"did": did}, authenticated=True)
+
+    async def close_device_connect(self, did: str) -> Any:
+        return await self._open_request("write.device.closeConnect", {"did": did}, authenticated=True)
+
+    async def query_device_support_gateway(self, model: str) -> Any:
+        return await self._open_request("query.device.supportGateway", {"model": model}, authenticated=True)
+
+    async def query_position_support_gateway(
+        self,
+        model: str,
+        position_id: str | None = None,
+        page_num: int = 1,
+        page_size: int = 30,
+    ) -> Any:
+        data: dict[str, Any] = {
+            "model": model,
+            "pageNum": str(page_num),
+            "pageSize": str(page_size),
+        }
+        if position_id:
+            data["positionId"] = position_id
+        return await self._open_request("query.position.supportGateway", data, authenticated=True)
 
     async def query_matter_device_config(self, dids: Iterable[str]) -> Any:
         return await self._open_request("spec.query.specdevice.config", {"dids": list(dids)}, authenticated=True)

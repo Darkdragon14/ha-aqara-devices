@@ -15,6 +15,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .binary_sensors import ALL_BINARY_SENSORS_DEF, G410_BINARY_SENSORS_DEF, G4_BINARY_SENSORS_DEF, M100_BINARY_SENSORS_DEF, M200_BINARY_SENSORS_DEF, M3_BINARY_SENSORS_DEF
 from .bridge_specs import g410_specs_for_model
+from .child_devices import CHILD_BINARY_SENSOR_PLATFORM
 from .const import (
     DOMAIN,
     FP2_DEVICE_LABEL,
@@ -30,7 +31,7 @@ from .const import (
     M3_DEVICE_LABEL,
     U200_DEVICE_LABEL,
 )
-from .device_info import build_device_info
+from .device_info import build_child_device_info, build_device_info
 from .fp300 import FP300_BINARY_SENSORS_DEF
 from .fp2 import FP2_BINARY_SENSORS_DEF
 from .u200 import U200_BINARY_SENSORS_DEF
@@ -57,6 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     m200_coordinators: dict[str, DataUpdateCoordinator] = data.get("m200_coordinators", {})
     presence_coordinators: dict[str, dict[str, DataUpdateCoordinator]] = data.get("presence_coordinators", {})
     u200_coordinators: dict[str, DataUpdateCoordinator] = data.get("u200_coordinators", {})
+    child_entity_specs: list[dict[str, Any]] = data.get("child_entity_specs", [])
+    child_coordinators: dict[str, DataUpdateCoordinator] = data.get("child_coordinators", {})
 
     entities = []
 
@@ -238,6 +241,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                     U200_DEVICE_LABEL,
                 )
             )
+
+    for spec in child_entity_specs:
+        if spec.get("platform") != CHILD_BINARY_SENSOR_PLATFORM:
+            continue
+        coordinator = child_coordinators.get(str(spec.get("did") or ""))
+        if coordinator is None:
+            continue
+        entities.append(AqaraGenericChildBinarySensor(coordinator, spec))
 
     async_add_entities(entities)
 
@@ -469,3 +480,55 @@ class AqaraFP2BinarySensor(CoordinatorEntity, BinarySensorEntity):
         if self._on_values:
             return str(raw) in self._on_values
         return str(raw).strip() not in ("0", "false", "off")
+
+
+class AqaraGenericChildBinarySensor(CoordinatorEntity, BinarySensorEntity):
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: DataUpdateCoordinator, spec: dict[str, Any]) -> None:
+        super().__init__(coordinator)
+        self._spec = spec
+        self._resource_id = str(spec["resource_id"])
+        self._attr_unique_id = str(spec["unique_id"])
+        self._attr_name = str(spec.get("name") or self._resource_id)
+        self._attr_entity_registry_enabled_default = spec.get("enabled_default", False)
+        self._attr_extra_state_attributes = {
+            "resource_id": self._resource_id,
+            "resource_name": spec.get("name"),
+            "resource_description": spec.get("description"),
+            "parent_did": spec.get("parent_did"),
+            "model": spec.get("model"),
+        }
+
+    @property
+    def device_info(self):
+        firmware_version = self._spec.get("firmware_version")
+        return build_child_device_info(
+            str(self._spec["did"]),
+            str(self._spec["parent_did"]),
+            str(self._spec.get("device_name") or ""),
+            str(self._spec.get("model") or ""),
+            None if firmware_version is None else str(firmware_version),
+        )
+
+    @staticmethod
+    def _truthy(value: Any) -> bool:
+        if isinstance(value, bool):
+            return value
+        normalized = str(value).strip().lower()
+        if normalized in {"1", "true", "on", "yes"}:
+            return True
+        if normalized in {"0", "false", "off", "no", ""}:
+            return False
+        try:
+            return int(float(normalized)) != 0
+        except (TypeError, ValueError):
+            return bool(value)
+
+    @property
+    def is_on(self) -> bool | None:
+        data = self.coordinator.data or {}
+        raw = data.get(self._resource_id)
+        if raw is None:
+            return None
+        return self._truthy(raw)

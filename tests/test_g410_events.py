@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import asyncio
 from pathlib import Path
 import sys
 from types import SimpleNamespace
@@ -111,7 +112,11 @@ def _import_test_modules():
         pass
 
     stub(f"{PACKAGE}.api", AqaraApi=object, AqaraAuthError=AqaraAuthError)
-    stub(f"{PACKAGE}.device_info", build_device_info=lambda *args: {})
+    stub(
+        f"{PACKAGE}.device_info",
+        build_child_device_info=lambda *args: {},
+        build_device_info=lambda *args: {},
+    )
     stub(f"{PACKAGE}.u200", U200_BINARY_SENSORS_DEF=[], U200_SENSORS_DEF=[])
 
     with patch.dict(sys.modules, stubs):
@@ -152,10 +157,20 @@ class _Coordinator:
     def __init__(self):
         self.data = {}
         self.updates = []
+        self.refresh_requests = 0
 
     def async_set_updated_data(self, data):
         self.data = data
         self.updates.append(data)
+
+    async def async_request_refresh(self):
+        self.refresh_requests += 1
+
+
+class _Hass:
+    @staticmethod
+    def async_create_task(coro):
+        asyncio.run(coro)
 
 
 def _manager(coordinator: _Coordinator, model: str = "lumi.camera.agl006"):
@@ -175,6 +190,117 @@ def _manager(coordinator: _Coordinator, model: str = "lumi.camera.agl006"):
     manager._g410_coordinators = {"g410": coordinator}
     manager._g410_state = {"g410": {}}
     return manager
+
+
+class PushPollingTests(unittest.TestCase):
+    def test_sse_only_keeps_polling_for_non_reportable_children(self):
+        manager = push_module.AqaraBridgePushManager.__new__(push_module.AqaraBridgePushManager)
+        standard = _Coordinator()
+        polled_child = _Coordinator()
+        pushed_child = _Coordinator()
+        manager._camera_coordinators = {"standard": standard}
+        manager._g2h_pro_coordinators = {}
+        manager._g410_coordinators = {}
+        manager._g4_coordinators = {}
+        manager._m3_coordinators = {}
+        manager._m100_coordinators = {}
+        manager._m200_coordinators = {}
+        manager._a100_pro_coordinators = {}
+        manager._acn002_coordinators = {}
+        manager._presence_coordinators = {}
+        manager._child_coordinators = {
+            "polled": polled_child,
+            "pushed": pushed_child,
+        }
+        manager._child_polling_dids = {"polled"}
+        manager._sse_connected = None
+        manager._hass = _Hass()
+
+        manager._set_sse_connected(True)
+
+        self.assertIsNone(standard.update_interval)
+        self.assertEqual(polled_child.update_interval.total_seconds(), 300)
+        self.assertIsNone(pushed_child.update_interval)
+
+        manager._set_sse_connected(False)
+
+        self.assertEqual(standard.update_interval.total_seconds(), 300)
+        self.assertEqual(pushed_child.update_interval.total_seconds(), 300)
+        self.assertEqual(standard.refresh_requests, 1)
+        self.assertEqual(pushed_child.refresh_requests, 1)
+
+    def test_subscription_normalization_preserves_attach(self):
+        subscriptions = push_module.AqaraBridgePushManager._normalize_subscriptions(
+            [
+                {
+                    "subjectId": "child.did",
+                    "resourceIds": ["3.1.85"],
+                    "attach": "ha_aqara_devices",
+                },
+                {
+                    "subjectId": "child.did",
+                    "resourceIds": ["4.1.85"],
+                },
+            ]
+        )
+
+        self.assertEqual(
+            subscriptions,
+            [
+                {
+                    "subjectId": "child.did",
+                    "resourceIds": ["3.1.85", "4.1.85"],
+                    "attach": "ha_aqara_devices",
+                }
+            ],
+        )
+
+    def test_push_merges_into_latest_polled_coordinator_state(self):
+        manager = push_module.AqaraBridgePushManager.__new__(push_module.AqaraBridgePushManager)
+        coordinator = _Coordinator()
+        coordinator.data = {"reported": "old", "polled": "current"}
+
+        state = manager._base_state(
+            "batch",
+            ("device", "child.did", coordinator.name),
+            {"reported": "old", "polled": "stale"},
+            coordinator,
+            {},
+        )
+
+        self.assertEqual(state, {"reported": "old", "polled": "current"})
+
+    def test_push_preserves_cached_state_omitted_from_partial_poll(self):
+        manager = push_module.AqaraBridgePushManager.__new__(push_module.AqaraBridgePushManager)
+        coordinator = _Coordinator()
+        coordinator.data = {"polled": "current"}
+
+        state = manager._base_state(
+            "batch",
+            ("device", "child.did", coordinator.name),
+            {"reported": "cached", "polled": "stale"},
+            coordinator,
+            {},
+        )
+
+        self.assertEqual(state, {"reported": "cached", "polled": "current"})
+
+
+class PushLifecycleTests(unittest.IsolatedAsyncioTestCase):
+    async def test_listener_shutdown_does_not_restart_polling(self):
+        manager = push_module.AqaraBridgePushManager.__new__(push_module.AqaraBridgePushManager)
+        manager._stop_event = asyncio.Event()
+        manager._connected_event = asyncio.Event()
+        manager._set_sse_connected = Mock()
+
+        async def _stop_stream():
+            manager._stop_event.set()
+
+        manager._stream_events = _stop_stream
+
+        await manager._listen_loop()
+
+        manager._set_sse_connected.assert_not_called()
 
 
 def _event(resource_id: str, value: str, **metadata):

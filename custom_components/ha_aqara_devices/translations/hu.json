@@ -30,6 +30,33 @@
             "already_configured": "Ez az eszkoz mar konfiguralva van."
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Aqara FP2",
+                "description": "Frissitsd az Aqara Open API-fiok adatait vagy a bridge kapcsolati beallitasait.",
+                "data": {
+                    "account": "Aqara-fiok (e-mail vagy telefon)",
+                    "area": "Regio",
+                    "bridge_url": "Bridge URL",
+                    "bridge_token": "Bridge token",
+                    "app_id": "App ID",
+                    "key_id": "Key ID",
+                    "app_key": "App key"
+                }
+            },
+            "auth_code": {
+                "title": "Hitelesitesi kod",
+                "description": "Add meg az Aqara altal az e-mail-cimedre vagy telefonodra kuldott ellenorzokodot.",
+                "data": {
+                    "auth_code": "Hitelesitesi kod"
+                }
+            }
+        },
+        "error": {
+            "auth": "A hitelesites sikertelen. Ellenorizd a fiokot, a regiot es a hitelesitesi kodot."
+        }
+    },
     "entity": {
         "binary_sensor": {
             "night_vision": {

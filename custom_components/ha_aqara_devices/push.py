@@ -62,6 +62,7 @@ class AqaraBridgePushManager:
         a100_pro_locks: list[dict[str, Any]],
         acn002_locks: list[dict[str, Any]],
         presence_devices: list[dict[str, Any]],
+        child_devices: list[dict[str, Any]],
         camera_coordinators: dict[str, DataUpdateCoordinator],
         g2h_pro_coordinators: dict[str, DataUpdateCoordinator],
         g410_coordinators: dict[str, DataUpdateCoordinator],
@@ -72,6 +73,9 @@ class AqaraBridgePushManager:
         a100_pro_coordinators: dict[str, DataUpdateCoordinator],
         acn002_coordinators: dict[str, DataUpdateCoordinator],
         presence_coordinators: dict[str, dict[str, DataUpdateCoordinator]],
+        child_coordinators: dict[str, DataUpdateCoordinator],
+        child_resource_specs: dict[str, dict[str, dict[str, Any]]],
+        child_polling_dids: set[str],
         subscriptions: list[dict[str, Any]],
     ) -> None:
         self._hass = hass
@@ -89,6 +93,9 @@ class AqaraBridgePushManager:
         self._a100_pro_coordinators = a100_pro_coordinators
         self._acn002_coordinators = acn002_coordinators
         self._presence_coordinators = presence_coordinators
+        self._child_coordinators = child_coordinators
+        self._child_resource_specs = child_resource_specs
+        self._child_polling_dids = child_polling_dids
         self._cameras = {device["did"]: device for device in cameras}
         self._g2h_pro_cameras = {device["did"]: device for device in g2h_pro_cameras}
         self._g410_doorbells = {device["did"]: device for device in g410_doorbells}
@@ -99,6 +106,7 @@ class AqaraBridgePushManager:
         self._a100_pro_locks = {device["did"]: device for device in a100_pro_locks}
         self._acn002_locks = {device["did"]: device for device in acn002_locks}
         self._presence_devices = {device["did"]: device for device in presence_devices}
+        self._child_devices = {device["did"]: device for device in child_devices}
         self._camera_state: dict[str, dict[str, Any]] = {did: {} for did in self._cameras}
         self._g2h_pro_state: dict[str, dict[str, Any]] = {did: {} for did in self._g2h_pro_cameras}
         self._g410_state: dict[str, dict[str, Any]] = {did: {} for did in self._g410_doorbells}
@@ -112,33 +120,44 @@ class AqaraBridgePushManager:
             did: {group: {} for group in coordinators}
             for did, coordinators in presence_coordinators.items()
         }
+        self._child_state: dict[str, dict[str, Any]] = {did: {} for did in self._child_devices}
         self._subscriptions = self._normalize_subscriptions(subscriptions)
         self._listen_task: asyncio.Task[None] | None = None
         self._stop_event = asyncio.Event()
         self._connected_event = asyncio.Event()
         self._subscribed = False
         self._started = False
-        self._polling_enabled: bool | None = None
+        self._sse_connected: bool | None = None
         self._event_id = 0
         self._seen_event_ids: dict[tuple[str, str], dict[int, None]] = {}
 
     @staticmethod
     def _normalize_subscriptions(subscriptions: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        merged: dict[str, dict[str, None]] = {}
+        merged: dict[str, dict[str, Any]] = {}
         for subscription in subscriptions:
             subject_id = str(subscription.get("subjectId") or "").strip()
             if not subject_id:
                 continue
-            resource_map = merged.setdefault(subject_id, {})
+            normalized = merged.setdefault(subject_id, {"resourceIds": {}, "attach": ""})
+            resource_map = normalized["resourceIds"]
             for resource_id in subscription.get("resourceIds") or []:
                 normalized_resource = str(resource_id or "").strip()
                 if normalized_resource:
                     resource_map[normalized_resource] = None
-        return [
-            {"subjectId": subject_id, "resourceIds": list(resource_map)}
-            for subject_id, resource_map in merged.items()
-            if resource_map
-        ]
+            attach = str(subscription.get("attach") or "").strip()
+            if attach:
+                normalized["attach"] = attach
+
+        result: list[dict[str, Any]] = []
+        for subject_id, normalized in merged.items():
+            resource_ids = list(normalized["resourceIds"])
+            if not resource_ids:
+                continue
+            item = {"subjectId": subject_id, "resourceIds": resource_ids}
+            if normalized["attach"]:
+                item["attach"] = normalized["attach"]
+            result.append(item)
+        return result
 
     def _subscription_resource_count(self) -> int:
         return sum(len(subscription["resourceIds"]) for subscription in self._subscriptions)
@@ -154,26 +173,30 @@ class AqaraBridgePushManager:
         yield from self._m200_coordinators.values()
         yield from self._a100_pro_coordinators.values()
         yield from self._acn002_coordinators.values()
+        yield from self._child_coordinators.values()
         for groups in self._presence_coordinators.values():
             yield from groups.values()
 
-    def _set_polling_enabled(self, enabled: bool) -> None:
-        """Toggle coordinator polling based on bridge SSE health.
-
-        When the bridge SSE stream is connected, polling is disabled because
-        push delivers all resource updates in real time.  When SSE drops,
-        polling is re-enabled as an automatic fallback.
-        """
-        if self._polling_enabled == enabled:
+    def _set_sse_connected(self, connected: bool) -> None:
+        """Use polling as fallback while retaining it for non-reportable children."""
+        if self._sse_connected == connected:
             return
 
-        interval = timedelta(seconds=BRIDGE_SANITY_INTERVAL_SECONDS) if enabled else None
+        interval = timedelta(seconds=BRIDGE_SANITY_INTERVAL_SECONDS)
         for coordinator in self._all_coordinators():
-            coordinator.update_interval = interval
-        self._polling_enabled = enabled
+            was_disabled = coordinator.update_interval is None
+            coordinator.update_interval = None if connected else interval
+            if not connected and was_disabled:
+                self._hass.async_create_task(coordinator.async_request_refresh())
+        for did, coordinator in self._child_coordinators.items():
+            if did in self._child_polling_dids:
+                coordinator.update_interval = interval
+        self._sse_connected = connected
         _LOGGER.info(
-            "Aqara bridge polling fallback %s",
-            "enabled" if enabled else "disabled",
+            "Aqara bridge SSE %s; polling fallback %s and %s child device(s) remain polled",
+            "connected" if connected else "disconnected",
+            "disabled" if connected else "enabled",
+            len(self._child_polling_dids),
         )
 
     async def async_start(self) -> None:
@@ -185,7 +208,7 @@ class AqaraBridgePushManager:
             self._started = True
             return
 
-        self._set_polling_enabled(True)
+        self._set_sse_connected(False)
         await self._api.ensure_valid_access_token()
         await self._check_health()
         await self._subscribe_all_resources()
@@ -219,7 +242,6 @@ class AqaraBridgePushManager:
         task = self._listen_task
         self._listen_task = None
         self._started = False
-        self._set_polling_enabled(True)
         if task is not None:
             task.cancel()
             with suppress(asyncio.CancelledError):
@@ -264,12 +286,20 @@ class AqaraBridgePushManager:
             len(self._subscriptions),
             self._subscription_resource_count(),
         )
+        _LOGGER.debug("Aqara bridge subscription payload: %s", self._subscriptions)
 
     async def _unsubscribe_all_resources(self) -> None:
         if not self._subscriptions:
             return
 
-        response = await self._api.unsubscribe_resources(self._subscriptions)
+        unsubscribe_payload = [
+            {
+                "subjectId": subscription["subjectId"],
+                "resourceIds": subscription["resourceIds"],
+            }
+            for subscription in self._subscriptions
+        ]
+        response = await self._api.unsubscribe_resources(unsubscribe_payload)
         if str(response.get("code")) != "0":
             raise RuntimeError(f"Failed to unsubscribe bridge resources: {response}")
         _LOGGER.info(
@@ -303,12 +333,13 @@ class AqaraBridgePushManager:
                     err,
                 )
 
-            # SSE disconnected - re-enable polling as fallback
             self._connected_event.clear()
-            self._set_polling_enabled(True)
-
             if self._stop_event.is_set():
                 break
+
+            # Re-enable polling before waiting for the SSE reconnect.
+            self._set_sse_connected(False)
+
             await asyncio.sleep(reconnect_delay)
             reconnect_delay = min(reconnect_delay * 2, 30.0)
 
@@ -325,7 +356,7 @@ class AqaraBridgePushManager:
                 raise RuntimeError(f"Aqara bridge events connection failed ({response.status}): {body}")
 
             self._connected_event.set()
-            self._set_polling_enabled(False)
+            self._set_sse_connected(True)
             _LOGGER.info("Connected to Aqara bridge SSE stream at %s", url)
 
             event_name: str | None = None
@@ -559,6 +590,28 @@ class AqaraBridgePushManager:
             )
             return
 
+        if did in self._child_devices and did in self._child_resource_specs:
+            if resource_id not in self._child_resource_specs[did]:
+                _LOGGER.debug(
+                    "Unknown Aqara child event: subjectId=%s resourceId=%s attach=%r",
+                    did,
+                    resource_id,
+                    payload.get("attach"),
+                )
+                return
+            self._handle_shared_device_message(
+                payload_type,
+                did,
+                resource_id,
+                payload.get("value"),
+                self._child_coordinators,
+                self._child_state,
+                self._child_resource_specs.get(did, {}),
+                pending_updates,
+                apply_scale=False,
+            )
+            return
+
         device = self._presence_devices.get(did)
         if device is None:
             return
@@ -631,7 +684,10 @@ class AqaraBridgePushManager:
         # The local bridge's SSE "snapshot" is a replay of recent events, not a
         # complete state dump. Merge it into the existing coordinator data so
         # fields missing from the replay do not regress to unknown.
-        return dict(cached_state or coordinator.data or {})
+        state = dict(cached_state or {})
+        if isinstance(coordinator.data, dict):
+            state.update(coordinator.data)
+        return state
 
     def _handle_g3_message(
         self,

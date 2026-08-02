@@ -30,6 +30,33 @@
             "already_configured": "Dit apparaat is al geconfigureerd."
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Aqara FP2",
+                "description": "Werk je Aqara Open API-accountgegevens of bridge-verbindingsinstellingen bij.",
+                "data": {
+                    "account": "Aqara-account (e-mail of telefoon)",
+                    "area": "Regio",
+                    "bridge_url": "Bridge-URL",
+                    "bridge_token": "Bridge-token",
+                    "app_id": "App ID",
+                    "key_id": "Key ID",
+                    "app_key": "App key"
+                }
+            },
+            "auth_code": {
+                "title": "Autorisatiecode",
+                "description": "Voer de verificatiecode in die Aqara naar je e-mail of telefoon heeft gestuurd.",
+                "data": {
+                    "auth_code": "Autorisatiecode"
+                }
+            }
+        },
+        "error": {
+            "auth": "Authenticatie mislukt. Controleer het account, de regio en de autorisatiecode."
+        }
+    },
     "entity": {
         "binary_sensor": {
             "night_vision": {
