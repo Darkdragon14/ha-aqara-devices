@@ -24,6 +24,7 @@ from .const import (
     CONF_BRIDGE_TOKEN,
     CONF_BRIDGE_URL,
     CONF_KEY_ID,
+    DATA_CAMERA_CANDIDATES,
     DOMAIN,
     DEFAULT_BRIDGE_URL,
     FP2_MODEL,
@@ -324,6 +325,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         build_active_subscriptions,
         g410_state_specs_for_model,
     )
+    from .camera_config import build_camera_candidates
     from .push import AqaraBridgePushManager
 
     session = aiohttp_client.async_get_clientsession(hass)
@@ -369,6 +371,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         acn002_locks = [device for device in devices if device.get("model") in ACN002_MODELS]
         presence_devices = [device for device in devices if device.get("model") in PRESENCE_MODELS]
         u200_locks = [device for device in devices if device.get("model") in U200_MODELS]
+        camera_candidates = build_camera_candidates(
+            cameras,
+            g2h_pro_cameras,
+            g410_doorbells,
+            g4_doorbells,
+        )
         remove_obsolete_g410_entities(hass, entry.entry_id, g410_doorbells)
 
         if (
@@ -451,6 +459,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "g2h_pro_cameras": g2h_pro_cameras,
         "g410_doorbells": g410_doorbells,
         "g4_doorbells": g4_doorbells,
+        DATA_CAMERA_CANDIDATES: camera_candidates,
         "hubs_m3": hubs_m3,
         "hubs_m100": hubs_m100,
         "hubs_m200": hubs_m200,

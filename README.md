@@ -92,6 +92,31 @@ The config flow asks for:
 
 After the first step, Aqara sends a verification code to your email address or phone number. Enter that authorization code to finish setup.
 
+### Optional camera live streams with go2rtc
+
+G3, G2H Pro, G410, and G4 devices can expose a Home Assistant `camera` entity through a separate [go2rtc](https://github.com/AlexxIT/go2rtc) instance. Video support is optional; all other Aqara entities continue to work when go2rtc is not installed.
+
+> [!IMPORTANT]
+> Camera configurations created with the prerelease tag `v1.4.0-beta-camera-rtsp-streams` are not migrated. Direct RTSP settings cannot be converted into a HomeKit pairing and are ignored by this version. Reconfigure each camera through go2rtc; the old `rtsp_cameras` options are left untouched so downgrading does not destroy them.
+
+For Home Assistant OS or Supervised, install the go2rtc add-on from `https://github.com/AlexxIT/hassio-addons`. Home Assistant Container users can run the official `alexxit/go2rtc` container instead. Keep the go2rtc API and media ports on localhost or a trusted private network.
+
+Open the integration options and use:
+
+| Menu | Purpose |
+| --- | --- |
+| `Account and bridge` | Update Aqara Open API account details, developer keys, or bridge connection settings |
+| `go2rtc` | Configure and validate the go2rtc API and RTSP output URLs |
+| `Camera streams` | Pair a discovered camera or associate an existing go2rtc stream |
+
+When pairing a camera, select the Aqara device, select the local HomeKit camera discovered by go2rtc, and enter its HomeKit pairing code. The code is sent directly to go2rtc and is not stored by this integration. go2rtc performs the local HomeKit pairing, stores its pairing keys, and provides the stream consumed by Home Assistant. The HomeKit Device integration is not required.
+
+The automatically paired stream currently exposes video only. HomeKit uses AAC-ELD audio, which requires an additional FFmpeg transcoding source; advanced users can configure that in go2rtc and associate the resulting existing stream.
+
+HomeKit cameras generally pair with one controller at a time. If discovery or pairing fails, remove any existing Apple Home, HomeKit Device, or other go2rtc pairing first. This does not remove the camera from the Aqara app or affect its Aqara Open API entities.
+
+Advanced users can associate an existing go2rtc stream instead of pairing through the integration. Streams created outside this integration are never deleted or unpaired automatically.
+
 ## How It Works
 
 `Aqara RocketMQ -> aqara-rocketmq-bridge -> SSE -> ha_aqara_devices -> Home Assistant`
@@ -129,6 +154,11 @@ The U200 is exposed by Aqara as Matter model `aqara.matter.4447_10242`, so this 
 
 - [Full setup and troubleshooting guide](https://darkdragon14.github.io/aqara-rocketmq-bridge/)
 - [Issues and feature requests](https://github.com/Darkdragon14/ha-aqara-devices/issues)
+
+## Credits / Acknowledgements
+
+Camera streaming is powered by [AlexxIT/go2rtc](https://github.com/AlexxIT/go2rtc), distributed separately under the MIT license.
+Thanks also to Aqara support for their help and information; this project is community-maintained and is not officially affiliated with or endorsed by Aqara.
 
 ## Missing translation
 
