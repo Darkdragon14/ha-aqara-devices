@@ -33,6 +33,22 @@
     "options": {
         "step": {
             "init": {
+                "title": "Aqara Devices",
+                "description": "Choose which Aqara settings you want to update.",
+                "menu_options": {
+                    "account_bridge": "Account and bridge",
+                    "go2rtc": "go2rtc",
+                    "camera_streams": "Camera streams"
+                }
+            },
+            "auth_code": {
+                "title": "授權碼",
+                "description": "輸入 Aqara 發送到您電子郵件或手機的驗證碼。",
+                "data": {
+                    "auth_code": "授權碼"
+                }
+            },
+            "account_bridge": {
                 "title": "Aqara FP2",
                 "description": "更新您的 Aqara Open API 帳戶詳情或網橋連線設定。",
                 "data": {
@@ -45,16 +61,21 @@
                     "app_key": "App Key"
                 }
             },
-            "auth_code": {
-                "title": "授權碼",
-                "description": "輸入 Aqara 發送到您電子郵件或手機的驗證碼。",
+            "camera_streams": {
+                "title": "Camera streams",
+                "description": "Select an Aqara camera and add, replace, or remove its go2rtc stream.",
                 "data": {
-                    "auth_code": "授權碼"
+                    "camera_did": "Camera",
+                    "action": "Action"
                 }
             }
         },
         "error": {
-            "auth": "認證失敗，請檢查帳戶、地區和授權碼。"
+            "auth": "認證失敗，請檢查帳戶、地區和授權碼。",
+            "integration_not_loaded": "The integration must be loaded before camera streams can be configured.",
+            "no_camera_devices": "No supported Aqara camera devices are currently discovered.",
+            "camera_not_found": "The selected camera is no longer available.",
+            "go2rtc_not_configured": "Configure the go2rtc connection before adding camera streams."
         }
     },
     "entity": {
@@ -550,6 +571,11 @@
         "lock": {
             "lock": {
                 "name": "門鎖"
+            }
+        },
+        "camera": {
+            "live_stream": {
+                "name": "Live stream"
             }
         }
     }

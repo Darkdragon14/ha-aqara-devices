@@ -1,5 +1,7 @@
 from typing import Dict, Any
 
+from .const import G410_ACN017_MODEL
+
 VIDEO_SWITCH_DEF: Dict[str, Any] = {
     "name": "Video",
     "translation_key": "video",
@@ -248,6 +250,7 @@ G410_SCHEDULED_SLEEP = _g410_switch(
     "time_sleep_enable",
     "14.125.85",
 )
+G410_SCHEDULED_SLEEP["g410_models"] = {G410_ACN017_MODEL}
 G410_INDICATOR_LIGHT = _g410_switch(
     "Indicator Light",
     "indicator_light",
@@ -255,6 +258,7 @@ G410_INDICATOR_LIGHT = _g410_switch(
     "device_night_tip_light",
     "8.0.2032",
 )
+G410_INDICATOR_LIGHT["g410_models"] = {G410_ACN017_MODEL}
 G410_ANTI_TAMPER_ALARM = _g410_switch(
     "Anti-Tamper Alarm",
     "anti_tamper_alarm",
@@ -276,6 +280,7 @@ G410_DOORBELL_NOTIFICATION = _g410_switch(
     "doorbell_push_enable",
     "4.154.85",
 )
+G410_DOORBELL_NOTIFICATION["g410_models"] = {G410_ACN017_MODEL}
 G410_LOW_TEMP_ALARM = _g410_switch(
     "Low Temperature Alarm",
     "low_temp_alarm",
@@ -290,6 +295,7 @@ G410_DOORBELL_RECORDING = _g410_switch(
     "doorbell_record_enable",
     "4.138.85",
 )
+G410_DOORBELL_RECORDING["g410_models"] = {G410_ACN017_MODEL}
 
 G410_SWITCHES_DEF = [
     G410_HIGH_TEMP_ALARM,

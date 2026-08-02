@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
 
-from .bridge_specs import spec_event_time_key, spec_event_token_key
+from .bridge_specs import g410_specs_for_model, spec_event_time_key, spec_event_token_key
 from .const import DOMAIN, G410_DEVICE_LABEL
 from .device_info import build_device_info
 from .events import G410_EVENTS_DEF
@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         coordinator = coordinators.get(did)
         if coordinator is None:
             continue
-        for spec in G410_EVENTS_DEF:
+        for spec in g410_specs_for_model(G410_EVENTS_DEF, doorbell["model"]):
             entities.append(
                 AqaraG410Event(
                     coordinator,

@@ -551,6 +551,40 @@
             "lock": {
                 "name": "Schloss"
             }
+        },
+        "camera": {
+            "live_stream": {
+                "name": "Live stream"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "account_bridge": {},
+            "init": {
+                "title": "Aqara Devices",
+                "description": "Choose which Aqara settings you want to update.",
+                "menu_options": {
+                    "account_bridge": "Account and bridge",
+                    "go2rtc": "go2rtc",
+                    "camera_streams": "Camera streams"
+                }
+            },
+            "camera_streams": {
+                "title": "Camera streams",
+                "description": "Select an Aqara camera and add, replace, or remove its go2rtc stream.",
+                "data": {
+                    "camera_did": "Camera",
+                    "action": "Action"
+                }
+            }
+        },
+        "error": {
+            "auth": "Authentication failed, please verify the account, region, and authorization code.",
+            "integration_not_loaded": "The integration must be loaded before camera streams can be configured.",
+            "no_camera_devices": "No supported Aqara camera devices are currently discovered.",
+            "camera_not_found": "The selected camera is no longer available.",
+            "go2rtc_not_configured": "Configure the go2rtc connection before adding camera streams."
         }
     }
 }

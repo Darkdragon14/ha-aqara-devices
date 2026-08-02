@@ -1,14 +1,25 @@
 from __future__ import annotations
 
 DOMAIN = "ha_aqara_devices"
-PLATFORMS: list[str] = ["switch", "button", "binary_sensor", "number", "sensor", "select", "lock", "event"]
+PLATFORMS: list[str] = ["switch", "button", "binary_sensor", "number", "sensor", "select", "lock", "event", "camera"]
 
 CONF_BRIDGE_URL = "bridge_url"
 CONF_BRIDGE_TOKEN = "bridge_token"
 CONF_APP_ID = "app_id"
 CONF_APP_KEY = "app_key"
 CONF_KEY_ID = "key_id"
+CONF_CAMERA_STREAMS = "camera_streams"
+CONF_GO2RTC_URL = "go2rtc_url"
+CONF_GO2RTC_USERNAME = "go2rtc_username"
+CONF_GO2RTC_PASSWORD = "go2rtc_password"
+CONF_GO2RTC_RTSP_URL = "go2rtc_rtsp_url"
+CONF_STREAM_NAME = "stream_name"
+CONF_HOMEKIT_ID = "homekit_id"
+CONF_MANAGED_HOMEKIT = "managed_homekit"
 DEFAULT_BRIDGE_URL = "http://aqara-rocketmq-bridge:8080"
+DEFAULT_GO2RTC_URL = "http://127.0.0.1:1984"
+DEFAULT_GO2RTC_RTSP_URL = "rtsp://127.0.0.1:8554"
+DATA_CAMERA_CANDIDATES = "camera_candidates"
 BRIDGE_SANITY_INTERVAL_SECONDS = 300
 BRIDGE_UNAVAILABLE_AFTER_FAILURES = 3
 EVENT_ID_SUFFIX = "__event_id"
@@ -43,7 +54,9 @@ ACN002_MODEL = "aqara.lock.acn002"
 G4_MODEL = "lumi.camera.agl002"
 G3_MODELS = {"lumi.camera.gwpgl1", "lumi.camera.gwpagl01"}
 G2H_PRO_MODELS = {"lumi.camera.agl001", "lumi.camera.acn003"}
-G410_MODELS = {"lumi.camera.acn017", "lumi.camera.agl006"}
+G410_ACN017_MODEL = "lumi.camera.acn017"
+G410_AGL006_MODEL = "lumi.camera.agl006"
+G410_MODELS = {G410_ACN017_MODEL, G410_AGL006_MODEL}
 M3_MODELS = {"lumi.gateway.acn012", "lumi.gateway.agl004"}
 M100_MODELS = {"lumi.gateway.agl008", "lumi.gateway.agl010"}
 M200_MODELS = {"lumi.gateway.agl011"}
@@ -66,6 +79,13 @@ A100_DEVICE_LABEL = "Aqara A100"
 A100_PRO_DEVICE_LABEL = "Aqara A100 Pro"
 ACN002_DEVICE_LABEL = "Aqara Smart Video Door Lock Xingyao"
 G4_DEVICE_LABEL = "Aqara G4"
+
+CAMERA_MODEL_LABELS: dict[str, str] = {
+    **dict.fromkeys(G3_MODELS, G3_DEVICE_LABEL),
+    **dict.fromkeys(G2H_PRO_MODELS, G2H_PRO_DEVICE_LABEL),
+    **dict.fromkeys(G410_MODELS, G410_DEVICE_LABEL),
+    **dict.fromkeys(G4_MODELS, G4_DEVICE_LABEL),
+}
 
 FP2_FAST_INTERVAL_SECONDS = 2
 FP2_PRESENCE_INTERVAL_SECONDS = 5

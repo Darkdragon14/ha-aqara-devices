@@ -12,7 +12,7 @@ from .binary_sensors import (
     M200_BINARY_SENSORS_DEF,
     M3_BINARY_SENSORS_DEF,
 )
-from .const import EVENT_ID_SUFFIX, EVENT_TIME_SUFFIX, FP2_MODEL, FP300_MODEL
+from .const import EVENT_ID_SUFFIX, EVENT_TIME_SUFFIX, FP2_MODEL, FP300_MODEL, G410_MODELS
 from .events import G410_EVENTS_DEF
 from .fp2 import FP2_BINARY_SENSORS_DEF, FP2_SENSOR_SPECS
 from .fp300 import FP300_BINARY_SENSORS_DEF, FP300_SENSOR_SPECS
@@ -51,6 +51,17 @@ def unique_api_resource_ids(specs: Iterable[dict[str, Any]]) -> list[str]:
         if api:
             seen[str(api)] = None
     return list(seen)
+
+
+def g410_specs_for_model(
+    specs: Iterable[dict[str, Any]],
+    model: str,
+) -> list[dict[str, Any]]:
+    return [
+        spec
+        for spec in specs
+        if not spec.get("g410_models") or model in spec["g410_models"]
+    ]
 
 
 def _to01(value: Any) -> int:
@@ -119,8 +130,22 @@ G410_STATE_SPECS = [
     *G410_NUMBERS_DEF,
     *G410_SELECTS_DEF,
 ]
-G410_RESOURCE_SPEC_MAP = build_api_spec_map(G410_STATE_SPECS)
-G410_SUBSCRIPTION_RESOURCE_IDS = unique_api_resource_ids(G410_STATE_SPECS)
+G410_STATE_SPECS_BY_MODEL = {
+    model: g410_specs_for_model(G410_STATE_SPECS, model)
+    for model in G410_MODELS
+}
+G410_RESOURCE_SPEC_MAPS = {
+    model: build_api_spec_map(specs)
+    for model, specs in G410_STATE_SPECS_BY_MODEL.items()
+}
+
+
+def g410_state_specs_for_model(model: str) -> list[dict[str, Any]]:
+    return G410_STATE_SPECS_BY_MODEL.get(model, [])
+
+
+def g410_resource_spec_map_for_model(model: str) -> dict[str, dict[str, Any]]:
+    return G410_RESOURCE_SPEC_MAPS.get(model, {})
 
 
 G4_STATE_SPECS = [
@@ -253,11 +278,11 @@ def _collect_g2h_pro_resources(enabled_unique_ids: set[str], did: str) -> list[s
     return list(resource_ids)
 
 
-def _collect_g410_resources(enabled_unique_ids: set[str], did: str) -> list[str]:
+def _collect_g410_resources(enabled_unique_ids: set[str], did: str, model: str) -> list[str]:
     resource_ids: dict[str, None] = {}
-    for spec in G410_STATE_SPECS:
+    for spec in g410_state_specs_for_model(model):
         _append_resource_if_enabled(resource_ids, enabled_unique_ids, f"{did}_{spec['inApp']}", spec)
-    for spec in G410_EVENTS_DEF:
+    for spec in g410_specs_for_model(G410_EVENTS_DEF, model):
         _append_resource_if_enabled(resource_ids, enabled_unique_ids, f"{did}_{spec['inApp']}", spec)
     return list(resource_ids)
 
@@ -350,7 +375,11 @@ def build_active_subscriptions(
 
     for doorbell in g410_doorbells:
         did = str(doorbell["did"])
-        resource_ids = _collect_g410_resources(enabled_unique_ids, did)
+        resource_ids = _collect_g410_resources(
+            enabled_unique_ids,
+            did,
+            str(doorbell.get("model") or ""),
+        )
         if resource_ids:
             subscriptions.append({"subjectId": did, "resourceIds": resource_ids})
 

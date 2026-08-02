@@ -11,6 +11,7 @@ from .const import (
     FP2_MODEL,
     G2H_PRO_DEVICE_LABEL,
     G410_DEVICE_LABEL,
+    G410_ACN017_MODEL,
     G4_DEVICE_LABEL,
     G3_MODEL,
     G3_DEVICE_LABEL,
@@ -90,6 +91,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         did = doorbell["did"]
         name = doorbell["deviceName"]
         model = doorbell["model"]
+        if model != G410_ACN017_MODEL:
+            continue
         entities.append(
             AqaraResourceButton(
                 api,

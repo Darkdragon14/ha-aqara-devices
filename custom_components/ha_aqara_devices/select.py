@@ -11,6 +11,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .api import AqaraApi
+from .bridge_specs import g410_specs_for_model
 from .const import (
     DOMAIN,
     FP300_DEVICE_LABEL,
@@ -60,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         if coordinator is None:
             continue
 
-        for select_def in G410_SELECTS_DEF:
+        for select_def in g410_specs_for_model(G410_SELECTS_DEF, model):
             select = AqaraSelect(
                 coordinator,
                 api,

@@ -33,6 +33,7 @@ from .const import (
     CONF_BRIDGE_TOKEN,
     CONF_BRIDGE_URL,
     CONF_KEY_ID,
+    DATA_CAMERA_CANDIDATES,
     DOMAIN,
     DEFAULT_BRIDGE_URL,
     FP2_MODEL,
@@ -193,15 +194,21 @@ def _setup_device_state_coordinators(
     devices: list[dict[str, Any]],
     label: str,
     state_defs: list[dict[str, Any]],
+    state_defs_for_model: Callable[[str], list[dict[str, Any]]] | None = None,
 ) -> dict[str, DataUpdateCoordinator]:
     coordinators: dict[str, DataUpdateCoordinator] = {}
     for device in devices:
         did = device["did"]
+        device_state_defs = (
+            state_defs_for_model(str(device.get("model") or ""))
+            if state_defs_for_model
+            else state_defs
+        )
         coordinators[did] = _create_resilient_coordinator(
             hass,
             did,
             label,
-            partial(api.get_device_states, did, state_defs),
+            partial(api.get_device_states, did, device_state_defs),
             BRIDGE_SANITY_INTERVAL_SECONDS,
             BRIDGE_UNAVAILABLE_AFTER_FAILURES,
         )
@@ -590,7 +597,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         M200_STATE_SPECS,
         M3_STATE_SPECS,
         build_active_subscriptions,
+        g410_state_specs_for_model,
     )
+    from .camera_config import build_camera_candidates
     from .push import AqaraBridgePushManager
 
     session = aiohttp_client.async_get_clientsession(hass)
@@ -636,6 +645,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         acn002_locks = [device for device in devices if device.get("model") in ACN002_MODELS]
         presence_devices = [device for device in devices if device.get("model") in PRESENCE_MODELS]
         u200_locks = [device for device in devices if device.get("model") in U200_MODELS]
+        camera_candidates = build_camera_candidates(
+            cameras,
+            g2h_pro_cameras,
+            g410_doorbells,
+            g4_doorbells,
+        )
         remove_obsolete_g410_entities(hass, entry.entry_id, g410_doorbells)
 
         hub_parent_devices = [
@@ -708,6 +723,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         g410_doorbells,
         "g410-state",
         G410_STATE_SPECS,
+        g410_state_specs_for_model,
     )
     g4_coordinators = _setup_device_state_coordinators(
         hass,
@@ -756,6 +772,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "g2h_pro_cameras": g2h_pro_cameras,
         "g410_doorbells": g410_doorbells,
         "g4_doorbells": g4_doorbells,
+        DATA_CAMERA_CANDIDATES: camera_candidates,
         "hubs_m3": hubs_m3,
         "hubs_m100": hubs_m100,
         "hubs_m200": hubs_m200,
