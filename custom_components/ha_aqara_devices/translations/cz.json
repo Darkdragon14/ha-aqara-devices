@@ -128,6 +128,21 @@
             "reachable": {
                 "name": "Dostupné"
             },
+            "low_battery_alarm": {
+                "name": "Upozornění na vybitou baterii"
+            },
+            "smoke_fault_alarm": {
+                "name": "Poruchový alarm"
+            },
+            "smoke_manual_mute": {
+                "name": "Ztišení"
+            },
+            "smoke_self_test": {
+                "name": "Autotest"
+            },
+            "smoke_alarm": {
+                "name": "Požární alarm"
+            },
             "battery_replacement_needed": {
                 "name": "Je nutná výměna baterie"
             }
@@ -225,6 +240,12 @@
             },
             "zigbee_signal_strength": {
                 "name": "Síla signálu Zigbee"
+            },
+            "low_battery_alarm": {
+                "name": "Upozornění na vybitou baterii"
+            },
+            "heartbeat_indicator": {
+                "name": "Kontrolka aktivity"
             },
             "people_counting": {
                 "name": "Počítání osob"

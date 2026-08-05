@@ -177,6 +177,21 @@
             "reachable": {
                 "name": "Reachable"
             },
+            "low_battery_alarm": {
+                "name": "Low Battery Alarm"
+            },
+            "smoke_fault_alarm": {
+                "name": "Fault Alarm"
+            },
+            "smoke_manual_mute": {
+                "name": "Mute"
+            },
+            "smoke_self_test": {
+                "name": "Self-Test"
+            },
+            "smoke_alarm": {
+                "name": "Smoke Alarm"
+            },
             "battery_replacement_needed": {
                 "name": "Battery Replacement Needed"
             }
@@ -274,6 +289,12 @@
             },
             "zigbee_signal_strength": {
                 "name": "Zigbee Signal Strength"
+            },
+            "low_battery_alarm": {
+                "name": "Low Battery Alarm"
+            },
+            "heartbeat_indicator": {
+                "name": "Heartbeat Indicator Light"
             },
             "people_counting": {
                 "name": "People Counting"
