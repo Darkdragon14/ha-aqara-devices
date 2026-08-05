@@ -107,6 +107,21 @@
             "reachable": {
                 "name": "Elérhető"
             },
+            "low_battery_alarm": {
+                "name": "Alacsony töltöttségi szint riasztás"
+            },
+            "smoke_fault_alarm": {
+                "name": "Hibariasztás"
+            },
+            "smoke_manual_mute": {
+                "name": "Némítás"
+            },
+            "smoke_self_test": {
+                "name": "Önteszt"
+            },
+            "smoke_alarm": {
+                "name": "Füstriasztás"
+            },
             "battery_replacement_needed": {
                 "name": "Elemcsere szükséges"
             }
@@ -204,6 +219,12 @@
             },
             "zigbee_signal_strength": {
                 "name": "Zigbee jelerősség"
+            },
+            "low_battery_alarm": {
+                "name": "Alacsony töltöttségi szint riasztás"
+            },
+            "heartbeat_indicator": {
+                "name": "Aktivitásjelző fény"
             },
             "people_counting": {
                 "name": "Emberszámlálás"

@@ -42,6 +42,26 @@ SAFE_DEFAULT_NAME_MARKERS = {
     "pm2",
     "pm10",
 }
+SMOKE_SENSOR_MODEL = "lumi.sensor_smoke.acn03"
+SMOKE_SENSOR_TRANSLATION_KEYS_BY_RESOURCE_ID = {
+    "4.12.85": "smoke_manual_mute",
+    "4.15.85": "smoke_self_test",
+    "8.0.2007": "zigbee_signal_strength",
+    "8.0.2008": "battery_voltage",
+    "8.0.2232": "smoke_alarm",
+    "8.0.2234": "smoke_fault_alarm",
+    "8.0.9001": "low_battery_alarm",
+}
+SMOKE_SENSOR_TRANSLATION_KEYS_BY_NAME = {
+    "heartbeat indicator light": "heartbeat_indicator",
+    "zigbee信号强度": "zigbee_signal_strength",
+    "低电压报警": "low_battery_alarm",
+    "故障报警": "smoke_fault_alarm",
+    "消音": "smoke_manual_mute",
+    "电池电压值": "battery_voltage",
+    "自检": "smoke_self_test",
+    "设备报警": "smoke_alarm",
+}
 
 
 def _has_value(value: Any) -> bool:
@@ -171,6 +191,21 @@ def _resource_name(resource: dict[str, Any], resource_id: str) -> str:
     return str(name).strip()
 
 
+def _resource_translation_key(
+    model: str,
+    resource: dict[str, Any],
+    resource_id: str,
+) -> str | None:
+    if model != SMOKE_SENSOR_MODEL:
+        return None
+
+    if translation_key := SMOKE_SENSOR_TRANSLATION_KEYS_BY_RESOURCE_ID.get(resource_id):
+        return translation_key
+
+    resource_name = _resource_name(resource, resource_id).casefold()
+    return SMOKE_SENSOR_TRANSLATION_KEYS_BY_NAME.get(resource_name)
+
+
 def _native_unit(resource: dict[str, Any]) -> str | None:
     unit = resource.get("unit")
     if not isinstance(unit, str):
@@ -244,6 +279,7 @@ def _resource_to_spec(child: dict[str, Any], resource: dict[str, Any]) -> dict[s
         reportable=reportable,
     )
 
+    model = str(child.get("model") or "")
     spec = {
         "api": resource_id,
         "key": resource_id,
@@ -256,7 +292,7 @@ def _resource_to_spec(child: dict[str, Any], resource: dict[str, Any]) -> dict[s
         "platform": platform,
         "did": str(child["did"]),
         "parent_did": str(child["parentDid"]),
-        "model": str(child.get("model") or ""),
+        "model": model,
         "device_name": str(child.get("deviceName") or child.get("did") or ""),
         "firmware_version": child.get("firmwareVersion"),
         "readable": readable,
@@ -267,6 +303,9 @@ def _resource_to_spec(child: dict[str, Any], resource: dict[str, Any]) -> dict[s
         "value_map": {} if is_binary else enum_map,
         "raw_resource": resource,
     }
+    translation_key = _resource_translation_key(model, resource, resource_id)
+    if translation_key:
+        spec["translation_key"] = translation_key
     _LOGGER.debug(
         "Mapped Aqara child resource: child=%s resource=%s platform=%s readable=%s writable=%s reportable=%s enabled_default=%s",
         child.get("did"),

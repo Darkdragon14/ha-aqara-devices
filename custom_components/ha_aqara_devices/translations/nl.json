@@ -107,6 +107,21 @@
             "reachable": {
                 "name": "Bereikbaar"
             },
+            "low_battery_alarm": {
+                "name": "Alarm lage batterij"
+            },
+            "smoke_fault_alarm": {
+                "name": "Storingsalarm"
+            },
+            "smoke_manual_mute": {
+                "name": "Dempen"
+            },
+            "smoke_self_test": {
+                "name": "Zelftest"
+            },
+            "smoke_alarm": {
+                "name": "Rookalarm"
+            },
             "battery_replacement_needed": {
                 "name": "Batterij vervangen nodig"
             }
@@ -204,6 +219,12 @@
             },
             "zigbee_signal_strength": {
                 "name": "Zigbee-signaalsterkte"
+            },
+            "low_battery_alarm": {
+                "name": "Alarm lage batterij"
+            },
+            "heartbeat_indicator": {
+                "name": "Activiteitslampje"
             },
             "people_counting": {
                 "name": "Personen tellen"

@@ -107,6 +107,21 @@
             "reachable": {
                 "name": "Доступен"
             },
+            "low_battery_alarm": {
+                "name": "Низкий заряд батареи"
+            },
+            "smoke_fault_alarm": {
+                "name": "Сигнал неисправности"
+            },
+            "smoke_manual_mute": {
+                "name": "Отключение звука"
+            },
+            "smoke_self_test": {
+                "name": "Самопроверка"
+            },
+            "smoke_alarm": {
+                "name": "Дымовая тревога"
+            },
             "battery_replacement_needed": {
                 "name": "Требуется замена батареи"
             }
@@ -204,6 +219,12 @@
             },
             "zigbee_signal_strength": {
                 "name": "Уровень сигнала Zigbee"
+            },
+            "low_battery_alarm": {
+                "name": "Низкий заряд батареи"
+            },
+            "heartbeat_indicator": {
+                "name": "Индикатор активности"
             },
             "people_counting": {
                 "name": "Подсчёт людей"

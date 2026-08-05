@@ -432,7 +432,10 @@ class AqaraGenericChildSensor(CoordinatorEntity, SensorEntity):
         self._value_map = spec.get("value_map") or {}
 
         self._attr_unique_id = str(spec["unique_id"])
-        self._attr_name = str(spec.get("name") or self._resource_id)
+        if translation_key := spec.get("translation_key"):
+            self._attr_translation_key = str(translation_key)
+        else:
+            self._attr_name = str(spec.get("name") or self._resource_id)
         self._attr_native_unit_of_measurement = spec.get("unit")
         self._attr_entity_registry_enabled_default = spec.get("enabled_default", False)
         self._attr_extra_state_attributes = {

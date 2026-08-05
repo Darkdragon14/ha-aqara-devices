@@ -107,6 +107,21 @@
             "reachable": {
                 "name": "Raggiungibile"
             },
+            "low_battery_alarm": {
+                "name": "Allarme batteria scarica"
+            },
+            "smoke_fault_alarm": {
+                "name": "Allarme guasto"
+            },
+            "smoke_manual_mute": {
+                "name": "Silenziamento"
+            },
+            "smoke_self_test": {
+                "name": "Autotest"
+            },
+            "smoke_alarm": {
+                "name": "Allarme fumo"
+            },
             "battery_replacement_needed": {
                 "name": "Sostituzione batteria necessaria"
             }
@@ -204,6 +219,12 @@
             },
             "zigbee_signal_strength": {
                 "name": "Intensità segnale Zigbee"
+            },
+            "low_battery_alarm": {
+                "name": "Allarme batteria scarica"
+            },
+            "heartbeat_indicator": {
+                "name": "Spia di attività"
             },
             "people_counting": {
                 "name": "Conteggio persone"

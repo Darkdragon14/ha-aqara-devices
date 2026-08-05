@@ -128,6 +128,21 @@
             "reachable": {
                 "name": "可连接"
             },
+            "low_battery_alarm": {
+                "name": "低电量报警"
+            },
+            "smoke_fault_alarm": {
+                "name": "故障报警"
+            },
+            "smoke_manual_mute": {
+                "name": "消音"
+            },
+            "smoke_self_test": {
+                "name": "自检"
+            },
+            "smoke_alarm": {
+                "name": "烟雾报警"
+            },
             "battery_replacement_needed": {
                 "name": "需要更换电池"
             }
@@ -225,6 +240,12 @@
             },
             "zigbee_signal_strength": {
                 "name": "Zigbee 信号强度"
+            },
+            "low_battery_alarm": {
+                "name": "低电量报警"
+            },
+            "heartbeat_indicator": {
+                "name": "心跳指示灯"
             },
             "people_counting": {
                 "name": "人数统计"

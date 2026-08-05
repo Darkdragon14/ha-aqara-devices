@@ -128,6 +128,21 @@
             "reachable": {
                 "name": "可連線"
             },
+            "low_battery_alarm": {
+                "name": "低電量警報"
+            },
+            "smoke_fault_alarm": {
+                "name": "故障警報"
+            },
+            "smoke_manual_mute": {
+                "name": "靜音"
+            },
+            "smoke_self_test": {
+                "name": "自我檢測"
+            },
+            "smoke_alarm": {
+                "name": "煙霧警報"
+            },
             "battery_replacement_needed": {
                 "name": "需要更換電池"
             }
@@ -225,6 +240,12 @@
             },
             "zigbee_signal_strength": {
                 "name": "Zigbee 訊號強度"
+            },
+            "low_battery_alarm": {
+                "name": "低電量警報"
+            },
+            "heartbeat_indicator": {
+                "name": "心跳指示燈"
             },
             "people_counting": {
                 "name": "人數統計"

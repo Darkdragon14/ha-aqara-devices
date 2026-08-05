@@ -490,7 +490,10 @@ class AqaraGenericChildBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._spec = spec
         self._resource_id = str(spec["resource_id"])
         self._attr_unique_id = str(spec["unique_id"])
-        self._attr_name = str(spec.get("name") or self._resource_id)
+        if translation_key := spec.get("translation_key"):
+            self._attr_translation_key = str(translation_key)
+        else:
+            self._attr_name = str(spec.get("name") or self._resource_id)
         self._attr_entity_registry_enabled_default = spec.get("enabled_default", False)
         self._attr_extra_state_attributes = {
             "resource_id": self._resource_id,
