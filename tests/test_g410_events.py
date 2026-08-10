@@ -350,6 +350,53 @@ def _face_event_entity(coordinator: _Coordinator):
     )
 
 
+def _child_voltage_entity(coordinator: _Coordinator):
+    return sensor_module.AqaraGenericChildSensor(
+        coordinator,
+        {
+            "did": "smoke.did",
+            "parent_did": "hub.did",
+            "model": "lumi.sensor_smoke.acn03",
+            "device_name": "Smoke detector",
+            "resource_id": "8.0.2008",
+            "unique_id": "smoke.did_child_8.0.2008",
+            "name": "Battery voltage",
+            "translation_key": "battery_voltage",
+            "unit": "V",
+            "value_type": "float",
+            "scale": 0.001,
+            "device_class": "voltage",
+            "state_class": "measurement",
+            "suggested_display_precision": 3,
+        },
+    )
+
+
+class GenericChildSensorTests(unittest.TestCase):
+    def test_battery_voltage_is_converted_to_volts(self):
+        coordinator = _Coordinator()
+        entity = _child_voltage_entity(coordinator)
+
+        for raw in (2915, "2915"):
+            with self.subTest(raw=raw):
+                coordinator.data = {"8.0.2008": raw}
+                self.assertEqual(entity.native_value, 2.915)
+
+        self.assertEqual(entity._attr_native_unit_of_measurement, "V")
+        self.assertEqual(entity._attr_device_class, "voltage")
+        self.assertEqual(entity._attr_state_class, "measurement")
+        self.assertEqual(entity._attr_suggested_display_precision, 3)
+
+    def test_battery_voltage_handles_missing_and_invalid_values(self):
+        coordinator = _Coordinator()
+        entity = _child_voltage_entity(coordinator)
+
+        self.assertIsNone(entity.native_value)
+
+        coordinator.data = {"8.0.2008": "unknown"}
+        self.assertIsNone(entity.native_value)
+
+
 class G410EventTests(unittest.TestCase):
     def test_real_ring_activates_once_and_refresh_does_not_extend_it(self):
         coordinator = _Coordinator()

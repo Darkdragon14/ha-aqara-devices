@@ -430,6 +430,7 @@ class AqaraGenericChildSensor(CoordinatorEntity, SensorEntity):
         self._spec = spec
         self._resource_id = str(spec["resource_id"])
         self._value_map = spec.get("value_map") or {}
+        self._scale = spec.get("scale")
 
         self._attr_unique_id = str(spec["unique_id"])
         if translation_key := spec.get("translation_key"):
@@ -437,7 +438,23 @@ class AqaraGenericChildSensor(CoordinatorEntity, SensorEntity):
         else:
             self._attr_name = str(spec.get("name") or self._resource_id)
         self._attr_native_unit_of_measurement = spec.get("unit")
+        self._attr_suggested_display_precision = spec.get("suggested_display_precision")
         self._attr_entity_registry_enabled_default = spec.get("enabled_default", False)
+
+        device_class = spec.get("device_class")
+        if device_class:
+            try:
+                self._attr_device_class = SensorDeviceClass(device_class)
+            except ValueError:
+                self._attr_device_class = None
+
+        state_class = spec.get("state_class")
+        if state_class:
+            try:
+                self._attr_state_class = SensorStateClass(state_class)
+            except ValueError:
+                self._attr_state_class = None
+
         self._attr_extra_state_attributes = {
             "resource_id": self._resource_id,
             "resource_name": spec.get("name"),
@@ -463,4 +480,10 @@ class AqaraGenericChildSensor(CoordinatorEntity, SensorEntity):
         raw = data.get(self._resource_id)
         if raw is None:
             return None
-        return self._value_map.get(str(raw), raw)
+        value = self._value_map.get(str(raw), raw)
+        if self._scale is None:
+            return value
+        try:
+            return float(value) * float(self._scale)
+        except (TypeError, ValueError):
+            return None
