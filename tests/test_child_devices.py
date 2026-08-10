@@ -149,6 +149,47 @@ class ChildAccessTests(unittest.TestCase):
                     translations["entity"]["binary_sensor"],
                 )
 
+    def test_smoke_sensor_battery_voltage_is_exposed_in_volts(self):
+        child = {
+            "did": "smoke.did",
+            "parentDid": "hub.did",
+            "model": "lumi.sensor_smoke.acn03",
+        }
+
+        specs = child_devices.build_child_entity_specs(
+            [child],
+            {
+                "lumi.sensor_smoke.acn03": [
+                    {"resourceId": "8.0.2008", "name": "电池电压值", "unit": 1},
+                    {"resourceId": "8.0.2007", "name": "Zigbee信号强度"},
+                ]
+            },
+        )
+
+        voltage_spec = specs[0]
+        self.assertEqual(voltage_spec["unit"], "V")
+        self.assertEqual(voltage_spec["value_type"], "float")
+        self.assertEqual(voltage_spec["scale"], 0.001)
+        self.assertEqual(voltage_spec["device_class"], "voltage")
+        self.assertEqual(voltage_spec["state_class"], "measurement")
+        self.assertEqual(voltage_spec["suggested_display_precision"], 3)
+        self.assertNotIn("scale", specs[1])
+
+    def test_smoke_voltage_override_is_model_specific(self):
+        child = {
+            "did": "other.did",
+            "parentDid": "hub.did",
+            "model": "other.model",
+        }
+
+        specs = child_devices.build_child_entity_specs(
+            [child],
+            {"other.model": [{"resourceId": "8.0.2008", "name": "Voltage"}]},
+        )
+
+        self.assertNotIn("scale", specs[0])
+        self.assertIsNone(specs[0]["unit"])
+
     def test_battery_level_resource_is_not_mislabeled_as_voltage(self):
         child = {
             "did": "smoke.did",

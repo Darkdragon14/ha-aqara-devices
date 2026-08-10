@@ -62,6 +62,16 @@ SMOKE_SENSOR_TRANSLATION_KEYS_BY_NAME = {
     "自检": "smoke_self_test",
     "设备报警": "smoke_alarm",
 }
+SMOKE_SENSOR_RESOURCE_SPEC_OVERRIDES = {
+    "8.0.2008": {
+        "unit": "V",
+        "value_type": "float",
+        "scale": 0.001,
+        "device_class": "voltage",
+        "state_class": "measurement",
+        "suggested_display_precision": 3,
+    },
+}
 
 
 def _has_value(value: Any) -> bool:
@@ -306,6 +316,8 @@ def _resource_to_spec(child: dict[str, Any], resource: dict[str, Any]) -> dict[s
     translation_key = _resource_translation_key(model, resource, resource_id)
     if translation_key:
         spec["translation_key"] = translation_key
+    if model == SMOKE_SENSOR_MODEL:
+        spec.update(SMOKE_SENSOR_RESOURCE_SPEC_OVERRIDES.get(resource_id, {}))
     _LOGGER.debug(
         "Mapped Aqara child resource: child=%s resource=%s platform=%s readable=%s writable=%s reportable=%s enabled_default=%s",
         child.get("did"),
