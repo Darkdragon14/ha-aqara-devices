@@ -244,6 +244,9 @@
             "low_battery_alarm": {
                 "name": "低电量报警"
             },
+            "wifi_signal_strength": {
+                "name": "Wi-Fi Signal Strength"
+            },
             "heartbeat_indicator": {
                 "name": "心跳指示灯"
             },
@@ -447,8 +450,19 @@
             "low_temp_alarm": {
                 "name": "低温警报"
             },
+            "alarm": {
+                "name": "Alarm"
+            },
+            "music_playback": {
+                "name": "Music Playback"
+            },
             "doorbell_recording": {
                 "name": "门铃录制"
+            }
+        },
+        "light": {
+            "night_light": {
+                "name": "Night Light"
             }
         },
         "number": {
@@ -472,6 +486,9 @@
             },
             "music_volume": {
                 "name": "音乐音量"
+            },
+            "music_duration": {
+                "name": "Music Duration"
             },
             "alarm_clock_volume": {
                 "name": "闹钟音量"

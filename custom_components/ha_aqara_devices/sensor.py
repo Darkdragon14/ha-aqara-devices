@@ -25,6 +25,7 @@ from .const import (
     FP300_MODEL,
     G410_DEVICE_LABEL,
     G4_DEVICE_LABEL,
+    M1S_MODEL_LABELS,
     M100_DEVICE_LABEL,
     M3_DEVICE_LABEL,
     U200_DEVICE_LABEL,
@@ -38,6 +39,7 @@ from .sensors import (
     ACN002_SENSORS_DEF,
     G410_SENSORS_DEF,
     G4_SENSORS_DEF,
+    M1S_SENSORS_DEF,
     M100_SENSORS_DEF,
     M3_SENSORS_DEF,
 )
@@ -50,6 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     data = hass.data[DOMAIN][entry.entry_id]
     g410_doorbells: list[dict] = data.get("g410_doorbells", [])
     g4_doorbells: list[dict] = data.get("g4_doorbells", [])
+    hubs_m1s: list[dict] = data.get("hubs_m1s", [])
     hubs_m3: list[dict] = data.get("hubs_m3", [])
     hubs_m100: list[dict] = data.get("hubs_m100", [])
     a100_pro_locks: list[dict] = data.get("a100_pro_locks", [])
@@ -58,6 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     u200_locks: list[dict] = data.get("u200_locks", [])
     g410_coordinators: dict[str, DataUpdateCoordinator] = data.get("g410_coordinators", {})
     g4_coordinators: dict[str, DataUpdateCoordinator] = data.get("g4_coordinators", {})
+    m1s_coordinators: dict[str, DataUpdateCoordinator] = data.get("m1s_coordinators", {})
     m3_coordinators: dict[str, DataUpdateCoordinator] = data.get("m3_coordinators", {})
     m100_coordinators: dict[str, DataUpdateCoordinator] = data.get("m100_coordinators", {})
     a100_pro_coordinators: dict[str, DataUpdateCoordinator] = data.get("a100_pro_coordinators", {})
@@ -126,6 +130,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                     sensor_def,
                     model,
                     M3_DEVICE_LABEL,
+                )
+            )
+
+    for hub in hubs_m1s:
+        did = hub["did"]
+        name = hub["deviceName"]
+        model = hub["model"]
+        coordinator = m1s_coordinators.get(did)
+        if coordinator is None:
+            continue
+
+        for sensor_def in M1S_SENSORS_DEF:
+            entities.append(
+                AqaraSensor(
+                    coordinator,
+                    did,
+                    name,
+                    sensor_def,
+                    model,
+                    M1S_MODEL_LABELS[model],
                 )
             )
 

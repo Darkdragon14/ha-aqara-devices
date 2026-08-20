@@ -12,14 +12,15 @@ from .binary_sensors import (
     M200_BINARY_SENSORS_DEF,
     M3_BINARY_SENSORS_DEF,
 )
-from .const import EVENT_ID_SUFFIX, EVENT_TIME_SUFFIX, FP2_MODEL, FP300_MODEL, G410_MODELS
+from .const import EVENT_ID_SUFFIX, EVENT_TIME_SUFFIX, FP2_MODEL, FP300_MODEL, G410_MODELS, M1S_MODEL, M1S_MODELS
 from .events import G410_EVENTS_DEF
 from .fp2 import FP2_BINARY_SENSORS_DEF, FP2_SENSOR_SPECS
 from .fp300 import FP300_BINARY_SENSORS_DEF, FP300_SENSOR_SPECS
-from .numbers import ALL_NUMBERS_DEF, G2H_PRO_NUMBERS_DEF, G410_NUMBERS_DEF, G4_NUMBERS_DEF, M100_NUMBERS_DEF, M200_NUMBERS_DEF, M3_NUMBERS_DEF
-from .selects import FP300_SELECTS_DEF, G410_SELECTS_DEF, G4_SELECTS_DEF, M100_SELECTS_DEF, M200_SELECTS_DEF, M3_SELECTS_DEF
-from .sensors import A100_PRO_SENSORS_DEF, ACN002_SENSORS_DEF, G410_SENSORS_DEF, G4_SENSORS_DEF, M100_SENSORS_DEF, M3_SENSORS_DEF
-from .switches import ALL_SWITCHES_DEF, G2H_PRO_SWITCHES_DEF, G410_SWITCHES_DEF, G4_SWITCHES_DEF, M100_SWITCHES_DEF
+from .lights import M1S_LIGHT_STATE_SPECS
+from .numbers import ALL_NUMBERS_DEF, G2H_PRO_NUMBERS_DEF, G410_NUMBERS_DEF, G4_NUMBERS_DEF, M1S_NUMBERS_DEF, M100_NUMBERS_DEF, M200_NUMBERS_DEF, M3_NUMBERS_DEF
+from .selects import FP300_SELECTS_DEF, G410_SELECTS_DEF, G4_SELECTS_DEF, M1S_SELECTS_DEF, M100_SELECTS_DEF, M200_SELECTS_DEF, M3_SELECTS_DEF
+from .sensors import A100_PRO_SENSORS_DEF, ACN002_SENSORS_DEF, G410_SENSORS_DEF, G4_SENSORS_DEF, M1S_SENSORS_DEF, M100_SENSORS_DEF, M3_SENSORS_DEF
+from .switches import ALL_SWITCHES_DEF, G2H_PRO_SWITCHES_DEF, G410_SWITCHES_DEF, G4_SWITCHES_DEF, M1S_SWITCHES_DEF, M100_SWITCHES_DEF
 
 
 def spec_state_key(spec: dict[str, Any]) -> str:
@@ -64,6 +65,17 @@ def g410_specs_for_model(
     ]
 
 
+def m1s_specs_for_model(
+    specs: Iterable[dict[str, Any]],
+    model: str,
+) -> list[dict[str, Any]]:
+    return [
+        spec
+        for spec in specs
+        if not spec.get("m1s_original_only") or model == M1S_MODEL
+    ]
+
+
 def _to01(value: Any) -> int:
     try:
         return 1 if int(value) == 1 else 0
@@ -80,7 +92,7 @@ def coerce_spec_value(spec: dict[str, Any], value: Any, *, apply_scale: bool) ->
         try:
             parsed: Any = int(float(value))
         except Exception:
-            parsed = 0
+            parsed = spec.get("invalid_default", 0)
     elif value_type == "float":
         try:
             parsed = float(value)
@@ -92,6 +104,13 @@ def coerce_spec_value(spec: dict[str, Any], value: Any, *, apply_scale: bool) ->
         parsed = _to01(value)
     else:
         parsed = _to01(value)
+
+    if parsed is None:
+        return None
+
+    signed_bits = spec.get("signed_bits")
+    if signed_bits and isinstance(parsed, int) and parsed >= 1 << (int(signed_bits) - 1):
+        parsed -= 1 << int(signed_bits)
 
     scale = spec.get("scale")
     if apply_scale and scale is not None:
@@ -157,6 +176,31 @@ G4_STATE_SPECS = [
 ]
 G4_RESOURCE_SPEC_MAP = build_api_spec_map(G4_STATE_SPECS)
 G4_SUBSCRIPTION_RESOURCE_IDS = unique_api_resource_ids(G4_STATE_SPECS)
+
+
+M1S_STATE_SPECS = [
+    *M1S_LIGHT_STATE_SPECS,
+    *M1S_NUMBERS_DEF,
+    *M1S_SELECTS_DEF,
+    *M1S_SENSORS_DEF,
+    *M1S_SWITCHES_DEF,
+]
+M1S_STATE_SPECS_BY_MODEL = {
+    model: m1s_specs_for_model(M1S_STATE_SPECS, model)
+    for model in M1S_MODELS
+}
+M1S_RESOURCE_SPEC_MAPS = {
+    model: build_api_spec_map(specs)
+    for model, specs in M1S_STATE_SPECS_BY_MODEL.items()
+}
+
+
+def m1s_state_specs_for_model(model: str) -> list[dict[str, Any]]:
+    return M1S_STATE_SPECS_BY_MODEL.get(model, [])
+
+
+def m1s_resource_spec_map_for_model(model: str) -> dict[str, dict[str, Any]]:
+    return M1S_RESOURCE_SPEC_MAPS.get(model, {})
 
 
 M3_STATE_SPECS = [
@@ -294,6 +338,27 @@ def _collect_g4_resources(enabled_unique_ids: set[str], did: str) -> list[str]:
     return list(resource_ids)
 
 
+def _collect_m1s_resources(
+    enabled_unique_ids: set[str],
+    did: str,
+    model: str,
+) -> list[str]:
+    resource_ids: dict[str, None] = {}
+    if f"{did}_night_light" in enabled_unique_ids:
+        for spec in M1S_LIGHT_STATE_SPECS:
+            resource_ids[str(spec["api"])] = None
+    for spec in m1s_state_specs_for_model(model):
+        if spec in M1S_LIGHT_STATE_SPECS:
+            continue
+        _append_resource_if_enabled(
+            resource_ids,
+            enabled_unique_ids,
+            f"{did}_{spec['inApp']}",
+            spec,
+        )
+    return list(resource_ids)
+
+
 def _collect_m3_resources(enabled_unique_ids: set[str], did: str) -> list[str]:
     resource_ids: dict[str, None] = {}
     for spec in M3_STATE_SPECS:
@@ -358,6 +423,7 @@ def build_active_subscriptions(
     a100_pro_locks: list[dict[str, Any]],
     acn002_locks: list[dict[str, Any]],
     presence_devices: list[dict[str, Any]],
+    hubs_m1s: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     subscriptions: list[dict[str, Any]] = []
 
@@ -386,6 +452,16 @@ def build_active_subscriptions(
     for doorbell in g4_doorbells:
         did = str(doorbell["did"])
         resource_ids = _collect_g4_resources(enabled_unique_ids, did)
+        if resource_ids:
+            subscriptions.append({"subjectId": did, "resourceIds": resource_ids})
+
+    for hub in hubs_m1s or []:
+        did = str(hub["did"])
+        resource_ids = _collect_m1s_resources(
+            enabled_unique_ids,
+            did,
+            str(hub.get("model") or ""),
+        )
         if resource_ids:
             subscriptions.append({"subjectId": did, "resourceIds": resource_ids})
 

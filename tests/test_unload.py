@@ -5,7 +5,7 @@ from pathlib import Path
 import sys
 from types import ModuleType, SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import AsyncMock, call, patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -79,6 +79,60 @@ def _load_integration_module():
 
 
 integration = _load_integration_module()
+
+
+class M1SChildDiscoveryTests(unittest.IsolatedAsyncioTestCase):
+    def test_supported_models_cover_both_generations(self):
+        self.assertEqual(
+            {"lumi.gateway.aeu01", "lumi.gateway.agl002"},
+            integration.M1S_MODELS,
+        )
+
+    async def test_discovers_children_from_both_generations(self):
+        api = SimpleNamespace(
+            query_device_sub_info=AsyncMock(
+                side_effect=[
+                    {
+                        "code": 0,
+                        "result": [{"did": "original-child", "model": "sensor.one"}],
+                    },
+                    {
+                        "code": "0",
+                        "result": [{"did": "gen2-child", "model": "sensor.two"}],
+                    },
+                ]
+            )
+        )
+        parents = [
+            {"did": "original", "model": "lumi.gateway.aeu01"},
+            {"did": "gen2", "model": "lumi.gateway.agl002"},
+        ]
+
+        children = await integration._discover_child_devices(api, parents, [])
+
+        self.assertEqual(
+            {"original-child": "original", "gen2-child": "gen2"},
+            {child["did"]: child["parentDid"] for child in children},
+        )
+        self.assertEqual(
+            [call("original"), call("gen2")],
+            api.query_device_sub_info.await_args_list,
+        )
+
+    def test_m1s_hub_is_pairing_capable(self):
+        api = object()
+        hass = SimpleNamespace(
+            data={
+                integration.DOMAIN: {
+                    "entry": {
+                        "api": api,
+                        "hubs_m1s": [{"did": "m1s"}],
+                    }
+                }
+            }
+        )
+
+        self.assertIs(api, integration._api_for_pairing_hub(hass, "m1s"))
 
 
 class _ConfigEntries:

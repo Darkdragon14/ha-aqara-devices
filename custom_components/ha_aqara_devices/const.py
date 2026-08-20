@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 DOMAIN = "ha_aqara_devices"
-PLATFORMS: list[str] = ["switch", "button", "binary_sensor", "number", "sensor", "select", "lock", "event", "camera"]
+PLATFORMS: list[str] = ["switch", "button", "binary_sensor", "number", "sensor", "select", "light", "lock", "event", "camera"]
 
 CONF_BRIDGE_URL = "bridge_url"
 CONF_BRIDGE_TOKEN = "bridge_token"
@@ -57,6 +57,9 @@ G2H_PRO_MODELS = {"lumi.camera.agl001", "lumi.camera.acn003"}
 G410_ACN017_MODEL = "lumi.camera.acn017"
 G410_AGL006_MODEL = "lumi.camera.agl006"
 G410_MODELS = {G410_ACN017_MODEL, G410_AGL006_MODEL}
+M1S_MODEL = "lumi.gateway.aeu01"
+M1S_GEN2_MODEL = "lumi.gateway.agl002"
+M1S_MODELS = {M1S_MODEL, M1S_GEN2_MODEL}
 M3_MODELS = {"lumi.gateway.acn012", "lumi.gateway.agl004"}
 M100_MODELS = {"lumi.gateway.agl008", "lumi.gateway.agl010"}
 M200_MODELS = {"lumi.gateway.agl011"}
@@ -69,6 +72,8 @@ U200_MODELS = {U200_MODEL}
 G3_DEVICE_LABEL = "Aqara G3"
 G2H_PRO_DEVICE_LABEL = "Aqara Camera Hub G2H Pro"
 G410_DEVICE_LABEL = "Aqara Doorbell G410"
+M1S_DEVICE_LABEL = "Aqara Hub M1S"
+M1S_GEN2_DEVICE_LABEL = "Aqara Hub M1S Gen 2"
 M3_DEVICE_LABEL = "Aqara Hub M3"
 M100_DEVICE_LABEL = "Aqara Hub M100"
 M200_DEVICE_LABEL = "Aqara Hub M200"
@@ -79,6 +84,11 @@ A100_DEVICE_LABEL = "Aqara A100"
 A100_PRO_DEVICE_LABEL = "Aqara A100 Pro"
 ACN002_DEVICE_LABEL = "Aqara Smart Video Door Lock Xingyao"
 G4_DEVICE_LABEL = "Aqara G4"
+
+M1S_MODEL_LABELS = {
+    M1S_MODEL: M1S_DEVICE_LABEL,
+    M1S_GEN2_MODEL: M1S_GEN2_DEVICE_LABEL,
+}
 
 CAMERA_MODEL_LABELS: dict[str, str] = {
     **dict.fromkeys(G3_MODELS, G3_DEVICE_LABEL),

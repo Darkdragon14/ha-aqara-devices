@@ -223,6 +223,9 @@
             "low_battery_alarm": {
                 "name": "Alacsony töltöttségi szint riasztás"
             },
+            "wifi_signal_strength": {
+                "name": "Wi-Fi Signal Strength"
+            },
             "heartbeat_indicator": {
                 "name": "Aktivitásjelző fény"
             },
@@ -426,8 +429,19 @@
             "low_temp_alarm": {
                 "name": "Alacsony hőmérséklet riasztás"
             },
+            "alarm": {
+                "name": "Alarm"
+            },
+            "music_playback": {
+                "name": "Music Playback"
+            },
             "doorbell_recording": {
                 "name": "Csengő rögzítés"
+            }
+        },
+        "light": {
+            "night_light": {
+                "name": "Night Light"
             }
         },
         "number": {
@@ -451,6 +465,9 @@
             },
             "music_volume": {
                 "name": "Zene hangereje"
+            },
+            "music_duration": {
+                "name": "Music Duration"
             },
             "alarm_clock_volume": {
                 "name": "Ébresztő hangereje"

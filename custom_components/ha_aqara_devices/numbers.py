@@ -82,6 +82,53 @@ M3_NUMBERS_DEF = [
     M3_DOORBELL_TIME_LENGTH,
 ]
 
+M1S_SYSTEM_VOLUME = {
+    **M3_SYSTEM_VOLUME,
+}
+
+M1S_ALARM_BELL_VOLUME = {
+    **M3_ALARM_BELL_VOLUME,
+}
+
+M1S_MUSIC_VOLUME = {
+    "name": "Music Volume",
+    "translation_key": "music_volume",
+    "icon": "mdi:music-note",
+    "inApp": "music_volume",
+    "api": "14.3.1000",
+    "min": 0,
+    "max": 100,
+    "step": 1,
+    "type": "integer",
+    "m1s_original_only": True,
+}
+
+M1S_MUSIC_TIME_LENGTH = {
+    "name": "Music Duration",
+    "translation_key": "music_duration",
+    "icon": "mdi:timer-music",
+    "inApp": "music_time_length",
+    "api": "14.3.113",
+    "min": -1,
+    "max": 255,
+    "step": 1,
+    "type": "integer",
+    "m1s_original_only": True,
+}
+
+M1S_ALARM_TIME_LENGTH = {
+    **M3_ALARM_TIME_LENGTH,
+    "m1s_original_only": True,
+}
+
+M1S_NUMBERS_DEF = [
+    {**M1S_SYSTEM_VOLUME, "confirm_write": True},
+    {**M1S_ALARM_BELL_VOLUME, "confirm_write": True},
+    {**M1S_MUSIC_VOLUME, "confirm_write": True},
+    {**M1S_MUSIC_TIME_LENGTH, "confirm_write": True},
+    {**M1S_ALARM_TIME_LENGTH, "confirm_write": True},
+]
+
 M100_MUSIC_VOLUME = {
     "name": "Music Volume",
     "translation_key": "music_volume",
