@@ -1,6 +1,6 @@
 from typing import Dict, Any
 
-from .const import G410_ACN017_MODEL
+from .const import G410_ACN017_MODEL, G410_AGL006_MODEL
 
 VIDEO_SWITCH_DEF: Dict[str, Any] = {
     "name": "Video",
@@ -243,6 +243,14 @@ G410_FACE_PUSH = _g410_switch(
     "face_push_enable",
     "4.55.85",
 )
+G410_FACE_DETECTION = _g410_switch(
+    "Detect Face",
+    "detect_face",
+    "mdi:face-recognition",
+    "face_detect_enable",
+    "14.75.85",
+)
+G410_FACE_DETECTION["g410_models"] = {G410_AGL006_MODEL}
 G410_SCHEDULED_SLEEP = _g410_switch(
     "Scheduled Sleep",
     "scheduled_sleep",
@@ -300,6 +308,7 @@ G410_DOORBELL_RECORDING["g410_models"] = {G410_ACN017_MODEL}
 G410_SWITCHES_DEF = [
     G410_HIGH_TEMP_ALARM,
     G410_FACE_PUSH,
+    G410_FACE_DETECTION,
     G410_SCHEDULED_SLEEP,
     G410_INDICATOR_LIGHT,
     G410_ANTI_TAMPER_ALARM,

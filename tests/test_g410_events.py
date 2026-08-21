@@ -654,6 +654,9 @@ class G410EventTests(unittest.TestCase):
             "4.54.85",
             "4.68.85",
         }
+        agl006_only_resources = {
+            "14.75.85",
+        }
         acn017_only_resources = {
             "14.68.85",
             "14.125.85",
@@ -663,8 +666,22 @@ class G410EventTests(unittest.TestCase):
             "4.138.85",
         }
 
-        self.assertEqual(common_resources, agl006_resources)
+        self.assertEqual(common_resources | agl006_only_resources, agl006_resources)
         self.assertEqual(common_resources | acn017_only_resources, acn017_resources)
+
+    def test_agl006_face_detection_switch_uses_documented_payload(self):
+        specs = bridge_specs.g410_state_specs_for_model("lumi.camera.agl006")
+        face_detection = next(
+            spec for spec in specs if spec.get("inApp") == "face_detect_enable"
+        )
+
+        self.assertEqual("14.75.85", face_detection["api"])
+        self.assertEqual({"14.75.85": 1}, face_detection["on_data"])
+        self.assertEqual({"14.75.85": 0}, face_detection["off_data"])
+        self.assertNotIn(
+            "14.75.85",
+            bridge_specs.g410_resource_spec_map_for_model("lumi.camera.acn017"),
+        )
 
     def test_stranger_face_resource_is_subscribed_only_for_acn017(self):
         enabled_unique_ids = {"g410_detect_stranger_face_event"}
