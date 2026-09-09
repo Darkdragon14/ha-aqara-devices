@@ -111,12 +111,19 @@ def _build_resilient_update(
     did: str,
     label: str,
     unavailable_after_failures: int,
-) -> Callable[[], Awaitable[dict[str, Any]]]:
+) -> tuple[Callable[[], Awaitable[dict[str, Any]]], dict[str, Any]]:
     from .api import AqaraAuthError
 
-    state: dict[str, Any] = {"failures": 0, "last_data": None}
+    state: dict[str, Any] = {
+        "failures": 0,
+        "last_data": None,
+        "network_attempts": 0,
+        "last_network_success": False,
+    }
 
     async def _async_update() -> dict[str, Any]:
+        state["network_attempts"] += 1
+        state["last_network_success"] = False
         try:
             data = await fetch_method()
         except AqaraAuthError as err:
@@ -137,9 +144,10 @@ def _build_resilient_update(
 
         state["last_data"] = data
         state["failures"] = 0
+        state["last_network_success"] = True
         return data
 
-    return _async_update
+    return _async_update, state
 
 
 def _create_resilient_coordinator(
@@ -150,18 +158,42 @@ def _create_resilient_coordinator(
     interval_seconds: int,
     unavailable_after_failures: int,
 ) -> DataUpdateCoordinator:
+    resilient_update, resilient_state = _build_resilient_update(
+        fetch_method,
+        did,
+        label,
+        unavailable_after_failures,
+    )
+    coordinator: DataUpdateCoordinator | None = None
+
+    async def _async_update() -> dict[str, Any]:
+        versions_provider = getattr(coordinator, "_aqara_push_versions", None)
+        versions_before = versions_provider() if callable(versions_provider) else {}
+        data = await resilient_update()
+        if callable(versions_provider) and isinstance(data, dict):
+            versions_after = versions_provider()
+            pushed_during_update = {
+                key: value
+                for key, (version, value) in versions_after.items()
+                if version > versions_before.get(key, (0, None))[0]
+            }
+            data = {**data, **pushed_during_update}
+            if pushed_during_update:
+                resilient_state["failures"] = 0
+        resilient_state["last_data"] = data
+        return data
+
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"{DOMAIN}-{label}-{did}",
-        update_method=_build_resilient_update(
-            fetch_method,
-            did,
-            label,
-            unavailable_after_failures,
-        ),
+        update_method=_async_update,
         update_interval=timedelta(seconds=interval_seconds),
     )
+    coordinator._aqara_resilient_state = resilient_state
+    push_versions: dict[str, tuple[int, Any]] = {}
+    coordinator._aqara_push_version_data = push_versions
+    coordinator._aqara_push_versions = lambda: dict(push_versions)
     hass.async_create_task(coordinator.async_refresh())
     return coordinator
 
@@ -601,6 +633,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     from .camera_config import build_camera_candidates
     from .push import AqaraBridgePushManager
+    from .u200 import build_u200_trait_subscriptions
 
     session = aiohttp_client.async_get_clientsession(hass)
     api = AqaraApi(
@@ -802,6 +835,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "bridge_task": None,
         "warmup_tasks": [],
         "active_subscriptions": [],
+        "active_trait_subscriptions": [],
     }
     hass.data[DOMAIN][entry.entry_id] = entry_data
 
@@ -865,12 +899,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             known_unique_ids=known_unique_ids,
         )
     )
+    active_trait_subscriptions = build_u200_trait_subscriptions(u200_locks)
     child_polling_dids = child_polling_required_dids(
         enabled_unique_ids,
         child_entity_specs,
         known_unique_ids=known_unique_ids,
     )
     entry_data["active_subscriptions"] = active_subscriptions
+    entry_data["active_trait_subscriptions"] = active_trait_subscriptions
 
     bridge_manager = AqaraBridgePushManager(
         hass,
@@ -903,6 +939,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         child_resource_specs,
         child_polling_dids,
         active_subscriptions,
+        u200_coordinators,
+        active_trait_subscriptions,
     )
 
     entry_data["bridge_manager"] = bridge_manager
@@ -923,9 +961,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     total_resources = sum(len(subscription["resourceIds"]) for subscription in active_subscriptions)
     _LOGGER.info(
-        "Aqara bridge subscriptions built for %s device(s), %s active resource(s)",
+        "Aqara bridge subscriptions built for %s resource device(s), %s active resource(s), "
+        "%s trait device(s), %s active trait(s)",
         len(active_subscriptions),
         total_resources,
+        len(active_trait_subscriptions),
+        sum(len(subscription["codePaths"]) for subscription in active_trait_subscriptions),
     )
     _LOGGER.debug(
         "Aqara child resources requiring polling fallback: %s",

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import importlib.util
 from pathlib import Path
 import sys
@@ -21,6 +22,15 @@ def _module(name: str, **attributes):
 
 
 def _load_integration_module():
+    class _DataUpdateCoordinator:
+        def __init__(self, hass, logger, *, name, update_method, update_interval):
+            self.name = name
+            self.update_method = update_method
+            self.update_interval = update_interval
+
+        async def async_refresh(self):
+            return await self.update_method()
+
     stubs = {
         "voluptuous": _module(
             "voluptuous",
@@ -53,7 +63,7 @@ def _load_integration_module():
         ),
         "homeassistant.helpers.update_coordinator": _module(
             "homeassistant.helpers.update_coordinator",
-            DataUpdateCoordinator=object,
+            DataUpdateCoordinator=_DataUpdateCoordinator,
             UpdateFailed=RuntimeError,
         ),
         "homeassistant.helpers.typing": _module(
@@ -100,6 +110,220 @@ class _BridgeManager:
 
 
 class UnloadLifecycleTests(unittest.IsolatedAsyncioTestCase):
+    async def test_push_during_failed_poll_keeps_failure_count_reset(self):
+        started = asyncio.Event()
+        release = asyncio.Event()
+
+        async def fetch():
+            started.set()
+            await release.wait()
+            raise RuntimeError("temporary failure")
+
+        class _Hass:
+            @staticmethod
+            def async_create_task(coroutine):
+                coroutine.close()
+
+        with patch.dict(
+            sys.modules,
+            {
+                f"{PACKAGE}.api": _module(
+                    f"{PACKAGE}.api",
+                    AqaraAuthError=type("AqaraAuthError", (Exception,), {}),
+                )
+            },
+        ):
+            coordinator = integration._create_resilient_coordinator(
+                _Hass(),
+                "matt.u200",
+                "u200-lock-state",
+                fetch,
+                30,
+                3,
+            )
+
+        coordinator._aqara_resilient_state.update(
+            {
+                "last_data": {"lock_state": "1"},
+                "failures": 2,
+            }
+        )
+        push_versions = coordinator._aqara_push_version_data
+        in_flight_poll = asyncio.create_task(coordinator.update_method())
+        await started.wait()
+
+        coordinator._aqara_resilient_state.update(
+            {
+                "last_data": {"lock_state": "2"},
+                "failures": 0,
+            }
+        )
+        push_versions["lock_state"] = (1, "2")
+        release.set()
+
+        self.assertEqual(await in_flight_poll, {"lock_state": "2"})
+        self.assertEqual(coordinator._aqara_resilient_state["failures"], 0)
+
+    async def test_push_reset_keeps_recent_state_on_first_failed_fallback_poll(self):
+        async def fetch():
+            raise RuntimeError("temporary failure")
+
+        class _Hass:
+            @staticmethod
+            def async_create_task(coroutine):
+                coroutine.close()
+
+        with patch.dict(
+            sys.modules,
+            {
+                f"{PACKAGE}.api": _module(
+                    f"{PACKAGE}.api",
+                    AqaraAuthError=type("AqaraAuthError", (Exception,), {}),
+                )
+            },
+        ):
+            coordinator = integration._create_resilient_coordinator(
+                _Hass(),
+                "matt.u200",
+                "u200-lock-state",
+                fetch,
+                30,
+                3,
+            )
+
+        coordinator._aqara_resilient_state.update(
+            {
+                "last_data": {"lock_state": "2"},
+                "failures": 0,
+            }
+        )
+
+        self.assertEqual(await coordinator.update_method(), {"lock_state": "2"})
+        self.assertEqual(coordinator._aqara_resilient_state["failures"], 1)
+        self.assertEqual(coordinator._aqara_resilient_state["network_attempts"], 1)
+        self.assertFalse(coordinator._aqara_resilient_state["last_network_success"])
+
+    async def test_coordinator_overlays_only_pushes_received_during_poll(self):
+        started = asyncio.Event()
+        release = asyncio.Event()
+        poll_results = [
+            {"lock_state": "1", "battery_percentage": 64.0},
+            {"lock_state": "3", "battery_percentage": 65.0},
+        ]
+
+        async def fetch():
+            if len(poll_results) == 2:
+                started.set()
+                await release.wait()
+            return poll_results.pop(0)
+
+        class _Hass:
+            @staticmethod
+            def async_create_task(coroutine):
+                coroutine.close()
+
+        with patch.dict(
+            sys.modules,
+            {f"{PACKAGE}.api": _module(f"{PACKAGE}.api", AqaraAuthError=RuntimeError)},
+        ):
+            coordinator = integration._create_resilient_coordinator(
+                _Hass(),
+                "matt.u200",
+                "u200-lock-state",
+                fetch,
+                30,
+                3,
+            )
+        push_versions = {}
+        coordinator._aqara_push_versions = lambda: dict(push_versions)
+
+        in_flight_poll = asyncio.create_task(coordinator.update_method())
+        await started.wait()
+        push_versions["lock_state"] = (1, "2")
+        release.set()
+
+        self.assertEqual(
+            await in_flight_poll,
+            {"lock_state": "2", "battery_percentage": 64.0},
+        )
+        self.assertEqual(
+            await coordinator.update_method(),
+            {"lock_state": "3", "battery_percentage": 65.0},
+        )
+
+    async def test_disconnected_poll_applies_push_received_after_reconnect(self):
+        started = asyncio.Event()
+        release = asyncio.Event()
+
+        async def fetch():
+            started.set()
+            await release.wait()
+            return {"lock_state": "1"}
+
+        class _Hass:
+            @staticmethod
+            def async_create_task(coroutine):
+                coroutine.close()
+
+        with patch.dict(
+            sys.modules,
+            {f"{PACKAGE}.api": _module(f"{PACKAGE}.api", AqaraAuthError=RuntimeError)},
+        ):
+            coordinator = integration._create_resilient_coordinator(
+                _Hass(),
+                "matt.u200",
+                "u200-lock-state",
+                fetch,
+                30,
+                3,
+            )
+
+        push_versions = coordinator._aqara_push_version_data
+        in_flight_poll = asyncio.create_task(coordinator.update_method())
+        await started.wait()
+        push_versions["lock_state"] = (1, "2")
+        release.set()
+
+        self.assertEqual(await in_flight_poll, {"lock_state": "2"})
+
+    async def test_poll_crossing_disconnect_reconnect_applies_later_push(self):
+        started = asyncio.Event()
+        release = asyncio.Event()
+
+        async def fetch():
+            started.set()
+            await release.wait()
+            return {"lock_state": "1"}
+
+        class _Hass:
+            @staticmethod
+            def async_create_task(coroutine):
+                coroutine.close()
+
+        with patch.dict(
+            sys.modules,
+            {f"{PACKAGE}.api": _module(f"{PACKAGE}.api", AqaraAuthError=RuntimeError)},
+        ):
+            coordinator = integration._create_resilient_coordinator(
+                _Hass(),
+                "matt.u200",
+                "u200-lock-state",
+                fetch,
+                30,
+                3,
+            )
+
+        provider = coordinator._aqara_push_versions
+        push_versions = coordinator._aqara_push_version_data
+        in_flight_poll = asyncio.create_task(coordinator.update_method())
+        await started.wait()
+        # Disconnect and reconnect leave the stable provider unchanged.
+        self.assertIs(coordinator._aqara_push_versions, provider)
+        push_versions["lock_state"] = (1, "2")
+        release.set()
+
+        self.assertEqual(await in_flight_poll, {"lock_state": "2"})
+
     async def test_failed_platform_unload_keeps_bridge_running(self):
         calls: list[str] = []
         entry = SimpleNamespace(entry_id="entry")
