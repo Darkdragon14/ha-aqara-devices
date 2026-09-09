@@ -142,6 +142,54 @@ U200_TRAIT_SPEC_MAP = {
 }
 
 
+def u200_trait_code_path(spec: dict[str, Any]) -> str:
+    return f"{spec['endpoint_id']}.{spec['function_code']}.{spec['trait_code']}"
+
+
+U200_TRAIT_CODE_PATH_MAP = {
+    u200_trait_code_path(spec): spec for spec in U200_STATE_TRAITS
+}
+
+
+def build_u200_trait_subscriptions(devices: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    code_paths = [u200_trait_code_path(spec) for spec in U200_STATE_TRAITS]
+    return [
+        {
+            "deviceId": str(device["did"]),
+            "codePaths": code_paths,
+            "attach": "ha_aqara_devices",
+        }
+        for device in devices
+    ]
+
+
+def coerce_u200_trait_value(spec: dict[str, Any], value: Any) -> Any:
+    if value is None:
+        return spec.get("default")
+
+    value_type = spec.get("value_type")
+    if value_type == "bool":
+        if isinstance(value, bool):
+            return value
+        normalized = str(value).strip().lower()
+        if normalized in {"1", "true", "on", "yes"}:
+            return True
+        if normalized in {"0", "false", "off", "no"}:
+            return False
+        return bool(value)
+    if value_type == "float":
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return spec.get("default")
+    if value_type == "int":
+        try:
+            return int(float(value))
+        except (TypeError, ValueError):
+            return spec.get("default")
+    return str(value)
+
+
 def u200_trait_request(device_id: str, spec: dict[str, Any], value: Any | None = None) -> dict[str, Any]:
     request = {
         "deviceId": device_id,

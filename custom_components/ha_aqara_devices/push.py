@@ -12,7 +12,7 @@ from typing import Any
 from aiohttp import ClientSession, ClientTimeout
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import BRIDGE_SANITY_INTERVAL_SECONDS
+from .const import BRIDGE_SANITY_INTERVAL_SECONDS, U200_INTERVAL_SECONDS
 
 from .api import AqaraApi, AqaraAuthError
 from .bridge_specs import (
@@ -35,9 +35,11 @@ from .bridge_specs import (
     spec_state_key,
 )
 from .const import FP2_MODEL, FP300_MODEL
+from .u200 import U200_TRAIT_CODE_PATH_MAP, coerce_u200_trait_value
 
 _LOGGER = logging.getLogger(__name__)
 _EVENT_DEDUP_CACHE_SIZE = 256
+_SSE_READ_TIMEOUT_SECONDS = 45
 
 
 class AqaraBridgeNotReady(RuntimeError):
@@ -77,6 +79,8 @@ class AqaraBridgePushManager:
         child_resource_specs: dict[str, dict[str, dict[str, Any]]],
         child_polling_dids: set[str],
         subscriptions: list[dict[str, Any]],
+        u200_coordinators: dict[str, DataUpdateCoordinator],
+        trait_subscriptions: list[dict[str, Any]],
     ) -> None:
         self._hass = hass
         self._session = session
@@ -96,6 +100,7 @@ class AqaraBridgePushManager:
         self._child_coordinators = child_coordinators
         self._child_resource_specs = child_resource_specs
         self._child_polling_dids = child_polling_dids
+        self._u200_coordinators = u200_coordinators
         self._cameras = {device["did"]: device for device in cameras}
         self._g2h_pro_cameras = {device["did"]: device for device in g2h_pro_cameras}
         self._g410_doorbells = {device["did"]: device for device in g410_doorbells}
@@ -121,13 +126,33 @@ class AqaraBridgePushManager:
             for did, coordinators in presence_coordinators.items()
         }
         self._child_state: dict[str, dict[str, Any]] = {did: {} for did in self._child_devices}
+        self._u200_state: dict[str, dict[str, Any]] = {did: {} for did in u200_coordinators}
+        self._u200_push_versions: dict[str, dict[str, tuple[int, Any]]] = {}
+        for did, coordinator in u200_coordinators.items():
+            push_versions = getattr(coordinator, "_aqara_push_version_data", None)
+            if not isinstance(push_versions, dict):
+                push_versions = {}
+                coordinator._aqara_push_version_data = push_versions
+                coordinator._aqara_push_versions = (
+                    lambda push_versions=push_versions: dict(push_versions)
+                )
+            self._u200_push_versions[did] = push_versions
+        self._u200_push_generation = 0
         self._subscriptions = self._normalize_subscriptions(subscriptions)
+        self._trait_subscriptions = trait_subscriptions
         self._listen_task: asyncio.Task[None] | None = None
+        self._trait_retry_task: asyncio.Task[None] | None = None
+        self._u200_reconciliation_task: asyncio.Task[None] | None = None
         self._stop_event = asyncio.Event()
         self._connected_event = asyncio.Event()
-        self._subscribed = False
+        self._resources_subscribed = False
+        self._traits_subscribed = False
+        self._bridge_supports_traits = False
+        self._sse_read_timeout_seconds: float | None = None
         self._started = False
         self._sse_connected: bool | None = None
+        self._u200_push_active: bool | None = None
+        self._u200_reconciled = False
         self._event_id = 0
         self._seen_event_ids: dict[tuple[str, str], dict[int, None]] = {}
 
@@ -179,8 +204,22 @@ class AqaraBridgePushManager:
 
     def _set_sse_connected(self, connected: bool) -> None:
         """Use polling as fallback while retaining it for non-reportable children."""
-        if self._sse_connected == connected:
+        if not connected:
+            self._u200_reconciled = False
+            reconciliation_task = getattr(self, "_u200_reconciliation_task", None)
+            self._u200_reconciliation_task = None
+            if reconciliation_task is not None:
+                reconciliation_task.cancel()
+        u200_push_active = (
+            connected
+            and self._traits_subscribed
+            and getattr(self, "_u200_reconciled", False)
+        )
+        if self._sse_connected == connected and self._u200_push_active == u200_push_active:
             return
+
+        if not connected and self._u200_push_active:
+            self._u200_state = {did: {} for did in self._u200_coordinators}
 
         interval = timedelta(seconds=BRIDGE_SANITY_INTERVAL_SECONDS)
         for coordinator in self._all_coordinators():
@@ -191,19 +230,89 @@ class AqaraBridgePushManager:
         for did, coordinator in self._child_coordinators.items():
             if did in self._child_polling_dids:
                 coordinator.update_interval = interval
+        u200_interval = None if u200_push_active else timedelta(seconds=U200_INTERVAL_SECONDS)
+        for coordinator in self._u200_coordinators.values():
+            was_disabled = coordinator.update_interval is None
+            coordinator.update_interval = u200_interval
+            if u200_interval is None and not was_disabled and coordinator.data is not None:
+                # async_refresh schedules from the interval it started with.
+                # A manual update cancels that timer and observes the new None interval.
+                coordinator.async_set_updated_data(coordinator.data)
+            if u200_interval is not None and was_disabled:
+                self._hass.async_create_task(coordinator.async_request_refresh())
         self._sse_connected = connected
+        self._u200_push_active = u200_push_active
         _LOGGER.info(
-            "Aqara bridge SSE %s; polling fallback %s and %s child device(s) remain polled",
+            "Aqara bridge SSE %s; polling fallback %s, %s child device(s) and %s U200 device(s) remain polled",
             "connected" if connected else "disconnected",
             "disabled" if connected else "enabled",
             len(self._child_polling_dids),
+            0 if u200_push_active else len(self._u200_coordinators),
         )
+
+    async def _reconcile_u200_before_push(self) -> None:
+        """Refresh U200 state before snapshots are ignored and polling is disabled."""
+        if not getattr(self, "_traits_subscribed", False) or not getattr(
+            self, "_u200_coordinators", {}
+        ):
+            self._u200_reconciled = True
+            return
+
+        coordinators = list(self._u200_coordinators.values())
+        attempts_before = [
+            getattr(coordinator, "_aqara_resilient_state", {}).get("network_attempts", 0)
+            for coordinator in coordinators
+        ]
+        results = await asyncio.gather(
+            *(coordinator.async_refresh() for coordinator in coordinators),
+            return_exceptions=True,
+        )
+        self._u200_reconciled = all(
+            not isinstance(result, BaseException)
+            and isinstance(
+                resilient_state := getattr(coordinator, "_aqara_resilient_state", None),
+                dict,
+            )
+            and resilient_state.get("network_attempts", 0) > attempts
+            and resilient_state.get("last_network_success") is True
+            for coordinator, result, attempts in zip(
+                coordinators, results, attempts_before, strict=True
+            )
+        )
+        if not self._u200_reconciled:
+            _LOGGER.warning(
+                "Aqara U200 reconciliation failed; polling remains active while SSE is connected"
+            )
+
+    def _start_u200_reconciliation_retry(self) -> None:
+        task = self._u200_reconciliation_task
+        if task is None or task.done():
+            self._u200_reconciliation_task = self._hass.async_create_background_task(
+                self._u200_reconciliation_retry_loop(),
+                "Aqara U200 reconciliation retry",
+            )
+
+    async def _u200_reconciliation_retry_loop(self) -> None:
+        retry_delay = 30.0
+        while self._sse_connected and self._traits_subscribed and not self._u200_reconciled:
+            await asyncio.sleep(retry_delay)
+            if not self._sse_connected or self._stop_event.is_set():
+                return
+            await self._reconcile_u200_before_push()
+            if not self._sse_connected:
+                return
+            self._set_sse_connected(True)
+            if self._u200_reconciled:
+                return
+            retry_delay = min(retry_delay * 2, 300.0)
 
     async def async_start(self) -> None:
         if self._started:
             return
 
-        if not self._subscriptions:
+        self._stop_event.clear()
+
+        if not self._subscriptions and not self._trait_subscriptions:
             _LOGGER.info("No active Aqara bridge subscriptions for enabled entities; skipping SSE startup")
             self._started = True
             return
@@ -212,8 +321,24 @@ class AqaraBridgePushManager:
         await self._api.ensure_valid_access_token()
         await self._check_health()
         await self._subscribe_all_resources()
+        try:
+            await self._subscribe_all_traits()
+        except Exception as err:
+            if not self._resources_subscribed:
+                raise
+            _LOGGER.warning(
+                "Aqara trait subscription failed; U200 polling remains active and subscription will be retried: %s",
+                err,
+            )
+            self._start_trait_subscription_retry()
 
-        self._stop_event.clear()
+        if not self._resources_subscribed and not self._traits_subscribed:
+            _LOGGER.warning(
+                "No subscriptions supported by this Aqara bridge; polling remains active"
+            )
+            self._started = True
+            return
+
         self._connected_event.clear()
         if self._listen_task is None or self._listen_task.done():
             self._listen_task = self._hass.async_create_background_task(
@@ -229,7 +354,21 @@ class AqaraBridgePushManager:
         self._stop_event.set()
         self._connected_event.clear()
 
-        if self._subscribed:
+        trait_retry_task = self._trait_retry_task
+        self._trait_retry_task = None
+        if trait_retry_task is not None:
+            trait_retry_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await trait_retry_task
+
+        reconciliation_task = getattr(self, "_u200_reconciliation_task", None)
+        self._u200_reconciliation_task = None
+        if reconciliation_task is not None:
+            reconciliation_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await reconciliation_task
+
+        if self._resources_subscribed:
             try:
                 await self._unsubscribe_all_resources()
             except AqaraAuthError as err:
@@ -237,7 +376,16 @@ class AqaraBridgePushManager:
             except Exception as err:
                 _LOGGER.warning("Aqara bridge unsubscribe failed during shutdown: %s", err)
             finally:
-                self._subscribed = False
+                self._resources_subscribed = False
+        if self._traits_subscribed:
+            try:
+                await self._unsubscribe_all_traits()
+            except AqaraAuthError as err:
+                _LOGGER.warning("Aqara trait unsubscribe skipped because authentication failed: %s", err)
+            except Exception as err:
+                _LOGGER.warning("Aqara trait unsubscribe failed during shutdown: %s", err)
+            finally:
+                self._traits_subscribed = False
 
         task = self._listen_task
         self._listen_task = None
@@ -272,6 +420,25 @@ class AqaraBridgePushManager:
                 payload.get("nameserver"),
                 payload.get("lastError"),
             )
+            capabilities = payload.get("capabilities") or []
+            self._bridge_supports_traits = (
+                isinstance(capabilities, list) and "spec_report" in capabilities
+            )
+            if self._trait_subscriptions and not self._bridge_supports_traits:
+                _LOGGER.warning(
+                    "Aqara bridge does not advertise spec_report support; U200 polling remains active"
+                )
+            heartbeat_interval = payload.get("heartbeatIntervalSeconds")
+            self._sse_read_timeout_seconds = None
+            try:
+                heartbeat_interval_seconds = float(heartbeat_interval)
+            except (TypeError, ValueError):
+                heartbeat_interval_seconds = 0
+            if heartbeat_interval_seconds > 0:
+                self._sse_read_timeout_seconds = max(
+                    heartbeat_interval_seconds * 3,
+                    _SSE_READ_TIMEOUT_SECONDS,
+                )
 
     async def _subscribe_all_resources(self) -> None:
         if not self._subscriptions:
@@ -280,7 +447,7 @@ class AqaraBridgePushManager:
         response = await self._api.subscribe_resources(self._subscriptions)
         if str(response.get("code")) != "0":
             raise RuntimeError(f"Failed to subscribe bridge resources: {response}")
-        self._subscribed = True
+        self._resources_subscribed = True
         _LOGGER.info(
             "Subscribed Aqara bridge resources for %s device(s), %s resource(s)",
             len(self._subscriptions),
@@ -306,6 +473,72 @@ class AqaraBridgePushManager:
             "Unsubscribed Aqara bridge resources for %s device(s), %s resource(s)",
             len(self._subscriptions),
             self._subscription_resource_count(),
+        )
+
+    async def _subscribe_all_traits(self) -> None:
+        if not self._trait_subscriptions or not self._bridge_supports_traits:
+            return
+
+        response = await self._api.subscribe_traits(self._trait_subscriptions)
+        if str(response.get("code")) != "0":
+            raise RuntimeError(f"Failed to subscribe Aqara traits: {response}")
+        self._traits_subscribed = True
+        _LOGGER.info(
+            "Subscribed Aqara bridge traits for %s device(s), %s trait(s)",
+            len(self._trait_subscriptions),
+            sum(len(subscription["codePaths"]) for subscription in self._trait_subscriptions),
+        )
+        _LOGGER.debug("Aqara bridge trait subscription payload: %s", self._trait_subscriptions)
+
+    def _start_trait_subscription_retry(self) -> None:
+        if self._trait_retry_task is None or self._trait_retry_task.done():
+            self._trait_retry_task = self._hass.async_create_background_task(
+                self._trait_subscription_retry_loop(),
+                "Aqara trait subscription retry",
+            )
+
+    async def _trait_subscription_retry_loop(self) -> None:
+        retry_delay = 30.0
+        while not self._stop_event.is_set() and not self._traits_subscribed:
+            await asyncio.sleep(retry_delay)
+            if self._stop_event.is_set():
+                return
+            try:
+                await self._api.ensure_valid_access_token()
+                await self._subscribe_all_traits()
+            except asyncio.CancelledError:
+                raise
+            except Exception as err:
+                _LOGGER.warning(
+                    "Aqara trait subscription retry failed; retrying in %.0f seconds: %s",
+                    min(retry_delay * 2, 300.0),
+                    err,
+                )
+                retry_delay = min(retry_delay * 2, 300.0)
+                continue
+
+            if self._sse_connected:
+                await self._reconcile_u200_before_push()
+                if self._sse_connected:
+                    self._set_sse_connected(True)
+                    if not self._u200_reconciled:
+                        self._start_u200_reconciliation_retry()
+            return
+
+    async def _unsubscribe_all_traits(self) -> None:
+        unsubscribe_payload = [
+            {
+                "deviceId": subscription["deviceId"],
+                "codePaths": subscription["codePaths"],
+            }
+            for subscription in self._trait_subscriptions
+        ]
+        response = await self._api.unsubscribe_traits(unsubscribe_payload)
+        if str(response.get("code")) != "0":
+            raise RuntimeError(f"Failed to unsubscribe Aqara traits: {response}")
+        _LOGGER.info(
+            "Unsubscribed Aqara bridge traits for %s device(s)",
+            len(unsubscribe_payload),
         )
 
     async def _listen_loop(self) -> None:
@@ -349,14 +582,21 @@ class AqaraBridgePushManager:
             "Accept": "text/event-stream",
             "Authorization": f"Bearer {self._bridge_token}",
         }
-        timeout = ClientTimeout(total=None, sock_connect=10, sock_read=None)
+        timeout = ClientTimeout(
+            total=None,
+            sock_connect=10,
+            sock_read=self._sse_read_timeout_seconds,
+        )
         async with self._session.get(url, headers=headers, timeout=timeout) as response:
             if response.status != 200:
                 body = await response.text()
                 raise RuntimeError(f"Aqara bridge events connection failed ({response.status}): {body}")
 
             self._connected_event.set()
+            await self._reconcile_u200_before_push()
             self._set_sse_connected(True)
+            if not self._u200_reconciled:
+                self._start_u200_reconciliation_retry()
             _LOGGER.info("Connected to Aqara bridge SSE stream at %s", url)
 
             event_name: str | None = None
@@ -451,6 +691,16 @@ class AqaraBridgePushManager:
 
         resource_id = str(payload.get("resourceId") or "")
         if not resource_id:
+            return
+
+        if str(payload.get("type") or "") == "spec_report":
+            self._handle_u200_trait_message(
+                payload_type,
+                did,
+                resource_id,
+                payload.get("value"),
+                pending_updates,
+            )
             return
 
         if did in self._cameras:
@@ -634,6 +884,49 @@ class AqaraBridgePushManager:
                 FP300_GROUP_SPEC_MAPS,
                 pending_updates,
             )
+
+    def _handle_u200_trait_message(
+        self,
+        payload_type: str,
+        did: str,
+        code_path: str,
+        value: Any,
+        pending_updates: dict[tuple[str, ...], tuple[DataUpdateCoordinator, dict[str, Any]]],
+    ) -> None:
+        if payload_type == "snapshot":
+            return
+
+        coordinator = self._u200_coordinators.get(did)
+        spec = U200_TRAIT_CODE_PATH_MAP.get(code_path)
+        if coordinator is None or spec is None:
+            return
+
+        flush_key = ("u200", did)
+        state = self._base_state(
+            payload_type,
+            flush_key,
+            self._u200_state.get(did),
+            coordinator,
+            pending_updates,
+        )
+        key = spec["key"]
+        new_value = coerce_u200_trait_value(spec, value)
+        if payload_type != "snapshot":
+            self._u200_push_generation += 1
+            self._u200_push_versions.setdefault(did, {})[key] = (
+                self._u200_push_generation,
+                new_value,
+            )
+        unchanged = key in state and state[key] == new_value
+        state[key] = new_value
+        self._u200_state[did] = state
+        resilient_state = getattr(coordinator, "_aqara_resilient_state", None)
+        if isinstance(resilient_state, dict):
+            resilient_state["last_data"] = dict(state)
+            resilient_state["failures"] = 0
+        if unchanged and getattr(coordinator, "last_update_success", True):
+            return
+        self._queue_state_update(flush_key, coordinator, state, pending_updates)
 
     def _queue_state_update(
         self,
