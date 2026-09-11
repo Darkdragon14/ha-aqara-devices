@@ -64,23 +64,49 @@ def _complete_trait_items():
 
 
 class U200ApiTests(unittest.IsolatedAsyncioTestCase):
-    async def test_u200_state_rejects_missing_trait(self):
+    async def test_u200_state_accepts_missing_optional_trait(self):
         api = api_module.AqaraApi.__new__(api_module.AqaraApi)
         items = _complete_trait_items()[:-1]
         api.query_traits = AsyncMock(return_value={"code": 0, "result": items})
         api.query_matter_device_config = AsyncMock()
 
-        with self.assertRaisesRegex(RuntimeError, "door_state"):
-            await api.get_u200_state("matt.u200")
+        state = await api.get_u200_state("matt.u200")
 
-    async def test_u200_state_rejects_individual_trait_error(self):
+        self.assertEqual(state["lock_state"], "1")
+        self.assertNotIn("door_state", state)
+
+    async def test_u200_state_accepts_optional_trait_error(self):
         api = api_module.AqaraApi.__new__(api_module.AqaraApi)
         items = _complete_trait_items()
         items[0]["code"] = 1
         api.query_traits = AsyncMock(return_value={"code": 0, "result": items})
         api.query_matter_device_config = AsyncMock()
 
-        with self.assertRaisesRegex(RuntimeError, "reachable"):
+        state = await api.get_u200_state("matt.u200")
+
+        self.assertEqual(state["lock_state"], "1")
+        self.assertNotIn("reachable", state)
+
+    async def test_u200_state_rejects_missing_lock_state(self):
+        api = api_module.AqaraApi.__new__(api_module.AqaraApi)
+        items = [
+            item for item in _complete_trait_items() if item["traitCode"] != "LockState"
+        ]
+        api.query_traits = AsyncMock(return_value={"code": 0, "result": items})
+        api.query_matter_device_config = AsyncMock()
+
+        with self.assertRaisesRegex(RuntimeError, "lock_state"):
+            await api.get_u200_state("matt.u200")
+
+    async def test_u200_state_rejects_lock_state_error(self):
+        api = api_module.AqaraApi.__new__(api_module.AqaraApi)
+        items = _complete_trait_items()
+        lock_state = next(item for item in items if item["traitCode"] == "LockState")
+        lock_state["code"] = 1
+        api.query_traits = AsyncMock(return_value={"code": 0, "result": items})
+        api.query_matter_device_config = AsyncMock()
+
+        with self.assertRaisesRegex(RuntimeError, "lock_state"):
             await api.get_u200_state("matt.u200")
 
 

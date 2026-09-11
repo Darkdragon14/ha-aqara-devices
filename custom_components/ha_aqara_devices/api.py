@@ -710,8 +710,7 @@ class AqaraApi:
             items = self._iter_matter_config_traits(config)
 
         state = self._map_u200_trait_items(did, items)
-        expected_keys = {spec["key"] for spec in U200_STATE_TRAITS}
-        missing_keys = expected_keys - state.keys()
+        missing_keys = {"lock_state"} - state.keys()
         if missing_keys:
             raise RuntimeError(
                 f"Incomplete U200 trait response for {did}; missing: {', '.join(sorted(missing_keys))}"
