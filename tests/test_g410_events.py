@@ -217,8 +217,8 @@ class PushPollingTests(unittest.TestCase):
         manager._child_polling_dids = {"polled"}
         manager._u200_coordinators = {}
         manager._traits_subscribed = False
-        manager._sse_connected = None
-        manager._u200_push_active = None
+        manager._sse_connected = False
+        manager._u200_push_active = False
         manager._u200_reconciled = True
         manager._hass = _Hass()
 
@@ -462,8 +462,8 @@ class PushPollingTests(unittest.TestCase):
         manager._u200_push_versions = {"matt.u200": {}}
         manager._u200_push_generation = 0
         manager._traits_subscribed = True
-        manager._sse_connected = False
-        manager._u200_push_active = False
+        manager._sse_connected = None
+        manager._u200_push_active = None
         manager._u200_reconciled = False
         manager._hass = _Hass()
 
@@ -615,6 +615,7 @@ class PushLifecycleTests(unittest.IsolatedAsyncioTestCase):
         manager._connected_event = asyncio.Event()
         manager._u200_coordinators = {}
         manager._trait_retry_task = None
+        manager._health_task = None
         manager._resources_subscribed = False
         manager._traits_subscribed = False
         manager._listen_task = None
@@ -715,6 +716,104 @@ class PushLifecycleTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertTrue(manager._bridge_supports_traits)
         self.assertEqual(manager._sse_read_timeout_seconds, 180)
+
+    async def test_bridge_health_rejects_consumer_without_assigned_queues(self):
+        class _Response:
+            status = 200
+
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *args):
+                return None
+
+            async def json(self):
+                return {
+                    "status": "up",
+                    "rocketmqStarted": True,
+                    "consumerRegistered": True,
+                    "assignedQueueCount": 0,
+                }
+
+        manager = push_module.AqaraBridgePushManager.__new__(push_module.AqaraBridgePushManager)
+        manager._bridge_url = "http://bridge"
+        manager._session = SimpleNamespace(get=Mock(return_value=_Response()))
+        manager._trait_subscriptions = []
+
+        with patch.object(push_module, "ClientTimeout", return_value=object()):
+            with self.assertRaises(push_module.AqaraBridgeNotReady):
+                await manager._check_health()
+
+    async def test_health_monitor_enables_polling_when_bridge_becomes_unhealthy(self):
+        manager = push_module.AqaraBridgePushManager.__new__(push_module.AqaraBridgePushManager)
+        manager._stop_event = asyncio.Event()
+        manager._connected_event = asyncio.Event()
+        manager._connected_event.set()
+        manager._sse_connected = True
+        manager._bridge_healthy = True
+        manager._check_health = AsyncMock(side_effect=push_module.AqaraBridgeNotReady("not ready"))
+
+        def set_connected(connected):
+            manager._stop_event.set()
+
+        manager._set_sse_connected = Mock(side_effect=set_connected)
+
+        with patch.object(push_module.asyncio, "sleep", AsyncMock()):
+            await manager._bridge_health_loop()
+
+        manager._set_sse_connected.assert_called_once_with(False)
+
+    async def test_health_monitor_reconciles_before_disabling_polling_after_recovery(self):
+        manager = push_module.AqaraBridgePushManager.__new__(push_module.AqaraBridgePushManager)
+        manager._stop_event = asyncio.Event()
+        manager._connected_event = asyncio.Event()
+        manager._connected_event.set()
+        manager._sse_connected = False
+        manager._bridge_healthy = False
+        manager._u200_reconciled = True
+        manager._check_health = AsyncMock()
+        manager._reconcile_u200_before_push = AsyncMock()
+        manager._start_u200_reconciliation_retry = Mock()
+
+        def set_connected(connected):
+            manager._stop_event.set()
+
+        manager._set_sse_connected = Mock(side_effect=set_connected)
+
+        with patch.object(push_module.asyncio, "sleep", AsyncMock()):
+            await manager._bridge_health_loop()
+
+        manager._reconcile_u200_before_push.assert_awaited_once()
+        manager._set_sse_connected.assert_called_once_with(True)
+        manager._start_u200_reconciliation_retry.assert_not_called()
+
+    def test_unhealthy_bridge_prevents_sse_reconnect_from_disabling_polling(self):
+        manager = push_module.AqaraBridgePushManager.__new__(push_module.AqaraBridgePushManager)
+        coordinator = _Coordinator()
+        manager._camera_coordinators = {"device": coordinator}
+        manager._g2h_pro_coordinators = {}
+        manager._g410_coordinators = {}
+        manager._g4_coordinators = {}
+        manager._m3_coordinators = {}
+        manager._m100_coordinators = {}
+        manager._m200_coordinators = {}
+        manager._a100_pro_coordinators = {}
+        manager._acn002_coordinators = {}
+        manager._presence_coordinators = {}
+        manager._child_coordinators = {}
+        manager._child_polling_dids = set()
+        manager._u200_coordinators = {}
+        manager._traits_subscribed = False
+        manager._sse_connected = None
+        manager._u200_push_active = None
+        manager._u200_reconciled = False
+        manager._bridge_healthy = False
+        manager._hass = _Hass()
+
+        manager._set_sse_connected(True)
+
+        self.assertEqual(coordinator.update_interval, timedelta(seconds=300))
+        self.assertFalse(manager._sse_connected)
 
     async def test_sse_stream_uses_heartbeat_read_timeout(self):
         class _Content:

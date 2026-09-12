@@ -40,6 +40,7 @@ from .u200 import U200_TRAIT_CODE_PATH_MAP, coerce_u200_trait_value
 _LOGGER = logging.getLogger(__name__)
 _EVENT_DEDUP_CACHE_SIZE = 256
 _SSE_READ_TIMEOUT_SECONDS = 45
+_BRIDGE_HEALTH_INTERVAL_SECONDS = 30
 
 
 class AqaraBridgeNotReady(RuntimeError):
@@ -141,6 +142,7 @@ class AqaraBridgePushManager:
         self._subscriptions = self._normalize_subscriptions(subscriptions)
         self._trait_subscriptions = trait_subscriptions
         self._listen_task: asyncio.Task[None] | None = None
+        self._health_task: asyncio.Task[None] | None = None
         self._trait_retry_task: asyncio.Task[None] | None = None
         self._u200_reconciliation_task: asyncio.Task[None] | None = None
         self._stop_event = asyncio.Event()
@@ -151,6 +153,7 @@ class AqaraBridgePushManager:
         self._sse_read_timeout_seconds: float | None = None
         self._started = False
         self._sse_connected: bool | None = None
+        self._bridge_healthy = False
         self._u200_push_active: bool | None = None
         self._u200_reconciled = False
         self._event_id = 0
@@ -204,6 +207,7 @@ class AqaraBridgePushManager:
 
     def _set_sse_connected(self, connected: bool) -> None:
         """Use polling as fallback while retaining it for non-reportable children."""
+        connected = connected and getattr(self, "_bridge_healthy", True)
         if not connected:
             self._u200_reconciled = False
             reconciliation_task = getattr(self, "_u200_reconciliation_task", None)
@@ -320,6 +324,7 @@ class AqaraBridgePushManager:
         self._set_sse_connected(False)
         await self._api.ensure_valid_access_token()
         await self._check_health()
+        self._bridge_healthy = True
         await self._subscribe_all_resources()
         try:
             await self._subscribe_all_traits()
@@ -345,6 +350,11 @@ class AqaraBridgePushManager:
                 self._listen_loop(),
                 "Aqara bridge SSE listener",
             )
+        if self._health_task is None or self._health_task.done():
+            self._health_task = self._hass.async_create_background_task(
+                self._bridge_health_loop(),
+                "Aqara bridge health monitor",
+            )
         _LOGGER.info(
             "Aqara bridge SSE listener started; polling fallback remains active until connected"
         )
@@ -360,6 +370,13 @@ class AqaraBridgePushManager:
             trait_retry_task.cancel()
             with suppress(asyncio.CancelledError):
                 await trait_retry_task
+
+        health_task = getattr(self, "_health_task", None)
+        self._health_task = None
+        if health_task is not None:
+            health_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await health_task
 
         reconciliation_task = getattr(self, "_u200_reconciliation_task", None)
         self._u200_reconciliation_task = None
@@ -395,7 +412,7 @@ class AqaraBridgePushManager:
             with suppress(asyncio.CancelledError):
                 await task
 
-    async def _check_health(self) -> None:
+    async def _check_health(self, *, log_success: bool = True) -> None:
         url = f"{self._bridge_url}/health"
         timeout = ClientTimeout(total=10)
         async with self._session.get(url, timeout=timeout) as response:
@@ -407,19 +424,37 @@ class AqaraBridgePushManager:
             status = str(payload.get("status") or "").strip().lower()
             rocketmq_started_value = payload.get("rocketmqStarted")
             rocketmq_started = rocketmq_started_value is True or str(rocketmq_started_value).lower() == "true"
-            if status != "up" or not rocketmq_started:
+            consumer_registered = payload.get("consumerRegistered")
+            assigned_queue_count = payload.get("assignedQueueCount")
+            queue_assignment_ready = assigned_queue_count is None
+            try:
+                if assigned_queue_count is not None:
+                    queue_assignment_ready = int(assigned_queue_count) > 0
+            except (TypeError, ValueError):
+                queue_assignment_ready = False
+            if (
+                status != "up"
+                or not rocketmq_started
+                or consumer_registered is False
+                or not queue_assignment_ready
+            ):
                 raise AqaraBridgeNotReady(
                     "Aqara bridge RocketMQ consumer is not ready "
                     f"(status={payload.get('status')}, rocketmqStarted={payload.get('rocketmqStarted')}, "
+                    f"consumerRegistered={consumer_registered}, assignedQueueCount={assigned_queue_count}, "
                     f"lastError={payload.get('lastError')})"
                 )
-            _LOGGER.info(
-                "Aqara bridge health OK: status=%s rocketmq_started=%s nameserver=%s last_error=%s",
-                payload.get("status"),
-                rocketmq_started,
-                payload.get("nameserver"),
-                payload.get("lastError"),
-            )
+            if log_success:
+                _LOGGER.info(
+                    "Aqara bridge health OK: status=%s rocketmq_started=%s consumer_registered=%s "
+                    "assigned_queue_count=%s nameserver=%s last_error=%s",
+                    payload.get("status"),
+                    rocketmq_started,
+                    consumer_registered,
+                    assigned_queue_count,
+                    payload.get("nameserver"),
+                    payload.get("lastError"),
+                )
             capabilities = payload.get("capabilities") or []
             self._bridge_supports_traits = (
                 isinstance(capabilities, list) and "spec_report" in capabilities
@@ -439,6 +474,35 @@ class AqaraBridgePushManager:
                     heartbeat_interval_seconds * 3,
                     _SSE_READ_TIMEOUT_SECONDS,
                 )
+
+    async def _bridge_health_loop(self) -> None:
+        while not self._stop_event.is_set():
+            await asyncio.sleep(_BRIDGE_HEALTH_INTERVAL_SECONDS)
+            if self._stop_event.is_set() or not self._connected_event.is_set():
+                continue
+
+            try:
+                await self._check_health(log_success=False)
+            except asyncio.CancelledError:
+                raise
+            except Exception as err:
+                self._bridge_healthy = False
+                if self._sse_connected:
+                    _LOGGER.warning(
+                        "Aqara bridge became unhealthy; polling fallback enabled: %s",
+                        err,
+                    )
+                    self._set_sse_connected(False)
+                continue
+
+            if not self._sse_connected and self._connected_event.is_set():
+                _LOGGER.info("Aqara bridge health recovered; reconciling before push resumes")
+                await self._reconcile_u200_before_push()
+                if self._connected_event.is_set():
+                    self._bridge_healthy = True
+                    self._set_sse_connected(True)
+                    if not self._u200_reconciled:
+                        self._start_u200_reconciliation_retry()
 
     async def _subscribe_all_resources(self) -> None:
         if not self._subscriptions:
