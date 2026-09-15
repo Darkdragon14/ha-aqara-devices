@@ -614,9 +614,48 @@ class AqaraApi:
                                 "traitCode": trait.get("traitCode"),
                                 "value": trait.get("value"),
                                 "time": trait.get("time"),
+                                "subscribable": (
+                                    trait.get("parameter", {}).get("subscribable")
+                                    if isinstance(trait.get("parameter"), dict)
+                                    else None
+                                ),
                             }
                         )
         return items
+
+    async def get_u200_subscribable_trait_paths(
+        self, dids: Iterable[str]
+    ) -> dict[str, set[str]]:
+        requested_dids = list(dict.fromkeys(str(did) for did in dids if did))
+        if not requested_dids:
+            return {}
+
+        paths_by_did: dict[str, set[str]] = {}
+        for offset in range(0, len(requested_dids), 10):
+            batch = requested_dids[offset : offset + 10]
+            data = await self.query_matter_device_config(batch)
+            if str(data.get("code")) != "0":
+                raise RuntimeError(f"Failed to query U200 trait capabilities: {data}")
+            for item in self._iter_matter_config_traits(data):
+                did = str(item.get("deviceId") or "")
+                if did not in batch:
+                    continue
+                paths_by_did.setdefault(did, set())
+                if item.get("subscribable") is not True:
+                    continue
+                endpoint_id = self._parse_endpoint_id(item.get("endpointId"))
+                function_code = str(item.get("functionCode") or "")
+                trait_code = str(item.get("traitCode") or "")
+                if (
+                    endpoint_id,
+                    function_code,
+                    trait_code,
+                ) not in U200_TRAIT_SPEC_MAP:
+                    continue
+                paths_by_did[did].add(
+                    f"{endpoint_id}.{function_code}.{trait_code}"
+                )
+        return paths_by_did
 
     def _map_u200_trait_items(self, did: str, items: Iterable[dict[str, Any]]) -> dict[str, Any]:
         state: dict[str, Any] = {}

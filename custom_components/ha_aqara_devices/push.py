@@ -447,11 +447,22 @@ class AqaraBridgePushManager:
             if log_success:
                 _LOGGER.info(
                     "Aqara bridge health OK: status=%s rocketmq_started=%s consumer_registered=%s "
-                    "assigned_queue_count=%s nameserver=%s last_error=%s",
+                    "assigned_queue_count=%s raw_message_count=%s parsed_message_count=%s "
+                    "published_event_count=%s ignored_message_count=%s processing_error_count=%s "
+                    "last_raw_message_at=%s last_message_type=%s last_ignored_reason=%s "
+                    "nameserver=%s last_error=%s",
                     payload.get("status"),
                     rocketmq_started,
                     consumer_registered,
                     assigned_queue_count,
+                    payload.get("rawMessageCount"),
+                    payload.get("parsedMessageCount"),
+                    payload.get("publishedEventCount"),
+                    payload.get("ignoredMessageCount"),
+                    payload.get("processingErrorCount"),
+                    payload.get("lastRawMessageAt"),
+                    payload.get("lastMessageType"),
+                    payload.get("lastIgnoredReason"),
                     payload.get("nameserver"),
                     payload.get("lastError"),
                 )
@@ -548,9 +559,10 @@ class AqaraBridgePushManager:
             raise RuntimeError(f"Failed to subscribe Aqara traits: {response}")
         self._traits_subscribed = True
         _LOGGER.info(
-            "Subscribed Aqara bridge traits for %s device(s), %s trait(s)",
+            "Subscribed Aqara bridge traits for %s device(s), %s trait(s), request_id=%s",
             len(self._trait_subscriptions),
             sum(len(subscription["codePaths"]) for subscription in self._trait_subscriptions),
+            response.get("requestId"),
         )
         _LOGGER.debug("Aqara bridge trait subscription payload: %s", self._trait_subscriptions)
 

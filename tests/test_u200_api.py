@@ -64,6 +64,74 @@ def _complete_trait_items():
 
 
 class U200ApiTests(unittest.IsolatedAsyncioTestCase):
+    async def test_discovers_only_subscribable_known_u200_traits(self):
+        api = api_module.AqaraApi.__new__(api_module.AqaraApi)
+        api.query_matter_device_config = AsyncMock(
+            return_value={
+                "code": 0,
+                "result": {
+                    "data": [
+                        {
+                            "deviceId": "matt.u200",
+                            "endpoints": [
+                                {
+                                    "endpointId": 2,
+                                    "functions": [
+                                        {
+                                            "functionCode": "DoorLock",
+                                            "traits": [
+                                                {
+                                                    "traitCode": "LockState",
+                                                    "parameter": {"subscribable": True},
+                                                },
+                                                {
+                                                    "traitCode": "DoorState",
+                                                    "parameter": {"subscribable": False},
+                                                },
+                                                {
+                                                    "traitCode": "Unknown",
+                                                    "parameter": {"subscribable": True},
+                                                },
+                                            ],
+                                        }
+                                    ],
+                                }
+                            ],
+                        }
+                    ]
+                },
+            }
+        )
+
+        paths = await api.get_u200_subscribable_trait_paths(["matt.u200"])
+
+        self.assertEqual(paths, {"matt.u200": {"2.DoorLock.LockState"}})
+
+    async def test_subscribable_trait_discovery_rejects_api_error(self):
+        api = api_module.AqaraApi.__new__(api_module.AqaraApi)
+        api.query_matter_device_config = AsyncMock(
+            return_value={"code": 500, "message": "failed"}
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "trait capabilities"):
+            await api.get_u200_subscribable_trait_paths(["matt.u200"])
+
+    async def test_subscribable_trait_discovery_batches_ten_devices(self):
+        api = api_module.AqaraApi.__new__(api_module.AqaraApi)
+        api.query_matter_device_config = AsyncMock(
+            side_effect=[
+                {"code": 0, "result": {"data": []}},
+                {"code": 0, "result": {"data": []}},
+            ]
+        )
+        dids = [f"matt.u200.{index}" for index in range(11)]
+
+        await api.get_u200_subscribable_trait_paths(dids)
+
+        self.assertEqual(api.query_matter_device_config.await_count, 2)
+        api.query_matter_device_config.assert_any_await(dids[:10])
+        api.query_matter_device_config.assert_any_await(dids[10:])
+
     async def test_u200_state_accepts_missing_optional_trait(self):
         api = api_module.AqaraApi.__new__(api_module.AqaraApi)
         items = _complete_trait_items()[:-1]
@@ -108,6 +176,36 @@ class U200ApiTests(unittest.IsolatedAsyncioTestCase):
 
         with self.assertRaisesRegex(RuntimeError, "lock_state"):
             await api.get_u200_state("matt.u200")
+
+    def test_subscriptions_use_discovered_subscribable_paths(self):
+        subscriptions = u200_module.build_u200_trait_subscriptions(
+            [{"did": "matt.u200"}],
+            {"matt.u200": {"2.DoorLock.LockState"}},
+        )
+
+        self.assertEqual(
+            subscriptions,
+            [
+                {
+                    "deviceId": "matt.u200",
+                    "codePaths": ["2.DoorLock.LockState"],
+                    "attach": "ha_aqara_devices",
+                }
+            ],
+        )
+
+    def test_subscriptions_fall_back_when_device_capabilities_are_missing(self):
+        subscriptions = u200_module.build_u200_trait_subscriptions(
+            [{"did": "matt.u200"}], {}
+        )
+
+        self.assertEqual(
+            subscriptions[0]["codePaths"],
+            [
+                u200_module.u200_trait_code_path(spec)
+                for spec in u200_module.U200_STATE_TRAITS
+            ],
+        )
 
 
 if __name__ == "__main__":

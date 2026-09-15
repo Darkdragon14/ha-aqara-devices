@@ -678,6 +678,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         acn002_locks = [device for device in devices if device.get("model") in ACN002_MODELS]
         presence_devices = [device for device in devices if device.get("model") in PRESENCE_MODELS]
         u200_locks = [device for device in devices if device.get("model") in U200_MODELS]
+        u200_subscribable_paths = None
+        if u200_locks:
+            try:
+                u200_subscribable_paths = await api.get_u200_subscribable_trait_paths(
+                    lock["did"] for lock in u200_locks
+                )
+                for lock in u200_locks:
+                    did = str(lock["did"])
+                    paths = u200_subscribable_paths.get(did)
+                    if paths is None:
+                        _LOGGER.warning(
+                            "Aqara omitted U200 trait capabilities for %s; using known trait paths",
+                            did,
+                        )
+                    elif not paths:
+                        _LOGGER.warning(
+                            "Aqara reports no supported subscribable U200 traits for %s",
+                            did,
+                        )
+                    else:
+                        _LOGGER.debug(
+                            "Aqara U200 subscribable traits for %s: %s",
+                            did,
+                            sorted(paths),
+                        )
+            except Exception as err:
+                _LOGGER.warning(
+                    "Failed to discover U200 subscribable traits; using known trait paths: %s",
+                    err,
+                )
         camera_candidates = build_camera_candidates(
             cameras,
             g2h_pro_cameras,
@@ -899,7 +929,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             known_unique_ids=known_unique_ids,
         )
     )
-    active_trait_subscriptions = build_u200_trait_subscriptions(u200_locks)
+    active_trait_subscriptions = build_u200_trait_subscriptions(
+        u200_locks, u200_subscribable_paths
+    )
     child_polling_dids = child_polling_required_dids(
         enabled_unique_ids,
         child_entity_specs,

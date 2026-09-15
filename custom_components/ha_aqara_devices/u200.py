@@ -151,16 +151,33 @@ U200_TRAIT_CODE_PATH_MAP = {
 }
 
 
-def build_u200_trait_subscriptions(devices: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    code_paths = [u200_trait_code_path(spec) for spec in U200_STATE_TRAITS]
-    return [
-        {
-            "deviceId": str(device["did"]),
-            "codePaths": code_paths,
-            "attach": "ha_aqara_devices",
-        }
-        for device in devices
-    ]
+def build_u200_trait_subscriptions(
+    devices: list[dict[str, Any]],
+    subscribable_paths_by_did: dict[str, set[str]] | None = None,
+) -> list[dict[str, Any]]:
+    known_paths = [u200_trait_code_path(spec) for spec in U200_STATE_TRAITS]
+    subscriptions = []
+    for device in devices:
+        did = str(device["did"])
+        discovered_paths = (
+            subscribable_paths_by_did.get(did)
+            if subscribable_paths_by_did is not None
+            else None
+        )
+        code_paths = (
+            known_paths
+            if discovered_paths is None
+            else [path for path in known_paths if path in discovered_paths]
+        )
+        if code_paths:
+            subscriptions.append(
+                {
+                    "deviceId": did,
+                    "codePaths": code_paths,
+                    "attach": "ha_aqara_devices",
+                }
+            )
+    return subscriptions
 
 
 def coerce_u200_trait_value(spec: dict[str, Any], value: Any) -> Any:
