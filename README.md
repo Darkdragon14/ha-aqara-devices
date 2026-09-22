@@ -148,6 +148,7 @@ The `ha_aqara_devices.open_pairing_mode` and `ha_aqara_devices.close_pairing_mod
 | `Door Lock A100` | `aqara.lock.agl002` |
 | `Door Lock A100 Pro` | `aqara.lock.acn001` |
 | `Smart Lock U200` | `aqara.matter.4447_10242` |
+| `Smart Lock U200 Lite` | `aqara.matter.4447_10247` |
 | `Smart Video Door Lock Xingyao` (`全自动智能猫眼门锁 星耀`) | `aqara.lock.acn002` |
 
 Each discovered supported device in your Aqara account gets its own entities and device metadata inside Home Assistant.
@@ -156,7 +157,7 @@ For the full per-device entity details, see the published bridge documentation:
 
 - [Supported devices reference](https://darkdragon14.github.io/aqara-rocketmq-bridge/devices/)
 
-The U200 is exposed by Aqara as Matter model `aqara.matter.4447_10242`, so this integration reads it through the Aqara trait API instead of the older resource API.
+The U200 and U200 Lite are exposed by Aqara as Matter models `aqara.matter.4447_10242` and `aqara.matter.4447_10247`, so this integration reads them through the Aqara trait API instead of the older resource API.
 
 ## Need Help?
 

@@ -48,6 +48,7 @@ G3_MODEL = "lumi.camera.gwpgl1"
 FP2_MODEL = "lumi.motion.agl001"
 FP300_MODEL = "lumi.sensor_occupy.agl8"
 U200_MODEL = "aqara.matter.4447_10242"
+U200_LITE_MODEL = "aqara.matter.4447_10247"
 A100_MODEL = "aqara.lock.agl002"
 A100_PRO_MODEL = "aqara.lock.acn001"
 ACN002_MODEL = "aqara.lock.acn002"
@@ -64,7 +65,7 @@ A100_PRO_MODELS = {A100_MODEL, A100_PRO_MODEL}
 ACN002_MODELS = {ACN002_MODEL}
 G4_MODELS = {G4_MODEL, "lumi.camera.acn005"}
 PRESENCE_MODELS = {FP2_MODEL, FP300_MODEL}
-U200_MODELS = {U200_MODEL}
+U200_MODELS = {U200_MODEL, U200_LITE_MODEL}
 
 G3_DEVICE_LABEL = "Aqara G3"
 G2H_PRO_DEVICE_LABEL = "Aqara Camera Hub G2H Pro"

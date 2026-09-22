@@ -31,7 +31,6 @@ from .u200 import (
     U200_LOCK_STATE_LOCKED,
     U200_STATE_TRAITS,
     U200_TRAIT_SPEC_MAP,
-    coerce_u200_trait_value,
     u200_trait_request,
 )
 _LOGGER = logging.getLogger(__name__)
@@ -489,20 +488,6 @@ class AqaraApi:
         data = {"resources": subscriptions}
         return await self._open_request("config.resource.unsubscribe", data, authenticated=True)
 
-    async def subscribe_traits(self, subscriptions: list[dict[str, Any]]) -> Any:
-        return await self._open_request(
-            "spec.config.trait.subscribe",
-            {"traits": subscriptions},
-            authenticated=True,
-        )
-
-    async def unsubscribe_traits(self, subscriptions: list[dict[str, Any]]) -> Any:
-        return await self._open_request(
-            "spec.config.trait.unsubscribe",
-            {"traits": subscriptions},
-            authenticated=True,
-        )
-
     async def query_device_sub_info(self, did: str) -> Any:
         return await self._open_request("query.device.subInfo", {"did": did}, authenticated=True)
 
@@ -581,7 +566,30 @@ class AqaraApi:
 
     @staticmethod
     def _coerce_u200_trait_value(spec: dict[str, Any], value: Any) -> Any:
-        return coerce_u200_trait_value(spec, value)
+        if value is None:
+            return spec.get("default")
+
+        value_type = spec.get("value_type")
+        if value_type == "bool":
+            if isinstance(value, bool):
+                return value
+            normalized = str(value).strip().lower()
+            if normalized in {"1", "true", "on", "yes"}:
+                return True
+            if normalized in {"0", "false", "off", "no"}:
+                return False
+            return bool(value)
+        if value_type == "float":
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return spec.get("default")
+        if value_type == "int":
+            try:
+                return int(float(value))
+            except (TypeError, ValueError):
+                return spec.get("default")
+        return str(value)
 
     @staticmethod
     def _iter_matter_config_traits(data: Any) -> list[dict[str, Any]]:
@@ -619,15 +627,10 @@ class AqaraApi:
         return items
 
     def _map_u200_trait_items(self, did: str, items: Iterable[dict[str, Any]]) -> dict[str, Any]:
-        state: dict[str, Any] = {}
+        state: dict[str, Any] = {spec["key"]: spec.get("default") for spec in U200_STATE_TRAITS}
         for item in items:
             device_id = item.get("deviceId")
             if device_id is not None and str(device_id) != did:
-                continue
-            if any(
-                field in item and str(item.get(field)) != "0"
-                for field in ("code", "statusCode")
-            ):
                 continue
 
             endpoint_id = self._parse_endpoint_id(item.get("endpointId"))
@@ -639,9 +642,7 @@ class AqaraApi:
             spec = U200_TRAIT_SPEC_MAP.get((endpoint_id, function_code, trait_code))
             if spec is None:
                 continue
-            value = self._coerce_u200_trait_value(spec, self._attr_value_from_item(item))
-            if value is not None:
-                state[spec["key"]] = value
+            state[spec["key"]] = self._coerce_u200_trait_value(spec, self._attr_value_from_item(item))
         return state
 
     @staticmethod
@@ -709,14 +710,7 @@ class AqaraApi:
                 raise RuntimeError(f"Failed to query U200 config: {config}")
             items = self._iter_matter_config_traits(config)
 
-        state = self._map_u200_trait_items(did, items)
-        expected_keys = {spec["key"] for spec in U200_STATE_TRAITS}
-        missing_keys = expected_keys - state.keys()
-        if missing_keys:
-            raise RuntimeError(
-                f"Incomplete U200 trait response for {did}; missing: {', '.join(sorted(missing_keys))}"
-            )
-        return state
+        return self._map_u200_trait_items(did, items)
 
     async def set_u200_locked(self, did: str, locked: bool) -> Any:
         lock_state_trait = {
