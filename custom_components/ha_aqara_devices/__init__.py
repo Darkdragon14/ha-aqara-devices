@@ -603,6 +603,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     from .push import AqaraBridgePushManager
 
     session = aiohttp_client.async_get_clientsession(hass)
+
+    def _persist_auth(auth: dict[str, Any]) -> None:
+        hass.config_entries.async_update_entry(entry, data={**entry.data, **auth})
+
     api = AqaraApi(
         entry.data["area"],
         session,
@@ -613,6 +617,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         refresh_token=entry.data.get("refresh_token"),
         open_id=entry.data.get("open_id"),
         expires_at=entry.data.get("expires_at"),
+        auth_updated_callback=_persist_auth,
     )
 
     try:
@@ -625,13 +630,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "Aqara Open API tokens missing. Reconfigure the integration with the new authorization-code flow."
             )
         await api.ensure_valid_access_token(TOKEN_REFRESH_STARTUP_MARGIN_SECONDS)
-        if api.export_auth() != {
-            "access_token": entry.data.get("access_token"),
-            "refresh_token": entry.data.get("refresh_token"),
-            "open_id": entry.data.get("open_id"),
-            "expires_at": entry.data.get("expires_at"),
-        }:
-            hass.config_entries.async_update_entry(entry, data={**entry.data, **api.export_auth()})
         devices = await api.get_devices()
 
         cameras = [device for device in devices if device.get("model") in G3_MODELS]

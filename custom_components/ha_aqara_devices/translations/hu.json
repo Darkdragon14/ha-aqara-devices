@@ -20,6 +20,10 @@
                 "data": {
                     "auth_code": "Hitelesitesi kod"
                 }
+            },
+            "reauth_confirm": {
+                "title": "Az Aqara-hitelesítés lejárt",
+                "description": "Kérj új ellenőrzőkódot az Aqarától az integráció helyreállításához."
             }
         },
         "error": {
@@ -27,7 +31,9 @@
             "no_devices_found": "Nem talalhato FP2 eszkoz."
         },
         "abort": {
-            "already_configured": "Ez az eszkoz mar konfiguralva van."
+            "already_configured": "Ez az eszkoz mar konfiguralva van.",
+            "reauth_successful": "Az Aqara-hitelesítés sikeresen megújult.",
+            "reauth_failed": "Az Aqara konfigurációs bejegyzése már nem érhető el."
         }
     },
     "options": {

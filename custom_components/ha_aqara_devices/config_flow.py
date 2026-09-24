@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
@@ -74,6 +75,41 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=_user_schema(user_input), errors=errors)
 
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]):
+        self._pending_input = dict(entry_data)
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input: dict[str, Any] | None = None):
+        errors: dict[str, str] = {}
+        pending = self._pending_input
+        if pending is None:
+            return self.async_abort(reason="reauth_failed")
+
+        if user_input is not None:
+            session = aiohttp_client.async_get_clientsession(self.hass)
+            try:
+                from .api import AqaraApi
+
+                api = AqaraApi(
+                    pending["area"],
+                    session,
+                    app_id=pending[CONF_APP_ID],
+                    app_key=pending[CONF_APP_KEY],
+                    key_id=pending[CONF_KEY_ID],
+                )
+                data = await api.request_auth_code(pending["account"])
+                if str(data.get("code")) != "0":
+                    raise RuntimeError(data)
+                return await self.async_step_auth_code()
+            except Exception:
+                errors["base"] = "auth"
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema({}),
+            errors=errors,
+        )
+
     async def async_step_auth_code(self, user_input: dict[str, Any] | None = None):
         errors: dict[str, str] = {}
         pending = self._pending_input
@@ -107,6 +143,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "open_id": result.get("openId"),
                     "expires_at": api.expires_at,
                 }
+                if self.source == config_entries.SOURCE_REAUTH:
+                    entry_id = self.context.get("entry_id")
+                    entry = self.hass.config_entries.async_get_entry(entry_id) if entry_id else None
+                    if entry is None:
+                        return self.async_abort(reason="reauth_failed")
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data={**entry.data, **entry_data},
+                    )
                 return self.async_create_entry(title="Aqara Devices", data=entry_data)
             except Exception:
                 errors["base"] = "auth"

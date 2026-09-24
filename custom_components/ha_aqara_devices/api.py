@@ -7,7 +7,7 @@ import json
 import logging
 import time
 import uuid
-from typing import Any, Dict, Iterable
+from typing import Any, Callable, Dict, Iterable
 
 from aiohttp import ClientSession
 
@@ -92,6 +92,7 @@ class AqaraApi:
         refresh_token: str | None = None,
         open_id: str | None = None,
         expires_at: float | None = None,
+        auth_updated_callback: Callable[[dict[str, Any]], None] | None = None,
     ) -> None:
         area = (area or "OTHER").upper()
         if area not in AREAS:
@@ -111,6 +112,7 @@ class AqaraApi:
         self._refresh_token = refresh_token
         self._open_id = open_id
         self._expires_at = float(expires_at) if expires_at else None
+        self._auth_updated_callback = auth_updated_callback
         self._refresh_lock = asyncio.Lock()
 
     @property
@@ -151,14 +153,15 @@ class AqaraApi:
         self._open_id = open_id
         if expires_at is not None:
             self._expires_at = float(expires_at)
-            return
-        if expires_in is None:
+        elif expires_in is None:
             self._expires_at = None
-            return
-        try:
-            self._expires_at = time.time() + int(expires_in)
-        except (TypeError, ValueError):
-            self._expires_at = None
+        else:
+            try:
+                self._expires_at = time.time() + int(expires_in)
+            except (TypeError, ValueError):
+                self._expires_at = None
+        if self._auth_updated_callback is not None:
+            self._auth_updated_callback(self.export_auth())
 
     def token_expiring_soon(self, margin_seconds: int = TOKEN_REFRESH_REQUEST_MARGIN_SECONDS) -> bool:
         if not self._access_token:
@@ -223,7 +226,7 @@ class AqaraApi:
         return {
             "code": data.get("code"),
             "message": data.get("message"),
-            "msgDetails": data.get("msgDetails"),
+            "msgDetails": data.get("msgDetails") or data.get("messageDetail"),
             "requestId": data.get("requestId"),
             "result": result_summary,
         }
@@ -256,10 +259,10 @@ class AqaraApi:
         if not isinstance(data, dict):
             return False
         code = str(data.get("code", ""))
-        if code in {"401", "403", "1005", "1006", "1008", "1013"}:
+        if code in {"108", "401", "403", "1005", "1006", "1008", "1013"}:
             return True
         message = str(data.get("message") or "").lower()
-        details = str(data.get("msgDetails") or "").lower()
+        details = str(data.get("msgDetails") or data.get("messageDetail") or "").lower()
         auth_markers = ("token", "auth", "unauthorized", "expired")
         return any(marker in message or marker in details for marker in auth_markers)
 
@@ -360,14 +363,12 @@ class AqaraApi:
                 retry_on_auth=False,
             )
             if str(data.get("code")) != "0":
-                if self._is_auth_error(data):
-                    raise AqaraAuthError(f"Aqara refresh token failed: {self._summarize_response(data)}")
-                raise RuntimeError(f"Aqara refresh token failed: {data}")
+                raise AqaraAuthError(f"Aqara refresh token failed: {self._summarize_response(data)}")
             result = data.get("result") or {}
             self.set_auth(
                 access_token=result.get("accessToken"),
-                refresh_token=result.get("refreshToken"),
-                open_id=result.get("openId"),
+                refresh_token=result.get("refreshToken") or self._refresh_token,
+                open_id=result.get("openId") or self._open_id,
                 expires_in=result.get("expiresIn"),
             )
             return data

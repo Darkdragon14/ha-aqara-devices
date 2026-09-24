@@ -20,6 +20,10 @@
                 "data": {
                     "auth_code": "授权码"
                 }
+            },
+            "reauth_confirm": {
+                "title": "Aqara 身份验证已过期",
+                "description": "向 Aqara 请求新的验证码以恢复此集成。"
             }
         },
         "error": {
@@ -27,7 +31,9 @@
             "no_devices_found": "未找到 FP2 设备。"
         },
         "abort": {
-            "already_configured": "此设备已配置。"
+            "already_configured": "此设备已配置。",
+            "reauth_successful": "Aqara 身份验证已成功更新。",
+            "reauth_failed": "Aqara 配置条目已不可用。"
         }
     },
     "options": {
