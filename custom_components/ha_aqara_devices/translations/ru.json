@@ -20,6 +20,10 @@
                 "data": {
                     "auth_code": "Код авторизации"
                 }
+            },
+            "reauth_confirm": {
+                "title": "Срок действия аутентификации Aqara истек",
+                "description": "Запросите новый код подтверждения Aqara, чтобы восстановить интеграцию."
             }
         },
         "error": {
@@ -27,7 +31,9 @@
             "no_devices_found": "Устройства FP2 не найдены."
         },
         "abort": {
-            "already_configured": "Это устройство уже настроено."
+            "already_configured": "Это устройство уже настроено.",
+            "reauth_successful": "Аутентификация Aqara успешно обновлена.",
+            "reauth_failed": "Запись конфигурации Aqara больше недоступна."
         }
     },
     "options": {

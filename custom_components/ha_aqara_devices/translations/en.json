@@ -20,6 +20,10 @@
                 "data": {
                     "auth_code": "Authorization code"
                 }
+            },
+            "reauth_confirm": {
+                "title": "Aqara authentication expired",
+                "description": "Request a new verification code from Aqara to restore this integration."
             }
         },
         "error": {
@@ -27,7 +31,9 @@
             "no_devices_found": "No FP2 devices were found."
         },
         "abort": {
-            "already_configured": "This device is already configured."
+            "already_configured": "This device is already configured.",
+            "reauth_successful": "Aqara authentication was renewed successfully.",
+            "reauth_failed": "The Aqara configuration entry is no longer available."
         }
     },
     "options": {

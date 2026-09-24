@@ -20,6 +20,10 @@
                 "data": {
                     "auth_code": "Autorisierungscode"
                 }
+            },
+            "reauth_confirm": {
+                "title": "Aqara-Authentifizierung abgelaufen",
+                "description": "Fordern Sie einen neuen Bestätigungscode von Aqara an, um diese Integration wiederherzustellen."
             }
         },
         "error": {
@@ -27,7 +31,9 @@
             "no_devices_found": "Es wurden keine FP2-Gerate gefunden."
         },
         "abort": {
-            "already_configured": "Dieses Gerat ist bereits konfiguriert."
+            "already_configured": "Dieses Gerat ist bereits konfiguriert.",
+            "reauth_successful": "Die Aqara-Authentifizierung wurde erfolgreich erneuert.",
+            "reauth_failed": "Der Aqara-Konfigurationseintrag ist nicht mehr verfügbar."
         }
     },
     "options": {

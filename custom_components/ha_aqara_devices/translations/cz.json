@@ -20,6 +20,10 @@
                 "data": {
                     "auth_code": "Ověřovací kód"
                 }
+            },
+            "reauth_confirm": {
+                "title": "Platnost ověření Aqara vypršela",
+                "description": "Vyžádejte si nový ověřovací kód Aqara pro obnovení této integrace."
             }
         },
         "error": {
@@ -27,7 +31,9 @@
             "no_devices_found": "Nebyla nalezena žádná zařízení FP2."
         },
         "abort": {
-            "already_configured": "Toto zařízení je již nastaveno."
+            "already_configured": "Toto zařízení je již nastaveno.",
+            "reauth_successful": "Ověření Aqara bylo úspěšně obnoveno.",
+            "reauth_failed": "Konfigurační záznam Aqara již není dostupný."
         }
     },
     "options": {

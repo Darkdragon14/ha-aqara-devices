@@ -20,6 +20,10 @@
                 "data": {
                     "auth_code": "Autorisatiecode"
                 }
+            },
+            "reauth_confirm": {
+                "title": "Aqara-authenticatie verlopen",
+                "description": "Vraag een nieuwe verificatiecode aan bij Aqara om deze integratie te herstellen."
             }
         },
         "error": {
@@ -27,7 +31,9 @@
             "no_devices_found": "Er zijn geen FP2-apparaten gevonden."
         },
         "abort": {
-            "already_configured": "Dit apparaat is al geconfigureerd."
+            "already_configured": "Dit apparaat is al geconfigureerd.",
+            "reauth_successful": "De Aqara-authenticatie is vernieuwd.",
+            "reauth_failed": "De Aqara-configuratie is niet meer beschikbaar."
         }
     },
     "options": {

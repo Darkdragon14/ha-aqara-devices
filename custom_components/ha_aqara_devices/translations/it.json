@@ -20,6 +20,10 @@
                 "data": {
                     "auth_code": "Codice di autorizzazione"
                 }
+            },
+            "reauth_confirm": {
+                "title": "L'autenticazione Aqara è scaduta",
+                "description": "Richiedi un nuovo codice di verifica ad Aqara per ripristinare questa integrazione."
             }
         },
         "error": {
@@ -27,7 +31,9 @@
             "no_devices_found": "Nessun dispositivo FP2 trovato."
         },
         "abort": {
-            "already_configured": "Questo dispositivo e gia configurato."
+            "already_configured": "Questo dispositivo e gia configurato.",
+            "reauth_successful": "L'autenticazione Aqara è stata rinnovata correttamente.",
+            "reauth_failed": "La voce di configurazione Aqara non è più disponibile."
         }
     },
     "options": {
