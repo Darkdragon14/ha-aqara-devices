@@ -4,7 +4,7 @@
 [![HACS Action](https://github.com/Darkdragon14/ha-aqara-devices/actions/workflows/hacs_action.yml/badge.svg)](https://github.com/Darkdragon14/ha-aqara-devices/actions/workflows/hacs_action.yml)
 [![release](https://img.shields.io/github/v/release/Darkdragon14/ha-aqara-devices.svg)](https://github.com/Darkdragon14/ha-aqara-devices/releases)
 
-`Aqara Devices (G3, G2H Pro, G410, G4, M3, M100, M200, FP2, FP300, A100, A100 Pro, Xingyao/ACN002 locks, and U200)` connects supported Aqara cameras, doorbells, hubs, presence sensors, and locks to Home Assistant with Aqara Open API v3 and `aqara-rocketmq-bridge`.
+`Aqara Devices (G3, G2H Pro, G410, G4, M1S, M1S Gen 2, M3, M100, M200, FP2, FP300, A100, A100 Pro, Xingyao/ACN002 locks, and U200)` connects supported Aqara cameras, doorbells, hubs, presence sensors, and locks to Home Assistant with Aqara Open API v3 and `aqara-rocketmq-bridge`.
 
 Instead of relying only on periodic polling, the integration now uses Aqara Message Push -> RocketMQ -> bridge -> Server-Sent Events (SSE) so Home Assistant receives live updates while the integration keeps Aqara authentication, token refresh, and resource subscriptions in sync.
 
@@ -119,11 +119,13 @@ Advanced users can associate an existing go2rtc stream instead of pairing throug
 
 ### Hub child devices
 
-The integration discovers child devices connected to supported G3, G2H Pro, M3, M100, and M200 hubs and registers each child under its parent hub in Home Assistant. Readable Aqara resources are exposed as generic read-only `sensor` or `binary_sensor` entities.
+The integration discovers child devices connected to supported G3, G2H Pro, M1S, M1S Gen 2, M3, M100, and M200 hubs and registers each child under its parent hub in Home Assistant. Readable Aqara resources are exposed as generic read-only `sensor` or `binary_sensor` entities.
 
 Only resources considered safe and useful are enabled automatically, including reportable binary states and common measurements with units. Writable, unknown, or less useful resources are disabled by default. To use one of these entities, open the child device in Home Assistant, select its disabled entities, and enable the ones you need. Enabling or disabling a child entity reloads the integration so polling and Aqara subscriptions stay aligned with the active entities.
 
 The `ha_aqara_devices.open_pairing_mode` and `ha_aqara_devices.close_pairing_mode` services can start or stop child-device pairing on a supported hub. Both services require the parent hub's Aqara DID.
+
+M1S and M1S Gen 2 hubs also expose their native night light, Wi-Fi signal strength, system and alarm volume, alarm ringtone, and alarm control. The original M1S additionally exposes its doorbell ringtone, music volume and duration, alarm duration, and music playback control.
 
 ## How It Works
 
@@ -141,6 +143,8 @@ The `ha_aqara_devices.open_pairing_mode` and `ha_aqara_devices.close_pairing_mod
 | `Camera Hub G2H Pro` | `lumi.camera.agl001`, `lumi.camera.acn003` |
 | `Doorbell G410` | `lumi.camera.acn017`, `lumi.camera.agl006` |
 | `Doorbell G4` | `lumi.camera.agl002`, `lumi.camera.acn005` |
+| `Hub M1S` | `lumi.gateway.aeu01` |
+| `Hub M1S Gen 2` | `lumi.gateway.agl002` |
 | `Hub M3` | `lumi.gateway.acn012`, `lumi.gateway.agl004` |
 | `Hub M100` | `lumi.gateway.agl008`, `lumi.gateway.agl010` |
 | `Presence Sensor FP2` | `lumi.motion.agl001` |

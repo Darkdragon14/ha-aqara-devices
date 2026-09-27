@@ -30,6 +30,7 @@ from .bridge_specs import (
     M3_RESOURCE_SPEC_MAP,
     coerce_spec_value,
     g410_resource_spec_map_for_model,
+    m1s_resource_spec_map_for_model,
     spec_event_time_key,
     spec_event_token_key,
     spec_state_key,
@@ -77,6 +78,8 @@ class AqaraBridgePushManager:
         child_resource_specs: dict[str, dict[str, dict[str, Any]]],
         child_polling_dids: set[str],
         subscriptions: list[dict[str, Any]],
+        hubs_m1s: list[dict[str, Any]] | None = None,
+        m1s_coordinators: dict[str, DataUpdateCoordinator] | None = None,
     ) -> None:
         self._hass = hass
         self._session = session
@@ -87,6 +90,7 @@ class AqaraBridgePushManager:
         self._g2h_pro_coordinators = g2h_pro_coordinators
         self._g410_coordinators = g410_coordinators
         self._g4_coordinators = g4_coordinators
+        self._m1s_coordinators = m1s_coordinators or {}
         self._m3_coordinators = m3_coordinators
         self._m100_coordinators = m100_coordinators
         self._m200_coordinators = m200_coordinators
@@ -100,6 +104,7 @@ class AqaraBridgePushManager:
         self._g2h_pro_cameras = {device["did"]: device for device in g2h_pro_cameras}
         self._g410_doorbells = {device["did"]: device for device in g410_doorbells}
         self._g4_doorbells = {device["did"]: device for device in g4_doorbells}
+        self._hubs_m1s = {device["did"]: device for device in hubs_m1s or []}
         self._hubs_m3 = {device["did"]: device for device in hubs_m3}
         self._hubs_m100 = {device["did"]: device for device in hubs_m100}
         self._hubs_m200 = {device["did"]: device for device in hubs_m200}
@@ -111,6 +116,7 @@ class AqaraBridgePushManager:
         self._g2h_pro_state: dict[str, dict[str, Any]] = {did: {} for did in self._g2h_pro_cameras}
         self._g410_state: dict[str, dict[str, Any]] = {did: {} for did in self._g410_doorbells}
         self._g4_state: dict[str, dict[str, Any]] = {did: {} for did in self._g4_doorbells}
+        self._m1s_state: dict[str, dict[str, Any]] = {did: {} for did in self._hubs_m1s}
         self._m3_state: dict[str, dict[str, Any]] = {did: {} for did in self._hubs_m3}
         self._m100_state: dict[str, dict[str, Any]] = {did: {} for did in self._hubs_m100}
         self._m200_state: dict[str, dict[str, Any]] = {did: {} for did in self._hubs_m200}
@@ -168,6 +174,7 @@ class AqaraBridgePushManager:
         yield from self._g2h_pro_coordinators.values()
         yield from self._g410_coordinators.values()
         yield from self._g4_coordinators.values()
+        yield from getattr(self, "_m1s_coordinators", {}).values()
         yield from self._m3_coordinators.values()
         yield from self._m100_coordinators.values()
         yield from self._m200_coordinators.values()
@@ -515,6 +522,21 @@ class AqaraBridgePushManager:
                 self._g4_coordinators,
                 self._g4_state,
                 G4_RESOURCE_SPEC_MAP,
+                pending_updates,
+                apply_scale=True,
+            )
+            return
+
+        m1s = getattr(self, "_hubs_m1s", {}).get(did)
+        if m1s is not None:
+            self._handle_shared_device_message(
+                payload_type,
+                did,
+                resource_id,
+                payload.get("value"),
+                self._m1s_coordinators,
+                self._m1s_state,
+                m1s_resource_spec_map_for_model(str(m1s.get("model") or "")),
                 pending_updates,
                 apply_scale=True,
             )

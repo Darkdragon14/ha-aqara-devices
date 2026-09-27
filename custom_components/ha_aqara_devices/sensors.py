@@ -2,6 +2,24 @@ from homeassistant.const import UnitOfTemperature, PERCENTAGE
 
 from .const import G410_ACN017_MODEL
 
+
+M1S_WIFI_SIGNAL_STRENGTH = {
+    "name": "Wi-Fi Signal Strength",
+    "translation_key": "wifi_signal_strength",
+    "icon": "mdi:wifi",
+    "inApp": "device_wifi_rssi",
+    "api": "8.0.2026",
+    "value_type": "uint32_t",
+    "signed_bits": 32,
+    "invalid_default": None,
+    "device_class": "signal_strength",
+    "state_class": "measurement",
+    "unit": "dBm",
+    "default": None,
+}
+
+M1S_SENSORS_DEF = [M1S_WIFI_SIGNAL_STRENGTH]
+
 M3_TEMPERATURE = {
     "icon": "mdi:thermometer",
     "inApp": "temperature_value",

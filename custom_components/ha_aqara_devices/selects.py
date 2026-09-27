@@ -69,6 +69,20 @@ M3_SELECTS_DEF = [
     M3_DOORBELL_BELL_INDEX,
 ]
 
+M1S_ALARM_BELL_INDEX = {
+    **M3_ALARM_BELL_INDEX,
+}
+
+M1S_DOORBELL_BELL_INDEX = {
+    **M3_DOORBELL_BELL_INDEX,
+    "m1s_original_only": True,
+}
+
+M1S_SELECTS_DEF = [
+    M1S_ALARM_BELL_INDEX,
+    M1S_DOORBELL_BELL_INDEX,
+]
+
 M100_GATEWAY_LANGUAGE = {
     "name": "Gateway Language",
     "translation_key": "gateway_language",

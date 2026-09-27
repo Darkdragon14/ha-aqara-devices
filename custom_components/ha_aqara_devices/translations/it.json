@@ -229,6 +229,9 @@
             "low_battery_alarm": {
                 "name": "Allarme batteria scarica"
             },
+            "wifi_signal_strength": {
+                "name": "Wi-Fi Signal Strength"
+            },
             "heartbeat_indicator": {
                 "name": "Spia di attività"
             },
@@ -432,8 +435,19 @@
             "low_temp_alarm": {
                 "name": "Allarme bassa temperatura"
             },
+            "alarm": {
+                "name": "Alarm"
+            },
+            "music_playback": {
+                "name": "Music Playback"
+            },
             "doorbell_recording": {
                 "name": "Registrazione campanello"
+            }
+        },
+        "light": {
+            "night_light": {
+                "name": "Night Light"
             }
         },
         "number": {
@@ -457,6 +471,9 @@
             },
             "music_volume": {
                 "name": "Volume musica"
+            },
+            "music_duration": {
+                "name": "Music Duration"
             },
             "alarm_clock_volume": {
                 "name": "Volume sveglia"

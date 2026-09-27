@@ -101,6 +101,34 @@ M100_SWITCHES_DEF = [
     M100_GATEWAY_DELETION_SETTING,
 ]
 
+M1S_ALARM = {
+    "name": "Alarm",
+    "translation_key": "alarm",
+    "icon": "mdi:alarm-light",
+    "inApp": "alarm_status",
+    "api": "14.1.111",
+    "on_data": {"14.1.111": 1},
+    "off_data": {"14.1.111": 0},
+    "value_type": "bool",
+}
+
+M1S_MUSIC_PLAYBACK = {
+    "name": "Music Playback",
+    "translation_key": "music_playback",
+    "icon": "mdi:music",
+    "inApp": "music_status",
+    "api": "14.3.111",
+    "on_data": {"14.3.111": 1},
+    "off_data": {"14.3.111": 0},
+    "value_type": "bool",
+    "m1s_original_only": True,
+}
+
+M1S_SWITCHES_DEF = [
+    M1S_ALARM,
+    M1S_MUSIC_PLAYBACK,
+]
+
 
 def _g2h_pro_switch(name: str, translation_key: str, icon: str, in_app: str, api: str) -> Dict[str, Any]:
     return {

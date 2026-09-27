@@ -11,9 +11,9 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.number import NumberEntity
 
-from .const import DOMAIN, G2H_PRO_DEVICE_LABEL, G410_DEVICE_LABEL, G4_DEVICE_LABEL, G3_MODEL, G3_DEVICE_LABEL, M100_DEVICE_LABEL, M200_DEVICE_LABEL, M3_DEVICE_LABEL
-from .bridge_specs import g410_specs_for_model
-from .numbers import ALL_NUMBERS_DEF, G2H_PRO_NUMBERS_DEF, G410_NUMBERS_DEF, G4_NUMBERS_DEF, M100_NUMBERS_DEF, M200_NUMBERS_DEF, M3_NUMBERS_DEF
+from .const import DOMAIN, G2H_PRO_DEVICE_LABEL, G410_DEVICE_LABEL, G4_DEVICE_LABEL, G3_MODEL, G3_DEVICE_LABEL, M1S_MODEL_LABELS, M100_DEVICE_LABEL, M200_DEVICE_LABEL, M3_DEVICE_LABEL
+from .bridge_specs import g410_specs_for_model, m1s_specs_for_model
+from .numbers import ALL_NUMBERS_DEF, G2H_PRO_NUMBERS_DEF, G410_NUMBERS_DEF, G4_NUMBERS_DEF, M1S_NUMBERS_DEF, M100_NUMBERS_DEF, M200_NUMBERS_DEF, M3_NUMBERS_DEF
 from .api import AqaraApi
 from .device_info import build_device_info
 
@@ -26,6 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     g2h_pro_cameras: list[dict] = data.get("g2h_pro_cameras", [])
     g410_doorbells: list[dict] = data.get("g410_doorbells", [])
     g4_doorbells: list[dict] = data.get("g4_doorbells", [])
+    hubs_m1s: list[dict] = data.get("hubs_m1s", [])
     hubs_m3: list[dict] = data.get("hubs_m3", [])
     hubs_m100: list[dict] = data.get("hubs_m100", [])
     hubs_m200: list[dict] = data.get("hubs_m200", [])
@@ -33,6 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     g2h_pro_coordinators: dict[str, DataUpdateCoordinator] = data.get("g2h_pro_coordinators", {})
     g410_coordinators: dict[str, DataUpdateCoordinator] = data.get("g410_coordinators", {})
     g4_coordinators: dict[str, DataUpdateCoordinator] = data.get("g4_coordinators", {})
+    m1s_coordinators: dict[str, DataUpdateCoordinator] = data.get("m1s_coordinators", {})
     m3_coordinators: dict[str, DataUpdateCoordinator] = data.get("m3_coordinators", {})
     m100_coordinators: dict[str, DataUpdateCoordinator] = data.get("m100_coordinators", {})
     m200_coordinators: dict[str, DataUpdateCoordinator] = data.get("m200_coordinators", {})
@@ -98,6 +100,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         for number_def in M3_NUMBERS_DEF:
             number = AqaraNumber(coordinator, api, did, name, number_def, model, M3_DEVICE_LABEL)
             entities.append(number)
+
+    for hub in hubs_m1s:
+        did = hub["did"]
+        name = hub["deviceName"]
+        model = hub["model"]
+        coordinator = m1s_coordinators.get(did)
+        if coordinator is None:
+            continue
+
+        for number_def in m1s_specs_for_model(M1S_NUMBERS_DEF, model):
+            entities.append(
+                AqaraNumber(
+                    coordinator,
+                    api,
+                    did,
+                    name,
+                    number_def,
+                    model,
+                    M1S_MODEL_LABELS[model],
+                )
+            )
 
     for hub in hubs_m100:
         did = hub["did"]
@@ -170,6 +193,7 @@ class AqaraNumber(CoordinatorEntity, NumberEntity):
     async def async_set_native_value(self, value: float):
         v = max(self._attr_native_min_value, min(self._attr_native_max_value, float(value)))
 
+        previous_value = self._native_value
         self._native_value = v
         self.async_write_ha_state()
         payload = {
@@ -178,7 +202,19 @@ class AqaraNumber(CoordinatorEntity, NumberEntity):
             },
             "subjectId": self._did,
         }
-        await self._api.res_write(payload)
+        try:
+            response = await self._api.res_write(payload)
+        except Exception:
+            if self._spec.get("confirm_write"):
+                self._native_value = previous_value
+                self.async_write_ha_state()
+            raise
+        if self._spec.get("confirm_write"):
+            if not isinstance(response, dict) or str(response.get("code")) != "0":
+                self._native_value = previous_value
+                self.async_write_ha_state()
+                raise RuntimeError(f"Aqara API error: {response}")
+            await self.coordinator.async_request_refresh()
 
     def _handle_coordinator_update(self) -> None:
         data = self.coordinator.data or {}
