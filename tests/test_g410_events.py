@@ -329,6 +329,66 @@ def _ring_entity(coordinator: _Coordinator, *, mock_schedule: bool = True):
     return entity
 
 
+class MatterLockBinarySensorTests(unittest.TestCase):
+    def test_experimental_battery_values_clear_when_traits_disappear(self):
+        for model in ("aqara.matter.4447_10241", "aqara.matter.4447_10244"):
+            for key in ("battery_percentage", "current_voltage"):
+                for missing in ({}, {key: None}):
+                    with self.subTest(model=model, key=key, missing=missing):
+                        coordinator = _Coordinator()
+                        coordinator.data = {key: 42}
+                        entity = sensor_module.AqaraSensor(
+                            coordinator, "lock", "Lock",
+                            {"inApp": key, "icon": "mdi:battery"}, model, "Aqara Smart Lock",
+                        )
+                        entity.async_write_ha_state = Mock()
+                        entity._handle_coordinator_update()
+                        self.assertEqual(entity._attr_native_value, 42)
+                        coordinator.data = missing
+                        entity._handle_coordinator_update()
+                        self.assertIsNone(entity._attr_native_value)
+                        self.assertEqual(entity.async_write_ha_state.call_count, 2)
+
+    def test_u200_battery_missing_behavior_is_unchanged(self):
+        for model in ("aqara.matter.4447_10242", "aqara.matter.4447_10247"):
+            coordinator = _Coordinator()
+            coordinator.data = {"battery_percentage": 42}
+            entity = sensor_module.AqaraSensor(
+                coordinator, "lock", "Lock",
+                {"inApp": "battery_percentage", "icon": "mdi:battery"}, model, "Aqara Smart Lock U200",
+            )
+            entity.async_write_ha_state = Mock()
+            entity._handle_coordinator_update()
+            coordinator.data = {}
+            entity._handle_coordinator_update()
+            self.assertEqual(entity._attr_native_value, 42)
+            entity.async_write_ha_state.assert_called_once()
+
+    def test_experimental_missing_boolean_traits_are_unknown(self):
+        for model in ("aqara.matter.4447_10241", "aqara.matter.4447_10244"):
+            for key in ("reachable", "battery_replacement_needed"):
+                for data, expected in (({}, None), ({key: None}, None),
+                                       ({key: True}, True), ({key: False}, False)):
+                    with self.subTest(model=model, key=key, data=data):
+                        coordinator = _Coordinator()
+                        coordinator.data = data
+                        entity = binary_sensor_module.AqaraBinarySensor(
+                            coordinator, "lock", "Lock", None,
+                            {"inApp": key, "icon": "mdi:lock", "value_type": "bool"},
+                            model, "Aqara Smart Lock",
+                        )
+                        self.assertIs(entity.is_on, expected)
+
+    def test_u200_missing_boolean_behavior_is_unchanged(self):
+        for model in ("aqara.matter.4447_10242", "aqara.matter.4447_10247"):
+            entity = binary_sensor_module.AqaraBinarySensor(
+                _Coordinator(), "lock", "Lock", None,
+                {"inApp": "reachable", "icon": "mdi:lock", "value_type": "bool"},
+                model, "Aqara Smart Lock U200",
+            )
+            self.assertIs(entity.is_on, False)
+
+
 def _face_entity(coordinator: _Coordinator):
     return sensor_module.AqaraSensor(
         coordinator,

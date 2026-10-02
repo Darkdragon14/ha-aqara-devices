@@ -799,6 +799,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "bridge_manager": None,
         "bridge_task": None,
         "warmup_tasks": [],
+        "matter_lock_capabilities": [],
         "active_subscriptions": [],
     }
     hass.data[DOMAIN][entry.entry_id] = entry_data
@@ -834,6 +835,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise
 
     _register_child_devices(hass, entry, child_devices)
+
+    from .matter_lock_diagnostics import collect_lock_capabilities
+
+    entry_data["warmup_tasks"].append(
+        hass.async_create_background_task(
+            collect_lock_capabilities(api, u200_locks, entry_data["matter_lock_capabilities"]),
+            f"{DOMAIN} Matter lock capabilities",
+        )
+    )
 
     enabled_unique_ids = _enabled_unique_ids_for_entry(hass, entry)
     known_unique_ids = _known_unique_ids_for_entry(hass, entry)

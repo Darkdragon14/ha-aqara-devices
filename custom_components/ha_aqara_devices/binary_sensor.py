@@ -30,6 +30,8 @@ from .const import (
     M200_DEVICE_LABEL,
     M3_DEVICE_LABEL,
     U200_DEVICE_LABEL,
+    MATTER_LOCK_MODEL_LABELS,
+    EXPERIMENTAL_MATTER_LOCK_MODELS,
 )
 from .device_info import build_child_device_info, build_device_info
 from .fp300 import FP300_BINARY_SENSORS_DEF
@@ -238,7 +240,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                     api,
                     binary_sensor_def,
                     model,
-                    U200_DEVICE_LABEL,
+                    MATTER_LOCK_MODEL_LABELS.get(lock["model"], U200_DEVICE_LABEL),
                 )
             )
 
@@ -396,9 +398,11 @@ class AqaraBinarySensor(CoordinatorEntity, BinarySensorEntity):
         super()._handle_coordinator_update()
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         data = self.coordinator.data or {}
         raw = data.get(self._spec["inApp"])
+        if raw is None and self._model in EXPERIMENTAL_MATTER_LOCK_MODELS:
+            return None
         if self._value_type == "timestamp":
             if not raw:
                 return False
