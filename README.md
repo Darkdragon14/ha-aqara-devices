@@ -149,6 +149,8 @@ The `ha_aqara_devices.open_pairing_mode` and `ha_aqara_devices.close_pairing_mod
 | `Door Lock A100 Pro` | `aqara.lock.acn001` |
 | `Smart Lock U200` | `aqara.matter.4447_10242` |
 | `Smart Lock U200 Lite` | `aqara.matter.4447_10247` |
+| `Smart Lock U300` (experimental) | `aqara.matter.4447_10241` |
+| `Smart Lock U400` (experimental) | `aqara.matter.4447_10244` |
 | `Smart Video Door Lock Xingyao` (`全自动智能猫眼门锁 星耀`) | `aqara.lock.acn002` |
 
 Each discovered supported device in your Aqara account gets its own entities and device metadata inside Home Assistant.
@@ -158,6 +160,31 @@ For the full per-device entity details, see the published bridge documentation:
 - [Supported devices reference](https://darkdragon14.github.io/aqara-rocketmq-bridge/devices/)
 
 The U200 and U200 Lite are exposed by Aqara as Matter models `aqara.matter.4447_10242` and `aqara.matter.4447_10247`, so this integration reads them through the Aqara trait API instead of the older resource API.
+
+### Experimental U300 / U400 support
+
+U300 and U400 initially reuse the U200 cloud trait layout: a lock entity, battery
+percentage/voltage sensors, and connectivity/battery-replacement binary sensors.
+Missing traits remain unknown. State, battery scaling, and lock/unlock commands
+must be verified on real hardware; model discovery alone does not confirm command
+compatibility. No unlock-method events or charging-state entity are provided yet.
+These are independent cloud entities, not automatic failover for HA Matter entities.
+
+At each integration load, a best-effort background query retrieves the capabilities
+of each U300/U400 using `spec.query.specdevice.config`. It does not delay entity
+setup; failures are recorded as generic statuses without raw API error messages.
+To help validate support, open **Settings > Devices & services > Aqara Devices**,
+use the integration entry's menu and select **Download diagnostics** after collection
+finishes (up to 20 seconds per experimental lock). If collection fails, reload the
+integration to retry. Attach the diagnostics to your issue along with the model,
+firmware, and observed state/command behavior. Test remote commands only when safe
+and someone is present to check the door.
+
+Diagnostics include only model IDs, endpoint IDs, function/trait codes, trait IDs,
+types, and read/write/subscription flags. They omit device/account identifiers,
+names, tokens, PINs, user/credential data, all current/default values and enum
+contents. Event definitions and actual push samples will still be needed before
+unlock-method events can be implemented.
 
 ## Need Help?
 
