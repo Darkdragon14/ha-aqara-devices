@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
 
 from .api import AqaraApi
-from .const import DOMAIN, U200_DEVICE_LABEL
+from .const import DOMAIN, MATTER_LOCK_MODEL_LABELS, U200_DEVICE_LABEL
 from .device_info import build_device_info
 from .u200 import U200_DOOR_STATE_LABELS, U200_LOCK_STATE_LABELS, U200_LOCK_STATE_LOCKED, U200_LOCK_STATE_UNLOCKED
 
@@ -59,7 +59,10 @@ class AqaraU200Lock(CoordinatorEntity, LockEntity):
 
     @property
     def device_info(self):
-        return build_device_info(self._did, self._device_name, self._model, U200_DEVICE_LABEL)
+        return build_device_info(
+            self._did, self._device_name, self._model,
+            MATTER_LOCK_MODEL_LABELS.get(self._model, U200_DEVICE_LABEL),
+        )
 
     @property
     def available(self) -> bool:

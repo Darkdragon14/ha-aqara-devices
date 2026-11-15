@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import asyncio
 from pathlib import Path
 import sys
 from types import ModuleType, SimpleNamespace
@@ -100,6 +101,17 @@ class _BridgeManager:
 
 
 class UnloadLifecycleTests(unittest.IsolatedAsyncioTestCase):
+    async def test_successful_unload_cancels_capability_collection(self):
+        calls = []
+        task = asyncio.create_task(asyncio.Event().wait())
+        entry = SimpleNamespace(entry_id="entry")
+        hass = SimpleNamespace(
+            config_entries=_ConfigEntries(True, calls),
+            data={integration.DOMAIN: {entry.entry_id: {"warmup_tasks": [task]}}},
+        )
+        self.assertTrue(await integration.async_unload_entry(hass, entry))
+        self.assertTrue(task.cancelled())
+
     async def test_failed_platform_unload_keeps_bridge_running(self):
         calls: list[str] = []
         entry = SimpleNamespace(entry_id="entry")

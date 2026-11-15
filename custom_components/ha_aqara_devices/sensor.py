@@ -28,6 +28,8 @@ from .const import (
     M100_DEVICE_LABEL,
     M3_DEVICE_LABEL,
     U200_DEVICE_LABEL,
+    MATTER_LOCK_MODEL_LABELS,
+    EXPERIMENTAL_MATTER_LOCK_MODELS,
 )
 from .bridge_specs import g410_specs_for_model
 from .device_info import build_child_device_info, build_device_info
@@ -239,7 +241,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                     name,
                     sensor_def,
                     model,
-                    U200_DEVICE_LABEL,
+                    MATTER_LOCK_MODEL_LABELS.get(lock["model"], U200_DEVICE_LABEL),
                 )
             )
 
@@ -326,6 +328,9 @@ class AqaraSensor(CoordinatorEntity, SensorEntity):
             self._attr_extra_state_attributes = {"event_id": event_id}
         raw = data.get(self._spec["inApp"])
         if raw is None:
+            if self._model in EXPERIMENTAL_MATTER_LOCK_MODELS:
+                self._attr_native_value = None
+                self.async_write_ha_state()
             return
         value = self._value_map.get(str(raw), raw)
         if self._attr_options is not None and value not in self._attr_options:
