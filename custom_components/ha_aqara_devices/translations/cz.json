@@ -257,10 +257,10 @@
                 "name": "Počítání osob"
             },
             "people_counting_per_minute": {
-                "name": "Počítání osob (za minutu)"
+                "name": "Maximální počet osob (1 min)"
             },
-            "whole_area_people_count_10s": {
-                "name": "Počet osob v celé oblasti (10 s)"
+            "whole_area_entries_30min": {
+                "name": "Vstupy do celé oblasti (30 min)"
             },
             "zone_people_count_10s": {
                 "name": "Počet osob zóny {index} (10 s)"

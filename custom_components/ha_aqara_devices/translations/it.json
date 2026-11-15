@@ -236,10 +236,10 @@
                 "name": "Conteggio persone"
             },
             "people_counting_per_minute": {
-                "name": "Conteggio persone (al minuto)"
+                "name": "Numero massimo di persone (1 min)"
             },
-            "whole_area_people_count_10s": {
-                "name": "Conteggio persone intera area (10 s)"
+            "whole_area_entries_30min": {
+                "name": "Ingressi nell’intera area (30 min)"
             },
             "zone_people_count_10s": {
                 "name": "Conteggio persone zona {index} (10 s)"

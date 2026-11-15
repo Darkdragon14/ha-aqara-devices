@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib
 import asyncio
+import json
 from pathlib import Path
 import sys
 from types import SimpleNamespace
@@ -190,6 +191,95 @@ def _manager(coordinator: _Coordinator, model: str = "lumi.camera.agl006"):
     manager._g410_coordinators = {"g410": coordinator}
     manager._g410_state = {"g410": {}}
     return manager
+
+
+class FP2CountingTests(unittest.TestCase):
+    def test_counting_labels_preserve_entity_identity_and_measurement_type(self):
+        expected = {
+            "0.60.85": ("people_counting", "people_counting", "People Counting"),
+            "0.61.85": (
+                "people_counting_by_mins",
+                "people_counting_per_minute",
+                "Maximum People Count (1 min)",
+            ),
+            "13.120.85": (
+                "all_zone_statistics",
+                "whole_area_entries_30min",
+                "Whole Area Entries (30 min)",
+            ),
+        }
+        for resource_id, (key, translation_key, name) in expected.items():
+            with self.subTest(resource_id=resource_id):
+                spec = bridge_specs.FP2_GROUP_SPEC_MAPS["medium"][resource_id]
+                sensor = sensor_module.AqaraFP2Sensor(
+                    _Coordinator(), "fp2", "FP2", spec, "lumi.motion.agl001", "FP2"
+                )
+                self.assertEqual(f"fp2_fp2_sensor_{key}", sensor._attr_unique_id)
+                self.assertEqual(translation_key, sensor._attr_translation_key)
+                self.assertEqual(name, spec["name"])
+                self.assertEqual("measurement", spec["state_class"])
+
+    def test_translations_include_corrected_counting_labels(self):
+        translations = ROOT / "custom_components" / "ha_aqara_devices" / "translations"
+        for path in sorted(translations.glob("*.json")):
+            with self.subTest(language=path.stem):
+                sensors = json.loads(path.read_text())["entity"]["sensor"]
+                self.assertTrue(sensors["people_counting_per_minute"]["name"])
+                self.assertTrue(sensors["whole_area_entries_30min"]["name"])
+                self.assertNotIn("whole_area_people_count_10s", sensors)
+                # Aqara has not confirmed zone reporting behavior.
+                self.assertIn("zone_people_count_10s", sensors)
+
+    def test_counting_resources_are_subscribed_only_for_enabled_entities(self):
+        for enabled_keys, expected_resources in (
+            ([], []),
+            (["people_counting_by_mins"], ["0.61.85"]),
+            (["all_zone_statistics"], ["13.120.85"]),
+            (["people_counting_by_mins", "all_zone_statistics"], ["0.61.85", "13.120.85"]),
+        ):
+            with self.subTest(enabled_keys=enabled_keys):
+                subscriptions = bridge_specs.build_active_subscriptions(
+                    enabled_unique_ids={f"fp2_fp2_sensor_{key}" for key in enabled_keys},
+                    cameras=[],
+                    g2h_pro_cameras=[],
+                    g410_doorbells=[],
+                    g4_doorbells=[],
+                    hubs_m3=[],
+                    hubs_m100=[],
+                    hubs_m200=[],
+                    a100_pro_locks=[],
+                    acn002_locks=[],
+                    presence_devices=[{"did": "fp2", "model": "lumi.motion.agl001"}],
+                )
+                self.assertEqual(
+                    [{"subjectId": "fp2", "resourceIds": expected_resources}]
+                    if expected_resources else [],
+                    subscriptions,
+                )
+
+    def test_push_statistics_merge_with_existing_count_and_allow_decreases(self):
+        coordinator = _Coordinator()
+        coordinator.data = {"people_counting": 3.0}
+        manager = _manager(_Coordinator())
+        manager._presence_devices = {"fp2": {"model": "lumi.motion.agl001"}}
+        manager._presence_coordinators = {"fp2": {"medium": coordinator}}
+        manager._presence_state = {"fp2": {"medium": {}}}
+        # The shared push router must not mistake this device for a hub child.
+        manager._child_devices = {}
+        manager._child_resource_specs = {}
+
+        for payload_type in ("snapshot", "batch"):
+            with self.subTest(payload_type=payload_type):
+                for minute_maximum, entries in ((4, 7), (1, 0)):
+                    manager._apply_events(payload_type, [
+                        {"subjectId": "fp2", "resourceId": "0.61.85", "value": str(minute_maximum)},
+                        {"subjectId": "fp2", "resourceId": "13.120.85", "value": str(entries)},
+                    ])
+                    self.assertEqual({
+                        "people_counting": 3.0,
+                        "people_counting_by_mins": float(minute_maximum),
+                        "all_zone_statistics": entries,
+                    }, coordinator.data)
 
 
 class PushPollingTests(unittest.TestCase):

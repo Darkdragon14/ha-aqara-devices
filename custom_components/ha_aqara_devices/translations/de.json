@@ -236,10 +236,10 @@
                 "name": "Personenzählung"
             },
             "people_counting_per_minute": {
-                "name": "Personenzählung (pro Minute)"
+                "name": "Maximale Personenzahl (1 min)"
             },
-            "whole_area_people_count_10s": {
-                "name": "Personenzahl gesamter Bereich (10 s)"
+            "whole_area_entries_30min": {
+                "name": "Eintritte im gesamten Bereich (30 min)"
             },
             "zone_people_count_10s": {
                 "name": "Personenzahl Zone {index} (10 s)"

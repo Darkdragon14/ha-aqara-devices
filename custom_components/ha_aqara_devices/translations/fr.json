@@ -306,10 +306,10 @@
                 "name": "Comptage de personnes"
             },
             "people_counting_per_minute": {
-                "name": "Comptage de personnes (par minute)"
+                "name": "Nombre maximal de personnes (1 min)"
             },
-            "whole_area_people_count_10s": {
-                "name": "Comptage de personnes zone entière (10 s)"
+            "whole_area_entries_30min": {
+                "name": "Entrées dans la zone entière (30 min)"
             },
             "zone_people_count_10s": {
                 "name": "Comptage de personnes zone {index} (10 s)"
