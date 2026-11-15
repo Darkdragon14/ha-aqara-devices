@@ -236,10 +236,10 @@
                 "name": "Подсчёт людей"
             },
             "people_counting_per_minute": {
-                "name": "Подсчёт людей (в минуту)"
+                "name": "Максимальное число людей (1 мин)"
             },
-            "whole_area_people_count_10s": {
-                "name": "Подсчёт людей по всей зоне (10 с)"
+            "whole_area_entries_30min": {
+                "name": "Входы во всю зону (30 мин)"
             },
             "zone_people_count_10s": {
                 "name": "Подсчёт людей зоны {index} (10 с)"

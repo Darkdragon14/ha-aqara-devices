@@ -102,7 +102,8 @@ FP2_COUNT_SENSORS_DEF = [
         "state_class": SensorStateClass.MEASUREMENT,
     },
     {
-        "name": "People Counting (per minute)",
+        # Aqara reports the maximum observed during the minute, not a live count.
+        "name": "Maximum People Count (1 min)",
         "translation_key": "people_counting_per_minute",
         "key": "people_counting_by_mins",
         "api": "0.61.85",
@@ -112,8 +113,9 @@ FP2_COUNT_SENSORS_DEF = [
         "state_class": SensorStateClass.MEASUREMENT,
     },
     {
-        "name": "Whole Area People Count (10s)",
-        "translation_key": "whole_area_people_count_10s",
+        # Entries during a 30-minute window, not current occupancy or a total.
+        "name": "Whole Area Entries (30 min)",
+        "translation_key": "whole_area_entries_30min",
         "key": "all_zone_statistics",
         "api": "13.120.85",
         "poll_group": "medium",

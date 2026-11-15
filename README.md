@@ -125,6 +125,19 @@ Only resources considered safe and useful are enabled automatically, including r
 
 The `ha_aqara_devices.open_pairing_mode` and `ha_aqara_devices.close_pairing_mode` services can start or stop child-device pairing on a supported hub. Both services require the parent hub's Aqara DID.
 
+### FP2 people counting (Aqara Lab feature)
+
+Aqara confirmed the following reporting behavior for the whole-area statistics:
+
+- **Maximum People Count (1 min)** (`0.61.85`): the maximum number of people observed within the minute, reported once per minute. This is not an instantaneous occupancy count.
+- **Whole Area Entries (30 min)** (`13.120.85`): the number of people entering the space within a half-hour window, reported once every 30 minutes. This is not current occupancy or a cumulative lifetime total. Earlier versions incorrectly labeled it as a 10-second people count.
+
+Both resources are pushed without requiring the Aqara Home app to remain open. `query.resource.value` reads cloud-stored data; polling does not request a fresh device measurement. The integration already subscribes to these resources when their entities are enabled and routes push updates to their sensors; fallback polling is retained for bridge disconnections.
+
+The separate **People Counting** sensor (`0.60.85`) and zone statistics were not covered by this confirmation, so their behavior has not been changed. Existing sensor unique IDs are preserved; manually customized names may still display the old labels.
+
+If updates stop, note the exact sensor name, enable integration debug logging, and capture at least 35 minutes with the Aqara Home app fully closed, including some entries/exits. Include integration and bridge logs covering the same period, plus FP2 firmware and integration versions. Review logs before sharing and redact credentials, tokens, and personal identifiers while keeping resource IDs and timestamps.
+
 ## How It Works
 
 `Aqara RocketMQ -> aqara-rocketmq-bridge -> SSE -> ha_aqara_devices -> Home Assistant`

@@ -236,10 +236,10 @@
                 "name": "Emberszámlálás"
             },
             "people_counting_per_minute": {
-                "name": "Emberszámlálás (percenként)"
+                "name": "Maximális létszám (1 perc)"
             },
-            "whole_area_people_count_10s": {
-                "name": "Teljes terület emberszám (10 mp)"
+            "whole_area_entries_30min": {
+                "name": "Belépések a teljes területre (30 perc)"
             },
             "zone_people_count_10s": {
                 "name": "{index}. zóna emberszám (10 mp)"

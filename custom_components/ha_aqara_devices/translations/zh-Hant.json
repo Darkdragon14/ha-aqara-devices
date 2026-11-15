@@ -257,10 +257,10 @@
                 "name": "人數統計"
             },
             "people_counting_per_minute": {
-                "name": "人數統計（每分鐘）"
+                "name": "最多人數（1 分鐘）"
             },
-            "whole_area_people_count_10s": {
-                "name": "整個區域人數（10 秒）"
+            "whole_area_entries_30min": {
+                "name": "整個區域進入人數（30 分鐘）"
             },
             "zone_people_count_10s": {
                 "name": "區域 {index} 人數（10 秒）"

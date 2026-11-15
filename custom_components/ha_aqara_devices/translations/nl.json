@@ -236,10 +236,10 @@
                 "name": "Personen tellen"
             },
             "people_counting_per_minute": {
-                "name": "Personen tellen (per minuut)"
+                "name": "Maximaal aantal personen (1 min)"
             },
-            "whole_area_people_count_10s": {
-                "name": "Personentelling hele gebied (10 s)"
+            "whole_area_entries_30min": {
+                "name": "Binnenkomsten in het hele gebied (30 min)"
             },
             "zone_people_count_10s": {
                 "name": "Personentelling zone {index} (10 s)"
